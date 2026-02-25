@@ -12,3 +12,14 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+model Student{
+  std_id String @id @default(uuid())
+  std_name String
+  std_lastname String
+  std_email String @unique
+  std_pfp String?
+  std_password String 
+  std_streak Int
+  std_last_activeDate DateTime
+
+} 
