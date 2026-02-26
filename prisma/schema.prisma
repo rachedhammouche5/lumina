@@ -29,7 +29,7 @@ enum crs_type{
 }
 enum difficulty{
   easy 
-  meduim
+  medium
   hard
   pro
 }
@@ -43,7 +43,7 @@ model Student{
   std_password String 
   std_streak Int @default(0)
   std_last_activeDate DateTime @default(now())
-  std_level level
+  std_level level @default(beginner)
   enroll enroll[]
   score score[]
   review review[]
@@ -95,7 +95,7 @@ model Course{
 model quiz{
   qst_id String @id @default(uuid())
   question String
-  difficulty String
+  difficulty difficulty
   responses q_response[]
   course Course @relation(fields:[courseId],references:[crs_id])
   courseId String
