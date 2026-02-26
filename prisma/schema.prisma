@@ -12,6 +12,28 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+enum level{
+beginner
+intermediate
+advanced
+master
+}
+enum crs_type{
+   pdf
+   video
+   mindmap
+   docs
+   article 
+   
+}
+enum difficulty{
+  easy 
+  meduim
+  hard
+  pro
+}
+
 model Student{
   std_id String @id @default(uuid())
   std_name String
@@ -19,7 +41,96 @@ model Student{
   std_email String @unique
   std_pfp String?
   std_password String 
-  std_streak Int
-  std_last_activeDate DateTime
+  std_streak Int @default(0)
+  std_last_activeDate DateTime @default(now())
+  std_level level
+  enroll enroll[]
+  score score[]
+  review review[]
 
 } 
+model Teacher{
+  tchr_id String @id @default(uuid())
+  tchr_name String 
+  tchr_lastname String
+  tchr_email String @unique
+  tchr_pfp String?
+  tchr_password String
+  courses Course[]
+}
+model Domain{
+  dmn_id String @id @default(uuid())
+  dmn_title String @unique
+  dmn_dscrptn String 
+  dmn_duration Int
+  subdomains subDomain[]
+  enroll enroll[]
+}
+model subDomain{
+  subdom_id String @id @default(uuid())
+  subdom_title String @unique 
+  courses Course[]
+  domain Domain @relation(fields:[domainId],references:[dmn_id])
+  domainId String
+  score score[]
+  parent subDomain? @relation("subdomainChildren",fields:[parentId],references:[subdom_id])
+  parentId String?
+  children subDomain[] @relation("subdomainChildren")
+
+}
+
+model Course{
+  crs_id String @id @default(uuid())
+  crs_title String @unique
+  crs_type crs_type 
+  quizzes quiz[]
+  subdomain subDomain @relation(fields:[subdom],references:[subdom_id])
+  subdom String
+  teacher Teacher @relation(fields:[teacherId],references:[tchr_id])
+  teacherId String 
+  review review[]
+
+}
+
+model quiz{
+  qst_id String @id @default(uuid())
+  question String
+  difficulty String
+  responses q_response[]
+  course Course @relation(fields:[courseId],references:[crs_id])
+  courseId String
+}
+model q_response{
+  rspns_id String @id @default(uuid())
+  response String 
+  isCorrect Boolean
+  quiz quiz @relation(fields:[quizId],references:[qst_id])
+  quizId String 
+}
+model enroll{
+  student Student @relation(fields:[studentId],references:[std_id])
+  studentId String
+  domain Domain @relation(fields:[domainId],references:[dmn_id])
+  domainId String
+  progress Int
+  @@id([studentId,domainId])
+}
+model score{
+  student Student @relation(fields:[studentId],references:[std_id])
+  studentId String 
+  subdomain subDomain @relation(fields:[subdom],references:[subdom_id])
+  subdom String 
+  score Float
+  time_taken Int
+  @@id([studentId,subdom])
+}
+model review{
+    student Student @relation(fields:[studentId],references:[std_id])
+    studentId String
+    course Course @relation(fields:[courseId],references:[crs_id])
+    courseId String
+    @@id([studentId,courseId])
+  comment String
+  rating Int
+}
+
