@@ -13,7 +13,7 @@
     "isolatedModules": true,
     "jsx": "react-jsx",
     "incremental": true,
-    "paths":{
+    "paths": {
       "@prisma/client": ["./app/generated/prisma"]
     },
 
@@ -21,7 +21,7 @@
       {
         "name": "next"
       }
-    ],
+    ]
     // "paths": {
     //   "@/*": ["./*"]
     // }
