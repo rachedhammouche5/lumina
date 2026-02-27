@@ -1,7 +1,15 @@
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient } from '../app/generated/prisma'
 import bcrypt from "bcrypt";
+import { PrismaPg } from '@prisma/adapter-pg';
+import {Pool} from 'pg';
 
-const prisma = new PrismaClient();
+const connectionString = process.env.DATABASE_URL;
+if (!connectionString) throw new Error("DATABASE_URL is missing");
+
+const pool = new Pool({ connectionString });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
+
 async function main() {
   console.log("Seeding database...");
   const hashedPassword = await bcrypt.hash("password123", 10);
@@ -84,3 +92,12 @@ async function main() {
     console.log("Response created:", response.rspns_id);
     console.log("Database seeding completed.");
 }
+
+main()
+  .catch((e) => {
+    console.error("Seed failed:", e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });
