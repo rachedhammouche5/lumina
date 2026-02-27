@@ -1,0 +1,52 @@
+/* Base styles - The 'Skeleton' of the button */
+.btn {
+    padding: 12px 28px;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 0.8rem;
+    border: 2px solid transparent; /* Prevents jumping when outline border appears */
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    outline: none;
+}
+
+/* Primary: The main orange gradient */
+.btn-primary {
+    background: var(--orange-gradient);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(249, 115, 22, 0.4);
+}
+
+/* Outline: Transparent with border */
+.btn-outline {
+    background: linear-gradient(135deg, rgb(72, 127, 255), rgb(82, 64, 252));
+    border-color: var(--border);
+    color: white;
+    transition: all 0.5s ease;
+}
+
+.btn-outline:hover {
+    background: rgb(255, 255, 255);
+    border-color: white;
+    color: black;
+}
+
+/* Ghost: No background, no border, looks like text */
+.btn-ghost {
+     background: rgba(249, 115, 22, 0.1);
+    color: var(--text-main);
+    padding: 12px 18px; /* Slightly tighter for navigation */
+}
+
+.btn-ghost:hover {
+    color: var(--indigo-glow); /* Changes to orange on hover */
+    background: rgba(249, 115, 22, 0.1); /* Very subtle orange tint */
+}

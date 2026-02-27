@@ -1,0 +1,81 @@
+/* --- BASE CONTAINER --- */
+.last-hook-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  /* subtle background difference to make the section pop */
+  background: radial-gradient(circle at center, rgba(255, 77, 0, 0.05) 0%, transparent 70%);
+}
+
+.last-hook {
+    width: 100%;
+    max-width: 800px; /* Better than 80vw for large screens */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+/* --- TEXT STYLING --- */
+.last-hook-title {
+  width: 100%; /* Let it breathe */
+  max-width: 700px;
+  font-size: 3.5rem; /* Bold impact */
+  font-weight: 800;
+  line-height: 1.1;
+  margin-bottom: 1.5rem;
+  color: var(--text-main);
+}
+
+.last-hook-subtitle {
+  font-size: 1.2rem;
+  color: var(--text-dim);
+  margin-bottom: 3rem;
+  letter-spacing: 1px;
+  text-transform: uppercase; /* Looks more "tech-pro" */
+}
+
+/* --- THE CTA BUTTON --- */
+.last-hook-button {
+    background: var(--orange-gradient);
+    padding: 18px 40px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: white;
+    border-radius: 1rem; /* Fully rounded for modern app look */
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 15px rgba(255, 77, 0, 0.3);
+}
+
+.last-hook-button:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 25px rgba(255, 77, 0, 0.5);
+    filter: brightness(1.1);
+}
+
+/* --- MOBILE DESIGN (Phones) --- */
+@media (max-width: 768px) {
+    .last-hook-container {
+        padding: 60px 20px;
+    }
+
+    .last-hook-title {
+        font-size: 2.2rem; /* Shorter text for small screens */
+    }
+
+    .last-hook-subtitle {
+        font-size: 0.9rem;
+        margin-bottom: 2rem;
+    }
+
+    .last-hook-button {
+        width: 100%; /* Full width button on mobile */
+        max-width: 300px;
+        padding: 15px 25px;
+    }
+}
