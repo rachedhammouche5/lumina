@@ -1,3 +1,0 @@
--- AlterTable
-ALTER TABLE "Student" ALTER COLUMN "std_streak" SET DEFAULT 0,
-ALTER COLUMN "std_last_activeDate" SET DEFAULT CURRENT_TIMESTAMP;

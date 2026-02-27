@@ -5,7 +5,7 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client"
+  provider = "prisma-client-js"
   output   = "../app/generated/prisma"
 }
 
@@ -82,7 +82,10 @@ model subDomain{
 model Course{
   crs_id String @id @default(uuid())
   crs_title String @unique
-  crs_type crs_type 
+  crs_type crs_type
+  vd_link String?
+  pdf_file String?
+  article_content String?
   quizzes quiz[]
   subdomain subDomain @relation(fields:[subdom],references:[subdom_id])
   subdom String
