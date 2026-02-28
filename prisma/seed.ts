@@ -137,5 +137,5 @@ main()
   })
   .finally(async () => {
     await prisma.$disconnect();
-    pool.end();
+   pool.end();
   });

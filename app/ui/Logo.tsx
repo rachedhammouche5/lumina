@@ -11,7 +11,7 @@ const Logo: React.FC<LogoProps> = ({ size = 28 }) => {
   return (
       <div className="logo">
         
-      <Image width={200} height={52} src="/png/LuminaLogo2.png" alt=""/>
+      <Image width={200} height={52} src="/png/LuminaLogo.png" alt=""/>
       </div>
   );
 };
