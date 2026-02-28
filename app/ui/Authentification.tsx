@@ -1,8 +1,35 @@
+'use client';
+import { useState } from "react";
+import { createClient } from "../lib/supabase/client";
 import React from "react";
 import '@/app/ui/styles/homeAuthentification.css';
 import Button from "@/app/ui/Button";
 import Logo from "@/app/ui/Logo";
-const Authentification: React.FC = () => {
+interface AuthentificationProps{
+    onSuccess?:()=>void;
+}
+const Authentification: React.FC <AuthentificationProps>= ({onSuccess}) => {
+    async function handleSubmit(e:React.FormEvent){
+        e.preventDefault();
+        const { error}=await supabase.auth.signInWithPassword({email,password});
+        if(!error){
+            onSuccess?.();
+        }
+    }
+    const supabase=createClient();
+    const [email,setEmail]=useState('');
+    const [password,setPassword]=useState('');
+    const[error,setError]=useState('');
+    // async function handleSubmit(e: React.FormEvent){
+    //     e.preventDefault();
+    //     setError('');
+
+    //     const{error}=
+    //         if(error){
+    //             setError(error.message);
+    //             return;
+    //         }
+    // }
     return (
         <div className="auth">
         <div className="auth-container">
@@ -15,10 +42,11 @@ const Authentification: React.FC = () => {
                     <hr />
                 </div>
                 <h2>Welcome Back!</h2>  
-                <form className="auth-form">
+            <form onSubmit={handleSubmit} className="auth-form">
                 <input type="email" placeholder="Email" required />
                 <input type="password" placeholder="Password" required />
                 <Button type="submit" variant="primary" className="button">Login</Button>
+                {error && <p> {error}</p>}
             </form>
             <p className="auth-footer">
                 Don&apos;t have an account? <a href="/signup">Sign Up</a>

@@ -1,6 +1,6 @@
 
 'use client';
-
+import {useRouter}from 'next/navigation';
 import '@/app/ui/global.css';
 import NavBar from '@/app/ui/NavBar';
 import Hero from '@/app/ui/Hero';
@@ -12,7 +12,9 @@ import Footer from '@/app/ui/Footer';
 import { useState } from 'react';
 import Authentification from '@/app/ui/Authentification';
 
+
 export default function Home() {
+  const router=useRouter();
   const [auth, setauth] = useState(false);
   return (
     
@@ -27,7 +29,12 @@ export default function Home() {
       }}
       }/>
       <div className= {auth ? "auth" : "auth-hidden"}>
-        <Authentification />
+        <Authentification 
+        onSuccess={()=>{
+          setauth(false);
+          router.push('/student');
+        }}
+        />
       </div>
       <div className="body">
         <Hero 
