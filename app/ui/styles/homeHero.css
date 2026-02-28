@@ -1,0 +1,187 @@
+/* Centering the card on the page */
+.hero-wrapper {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    padding: 60px 0;
+    background-color: #020617; /* Matches your site background */
+}
+
+/* The Box: Controlling the width and height */
+.hero-card {
+    margin-top: 2rem;
+    position: relative;
+    width: 90vw;            /* Not full width, nice margins on sides */
+    max-width: 1400px;
+    height: 650px;          /* Fixed height for control */
+    border-radius: 40px;    /* Rounded modern look */
+    overflow: hidden;       /* Keeps video inside the rounded corners */
+    display: flex;
+    align-items: center;
+    box-shadow: -50px 100px 40px rgba(0, 0, 58, 0.212); /* Subtle glow for depth */
+}   
+
+/* Video: Now locked to the hero-card boundaries */
+.hero-video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 1;
+}
+
+/* Overlay: Darker on the left to make text pop */
+.hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        90deg, 
+        rgba(2, 6, 23, 0.9) 30%, 
+        rgba(2, 6, 23, 0.4) 100%
+    );
+    z-index: 2;
+}
+
+/* Content: Split Layout */
+.hero-content {
+    position: relative;
+    z-index: 3;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 80px;
+}
+
+.hero-texts {
+    flex: 1;
+    text-align: left;
+}
+
+
+
+.titles {
+    font-size: 4.8rem;      /* Huge size for impact */
+    font-weight: 800;
+    line-height: 1.1;       /* Tight lines for that professional look */
+    color: white;
+    margin-bottom: 20px;
+}
+
+:root {
+    /* Define the Plasma Gold gradient here */
+    --orange-gradient: linear-gradient(135deg, #FF4D00 0%, #FFB800 100%);
+}
+
+.titles-highlight {
+    font-size: 2rem; /* Make the "AI ASSISTED" tag a bit smaller and cleaner */
+    font-weight: 900;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    background: var(--orange-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent; /* This was missing! */
+    color: transparent;
+    margin-bottom: 10px;
+}
+
+.hero-btns {
+    display: flex;
+    gap: 20px;
+    justify-content: flex-start; /* Keeps buttons left-aligned with text */
+    align-items: center;
+}
+.subtitle {
+    font-size: 1.2rem;
+    max-width: 500px;
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: 30px;
+}
+
+.hero-vector {
+    flex: 1;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.hero-vector-image {
+    width: 100%;
+    max-width: 550px;       /* Control image size */
+    height: auto;
+    filter: drop-shadow(0 20px 50px rgba(0,0,0,0.5));
+    animation: float 5s ease-in-out infinite;
+}
+.hero-btns{
+    display: flex;
+    gap: 20px;
+    justify-content: left;
+    align-items: center;
+}
+.hero-btns button {
+    padding: 15px 30px;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 1rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+.start-learning-btn {
+    background: var(--orange-gradient);
+    color: white;
+}
+.start-learning-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(255, 184, 0, 0.4);
+}   
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-20px); }
+}
+
+/* --- Responsive (Mobile) --- */
+@media (max-width: 1024px) {
+    .titles { font-size: 3.5rem; }
+    .hero-content { padding: 0 40px; }
+}
+
+@media (max-width: 768px) {
+    .hero-card {margin-top: 2rem; height: auto; padding: 60px 0; }
+    .hero-content { flex-direction: column; text-align: center; }
+    .hero-texts { text-align: center; order: 2; }
+    .hero-vector { order: 1; margin-bottom: 40px; }
+    .titles { font-size: 2.8rem; }
+}
+
+@media (max-width: 768px) {
+    .hero-card { 
+        margin-top: 6rem;
+        height: auto; 
+        padding: 40px 20px; /* Reduced padding for smaller screens */
+        width: 95vw;        /* Give more room on mobile */
+    }
+    
+    .hero-content { 
+        flex-direction: column; 
+        text-align: center;
+        padding: 0 20px; 
+    }
+
+    .hero-texts { 
+        width: 100%;  /* Ensures text spans the card width */
+        order: 2; 
+    }
+
+    .subtitle {
+        margin: 0 auto 30px auto; /* Centers the paragraph when text is centered */
+    }
+    .hero-btns
+    {
+        justify-content: center; 
+        /* Center buttons on mobile */
+    }
+}
