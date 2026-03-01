@@ -12,24 +12,23 @@ const Authentification: React.FC <AuthentificationProps>= ({onSuccess}) => {
     async function handleSubmit(e:React.FormEvent){
         e.preventDefault();
         const { error}=await supabase.auth.signInWithPassword({email,password});
+
+        
         if(!error){
             onSuccess?.();
+        }else{
+            const invalidCredentialsError = error.message.toLowerCase().includes('invalid email or password');
+            setError(invalidCredentialsError?'the email or password is incorrect. Please try again.'
+               : 'the email or password is incorrect. Please try again.'
+            );
+            return;
         }
     }
     const supabase=createClient();
     const [email,setEmail]=useState('');
     const [password,setPassword]=useState('');
     const[error,setError]=useState('');
-    // async function handleSubmit(e: React.FormEvent){
-    //     e.preventDefault();
-    //     setError('');
-
-    //     const{error}=
-    //         if(error){
-    //             setError(error.message);
-    //             return;
-    //         }
-    // }
+    
     return (
         <div className="auth">
         <div className="auth-container">
@@ -43,8 +42,8 @@ const Authentification: React.FC <AuthentificationProps>= ({onSuccess}) => {
                 </div>
                 <h2>Welcome Back!</h2>  
             <form onSubmit={handleSubmit} className="auth-form">
-                <input type="email" placeholder="Email" required />
-                <input type="password" placeholder="Password" required />
+                <input type="email" placeholder="Email" required  value={email} onChange={(e) => setEmail(e.target.value)} />
+                <input type="password" placeholder="Password" required   value={password} onChange={(e) => setPassword(e.target.value)}/>
                 <Button type="submit" variant="primary" className="button">Login</Button>
                 {error && <p> {error}</p>}
             </form>

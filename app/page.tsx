@@ -9,24 +9,24 @@ import Features from '@/app/ui/Features';
 import About from '@/app/ui/About';
 import LastHook from '@/app/ui/LastHook';
 import Footer from '@/app/ui/Footer';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Authentification from '@/app/ui/Authentification';
+import { createClient } from '@/app/lib/supabase/client';
 
 
 export default function Home() {
   const router=useRouter();
   const [auth, setauth] = useState(false);
+
+  
+
   return (
     
 
     <div>
       <NavBar onLoginClick={()=>{
-        if(auth === false){
-          setauth(true);
-        }
-      else{
-        setauth(false);
-      }}
+        setauth((prev)=>!prev);
+      }
       }/>
       <div className= {auth ? "auth" : "auth-hidden"}>
         <Authentification 

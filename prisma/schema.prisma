@@ -42,7 +42,7 @@ model Student{
   std_lastname String
   std_email String @unique
   std_pfp String?
-  std_password String 
+  supabaseId   String   @unique
   std_streak Int @default(0)
   std_last_activeDate DateTime @default(now())
   std_level level @default(beginner)
