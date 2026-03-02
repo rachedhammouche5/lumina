@@ -1,18 +1,26 @@
 import React from "react";
-import '@/app/ui/styles/logo.css';
-import { Lightbulb } from "lucide-react";
 import Image from "next/image"
-import LuminaLogo from "@/public/png/LuminaLogo.png"
+import LuminaLogo from "../../public/png/LuminaLogo.png"
+
 interface LogoProps {
   size?: number;
 }
 
-const Logo: React.FC<LogoProps> = ({ size = 28 }) => {
+const Logo: React.FC<LogoProps> = () => {
   return (
-      <div className="logo">
-        
-      <Image width={200} height={52} src="/png/LuminaLogo.png" alt=""/>
-      </div>
+    // .logo-wrapper
+    <div className="flex items-center justify-center w-full h-full m-0 p-0">
+      <Image 
+        width={400}
+        height={100}
+        src={LuminaLogo} 
+        alt="Lumina Logo" 
+        // 1. Used aspect-ratio to match image file
+        // 2. Used object-cover to fill container
+        className="cursor-pointer w-full h-autoobject-contain" 
+        priority
+      />
+    </div>
   );
 };
 

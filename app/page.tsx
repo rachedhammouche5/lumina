@@ -39,7 +39,6 @@ export default function Home() {
       <div className="body">
         <Hero 
         src="/videos/homeVideo.mp4"
-        title="Learn Smarter. Adapt Faster."
         subtitle="Lumina is an AI-powered adaptive learning platform designed for 
           university students. It personalizes learning paths based on 
           performance, engagement, and skill level."
@@ -50,8 +49,7 @@ export default function Home() {
       />
         <Features />
         <About />
-        <LastHook />
-        <Footer />  
+        <LastHook /> 
       </div>
       
     </div>  
