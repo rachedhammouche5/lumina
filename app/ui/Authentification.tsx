@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { createClient } from "../lib/supabase/client";
 import React from "react";
-import '@/app/ui/styles/homeAuthentification.css';
+import '@/app/ui/homeAuthentification.css';
 import Button from "@/app/ui/Button";
 import Logo from "@/app/ui/Logo";
 interface AuthentificationProps{
