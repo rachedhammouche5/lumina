@@ -1,19 +1,32 @@
 import React from 'react';
+import Link from 'next/link';
 
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+interface AnchorProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
+  href: string;
+  children: React.ReactNode;
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
   size?: 's' | 'm' | 'l';
-  children: React.ReactNode;
 }
 
-const Button: React.FC<ButtonProps> = ({ 
-  variant = 'primary', 
-  size = 'm',
-  children,
-  className = '', 
-  ...props 
-}) => {
-  const baseStyles = "font-semibold rounded-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2";
+interface RegularButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  href?: never;
+  children: React.ReactNode;
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
+  size?: 's' | 'm' | 'l';
+}
+
+type ButtonProps = AnchorProps | RegularButtonProps;
+
+const Button: React.FC<ButtonProps> = (props) => {
+  const { 
+    variant = 'primary', 
+    size = 'm',
+    children,
+    className = '', 
+    ...rest 
+  } = props;
+
+  const baseStyles = "font-semibold rounded-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 inline-flex items-center justify-center";
 
   const variants = {
     primary: "text-base font-semibold rounded-4xl border-none cursor-pointer transition-all duration-300 bg-gradient-to-br from-[#FF4D00] to-[#FFB800] text-white hover:-translate-y-0.5 hover:shadow-lg hover:shadow-yellow-500/40",
@@ -30,8 +43,18 @@ const Button: React.FC<ButtonProps> = ({
 
   const buttonStyle = `${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`.trim();
 
+  if ('href' in rest && rest.href) {
+    const { href, ...linkProps } = rest;
+    
+    return (
+      <Link href={href} className={buttonStyle} {...linkProps}>
+        {children}
+      </Link>
+    );
+  }
+
   return (
-    <button className={buttonStyle} {...props}>
+    <button className={buttonStyle} {...(rest as React.ButtonHTMLAttributes<HTMLButtonElement>)}>
       {children}
     </button>
   );

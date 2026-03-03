@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans } from 'next/font/google' // Next.js built-in font loader
+import { Plus_Jakarta_Sans } from 'next/font/google'
 import "./globals.css";
 import Footer from "./ui/Footer";
+import NavBar from "./ui/NavBar";
 
 const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'] })
-
 
 export const metadata: Metadata = {
   title: "Lumina",
@@ -18,11 +18,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={jakarta.className}>
+      <body className={jakarta.className}>
+        <NavBar />
+        
+        <main className="relative">
           {children}
-          <Footer />
-        </body>
+          
+        </main>
+        
+        <Footer />
+      </body>
     </html>
   );
 }

@@ -1,15 +1,11 @@
+'use client'
 import React, { useState } from "react";
 import Logo from "../ui/Logo";
 import Button from "../ui/Button";
 import Link from "next/link";
 import { House, LibraryBig, Blocks, Menu, X } from 'lucide-react';
 
-interface NavBarProps {
-  onLoginClick?: () => void;
-  onSignUpClick?: () => void;
-}
-
-const NavBar: React.FC<NavBarProps> = ({ onLoginClick, onSignUpClick }) => {
+const NavBar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   const navLinks = [
@@ -19,17 +15,15 @@ const NavBar: React.FC<NavBarProps> = ({ onLoginClick, onSignUpClick }) => {
   ];
 
   return (
-    // .nav-wrapper
-    <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md bg-[rgba(2,6,23,0.6)] border-b border-slate-800">
-      {/* .nav-container */}
+
+    <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md bg-[rgba(2,6,23,0.6)] border-b border-slate-800 z-[1000]">
+
       <div className="flex items-center justify-between px-6 md:px-8 py-2">
         
-        {/* .logo-container */}
         <div className="flex items-center justify-center h-11 w-30 md:h-11 md:w-30">
             <Logo />
         </div>
 
-        {/* .nav-links-desktop */}
         <div className="hidden md:flex flex-row gap-8 text-slate-400">
           {navLinks.map((link) => (
             <Link 
@@ -43,18 +37,16 @@ const NavBar: React.FC<NavBarProps> = ({ onLoginClick, onSignUpClick }) => {
           ))}
         </div>
 
-        {/* .nav-actions */}
         <div className="flex items-center gap-3">
           <div className="hidden sm:flex gap-3">
-            <Button variant="ghost" onClick={onLoginClick}>
+            <Button variant="ghost" href="/log-in">
               Login
             </Button>
-            <Button variant="secondary" onClick={onSignUpClick}>
+            <Button variant="secondary" href="/sign-up">
               Sign Up
             </Button>
           </div>
 
-          {/* .mobile-menu-button */}
           <button 
             className="md:hidden text-slate-100 p-2"
             onClick={() => setIsOpen(!isOpen)}
@@ -65,7 +57,6 @@ const NavBar: React.FC<NavBarProps> = ({ onLoginClick, onSignUpClick }) => {
         </div>
       </div>
 
-      {/* .mobile-menu*/}
       <div className={`md:hidden overflow-hidden transition-all border-slate-700  backdrop-blur-md bg-[rgba(2,6,23,0.6)] duration-300 ease-in-out ${isOpen ? "max-h-96 border-b border-slate-800" : "max-h-0"}`}>
         <div className="backdrop-blur-md bg-[rgba(2,6,23,0.6)] border-b border-slate-700 px-6 py-4 flex flex-col gap-4">
           {navLinks.map((link) => (
@@ -80,8 +71,8 @@ const NavBar: React.FC<NavBarProps> = ({ onLoginClick, onSignUpClick }) => {
             </Link>
           ))}
           <div className="flex flex-col gap-3 pt-4 border-t border-slate-800 sm:hidden">
-            <Button variant="ghost" onClick={onLoginClick} className="w-full">Login</Button>
-            <Button variant="secondary" onClick={onSignUpClick} className="w-full">Sign Up</Button>
+              <Button variant="ghost"  className="w-full" href="/log-in">Login</Button>
+              <Button variant="secondary"  className="w-full" href="/sign-up">Sign Up</Button>            
           </div>
         </div>
       </div>
