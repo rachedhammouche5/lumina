@@ -1,6 +1,6 @@
 import { describe, test, expect, vi } from "vitest";
 
-vi.mock("@/app/lib/supabase/server", () => ({
+vi.mock("@/lib/supabase/server", () => ({
   createClient: vi.fn(async () => ({
     auth: {
       getUser: vi.fn(async () => ({
@@ -13,7 +13,6 @@ vi.mock("@/app/lib/supabase/server", () => ({
   })),
 }));
 
-// Optional: avoid real Supabase admin calls
 vi.mock("@supabase/supabase-js", () => ({
   createClient: vi.fn(() => ({
     auth: {
@@ -24,7 +23,7 @@ vi.mock("@supabase/supabase-js", () => ({
   })),
 }));
 
-import { updateUserRole } from "@/app/lib/actions/updateUserRole";
+import { updateUserRole } from "@/features/users/actions/updateUserRole";
 
 describe("updateUserRole", () => {
   test("non admin cannot promote user", async () => {

@@ -6,10 +6,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { House, LibraryBig, Blocks, Menu, X } from 'lucide-react';
 
+
 const NavBar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
-  const replaceAuthNav = pathname === "/";
+
 
   const navLinks = [
     { name: "Home", href: "/", icon: House },
@@ -42,10 +43,10 @@ const NavBar: React.FC = () => {
 
         <div className="flex items-center gap-3">
           <div className="hidden sm:flex gap-3">
-            <Button variant="ghost" href="/log-in" replace={replaceAuthNav}>
+            <Button variant="ghost" href="/login" >
               Login
             </Button>
-            <Button variant="secondary" href="/sign-up" replace={replaceAuthNav}>
+            <Button variant="secondary" href="/signup" >
               Sign Up
             </Button>
           </div>
@@ -74,8 +75,8 @@ const NavBar: React.FC = () => {
             </Link>
           ))}
           <div className="flex flex-col gap-3 pt-4 border-t border-slate-800 sm:hidden">
-              <Button variant="ghost"  className="w-full" href="/log-in" replace={replaceAuthNav}>Login</Button>
-              <Button variant="secondary"  className="w-full" href="/sign-up" replace={replaceAuthNav}>Sign Up</Button>            
+              <Button variant="ghost"  className="w-full" href="/login" >Login</Button>
+              <Button variant="secondary"  className="w-full" href="/signup" >Sign Up</Button>            
           </div>
         </div>
       </div>

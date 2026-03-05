@@ -38,11 +38,11 @@ async function loginAs(page: Page, role: Role) {
     `Missing E2E credentials for role: ${role}`,
   );
 
-  await page.goto('/');
-  await page.getByRole('navigation').getByRole('button', { name: 'Login' }).click();
-  await page.getByPlaceholder('Email').fill(creds.email!);
-  await page.getByPlaceholder('Password').fill(creds.password!);
-  await page.locator('form.auth-form button[type="submit"]').click();
+  await page.goto('/login');
+
+  await page.getByRole('textbox', { name: /johndoe@example.com/i }).fill(creds.email!);
+  await page.locator('input[type="password"]').fill(creds.password!);
+  await page.getByRole('button', { name: /^login$/i }).click();
 
   await expect
     .poll(
@@ -66,17 +66,26 @@ async function loginAs(page: Page, role: Role) {
 test.describe('Route access tests', () => {
   for (const role of roles) {
     for (const route of routes) {
-      test(`${role} access to ${route}`, async ({ page }) => {
+      const isOwnRoute =
+        (route === '/student' && role === 'student') ||
+        (route === '/teacher' && role === 'teacher') ||
+        (route === '/admin' && role === 'admin');
+
+      const caseTitle = isOwnRoute
+        ? `[ALLOW] ${role} can access ${route}`
+        : `[DENY] ${role} is denied access to ${route}`;
+
+      test(caseTitle, async ({ page }) => {
         await loginAs(page, role);
         await page.goto(route);
 
-        const shouldRedirectHome =
+        const shouldRedirectToOwnDashboard =
           (route === '/student' && role !== 'student') ||
           (route === '/teacher' && role !== 'teacher') ||
           (route === '/admin' && role !== 'admin');
 
-        if (shouldRedirectHome) {
-          await expect(page).toHaveURL(/\/$/);
+        if (shouldRedirectToOwnDashboard) {
+          await expect(page).toHaveURL(new RegExp(`${roleHome[role]}$`));
           return;
         }
 

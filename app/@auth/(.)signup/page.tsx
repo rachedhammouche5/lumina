@@ -1,108 +1,71 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, User, Mail, Lock, X } from 'lucide-react';
-import Button from "../../ui/Button";
+import { X } from "lucide-react";
+import SignupPageView from "@/app/ui/auth/SignupPageView";
 
 export default function SignupModal() {
   const router = useRouter();
-  const [showPassword, setShowPassword] = useState(false);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const [isOpen, setIsOpen] = useState(false);
+  const isClosingRef = useRef(false);
 
-  const handleClose = () => {
-    if (window.history.length > 1) {
-      router.back();
-      return;
-    }
-    router.push("/");
-  };
+  const closeModal = useCallback(() => {
+    if (isClosingRef.current) return;
+    isClosingRef.current = true;
+    setIsOpen(false);
+    window.setTimeout(() => {
+      if (window.history.length > 1) router.back();
+      else router.push("/");
+    }, 180);
+  }, [router]);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "auto" });
+    panelRef.current?.focus();
+    const frame = window.requestAnimationFrame(() => setIsOpen(true));
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeModal();
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [closeModal]);
 
   return (
-    <div className="pointer-events-auto fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
-      <div className="w-full max-w-lg rounded-[2rem] bg-slate-900 border border-slate-800 p-8 text-white shadow-2xl">
-        
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-bold bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
-              Join Lumina
-            </h2>
-            <p className="text-xs text-slate-400 mt-1">Start your AI learning journey</p>
-          </div>
-          <button
-            type="button"
-            onClick={handleClose}
-            className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-white transition-all"
-          >
-            <X size={20} />
-          </button>
-        </div>
+    <div
+      className={`fixed inset-0 z-[2000] bg-black/55 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 transition-opacity duration-200 ${
+        isOpen ? "opacity-100" : "opacity-0"
+      }`}
+      onClick={closeModal}
+      aria-hidden="true"
+    >
+      <div
+        ref={panelRef}
+        tabIndex={-1}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Signup modal"
+        className={`relative w-full max-w-2xl outline-none transition-all duration-200 ${
+          isOpen ? "translate-y-0 scale-100 opacity-100" : "translate-y-2 scale-95 opacity-0"
+        }`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          type="button"
+          onClick={closeModal}
+          className="absolute right-3 top-3 z-20 flex rounded-full border border-slate-600 bg-slate-800/95 p-2 text-white shadow-lg hover:bg-slate-700"
+          aria-label="Close signup modal"
+        >
+          <X size={16} />
+        </button>
 
-        <form className="flex flex-col gap-5" onSubmit={(e) => e.preventDefault()}>
-          
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-slate-300 ml-1">First Name</label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
-                <input 
-                  type="text" 
-                  placeholder="John"
-                  className="w-full bg-slate-800/40 border border-slate-700 focus:border-orange-500 rounded-xl py-2.5 pl-9 pr-3 text-white outline-none transition-all placeholder:text-slate-600 text-sm"
-                />
-              </div>
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-slate-300 ml-1">Last Name</label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
-                <input 
-                  type="text" 
-                  placeholder="Doe"
-                  className="w-full bg-slate-800/40 border border-slate-700 focus:border-orange-500 rounded-xl py-2.5 pl-9 pr-3 text-white outline-none transition-all placeholder:text-slate-600 text-sm"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-slate-300 ml-1">Email Address</label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
-              <input 
-                type="email" 
-                placeholder="johndoe@example.com"
-                className="w-full bg-slate-800/40 border border-slate-700 focus:border-orange-500 rounded-xl py-2.5 pl-9 pr-3 text-white outline-none transition-all placeholder:text-slate-600 text-sm"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-slate-300 ml-1">Password</label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
-              <input 
-                type={showPassword ? "text" : "password"} 
-                placeholder="••••••••"
-                className="w-full bg-slate-800/40 border border-slate-700 focus:border-orange-500 rounded-xl py-2.5 pl-9 pr-10 text-white outline-none transition-all placeholder:text-slate-600 text-sm"
-              />
-              <button 
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white"
-              >
-                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-              </button>
-            </div>
-          </div>
-
-          <Button variant="primary" size="m" className="w-full py-3.5 mt-2 shadow-orange-500/10 shadow-lg">
-            Create Account
-          </Button>
-
-          <p className="text-center text-xs text-slate-500">
-            By signing up, you agree to our Terms and Conditions.
-          </p>
-        </form>
+        <SignupPageView />
       </div>
     </div>
   );

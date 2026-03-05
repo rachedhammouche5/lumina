@@ -1,45 +1,73 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import Button from "../../ui/Button";
 import { X } from "lucide-react";
+import LoginPageView from "@/app/ui/auth/LoginPageView";
 
 export default function LoginModal() {
   const router = useRouter();
-  const handleClose = () => {
-    if (window.history.length > 1) {
-      router.back();
-      return;
-    }
-    router.push("/");
+  const panelRef = useRef<HTMLDivElement>(null);
+  const [isOpen, setIsOpen] = useState(false);
+  const isClosingRef = useRef(false);
+
+  const closeModal = () => {
+    if (isClosingRef.current) return;
+    isClosingRef.current = true;
+    setIsOpen(false);
+    window.setTimeout(() => {
+      if (window.history.length > 1) router.back();
+      else router.push("/");
+    }, 180);
   };
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "auto" });
+    panelRef.current?.focus();
+    const frame = window.requestAnimationFrame(() => setIsOpen(true));
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeModal();
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, []);
+
+
+
   return (
-    <div className="pointer-events-auto fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-4">
-      <div className="relative bg-slate-900 w-full max-w-lg rounded-4xl flex flex-col gap-2 border-2 border-slate-800 p-10 justify-center items-center">
-        
-        <Button 
-          variant="ghost" 
-          size="s"
-          onClick={handleClose}
-          className="absolute top-4 right-4 p-2 rounded-full"
+    <div
+      className={`fixed inset-0 z-[2000] bg-black/55 backdrop-blur-sm flex items-center justify-center p-4 transition-opacity duration-200 ${
+        isOpen ? "opacity-100" : "opacity-0"
+      }`}
+      onClick={closeModal}
+      aria-hidden="true"
+    >
+      <div
+        ref={panelRef}
+        tabIndex={-1}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Login modal"
+        className={`relative w-full max-w-2xl outline-none transition-all duration-200 ${
+          isOpen ? "translate-y-0 scale-100 opacity-100" : "translate-y-2 scale-95 opacity-0"
+        }`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          type="button"
+          onClick={closeModal}
+          className="absolute right-3 top-3 z-10 rounded-full border border-slate-600 bg-slate-800/95 p-2 text-white shadow-lg hover:bg-slate-700"
+          aria-label="Close login modal"
         >
-          <X className="w-6 h-6 text-slate-400 hover:text-white" />
-        </Button>
+          <X size={16} />
+        </button>
 
-        <h2 className="font-bold text-2xl mb-10">LOGIN</h2>
-
-        <form action="" className="flex flex-col gap-6 w-full">
-          <input type="text" placeholder="Email" className="bg-slate-800 border-2 border-slate-700 rounded-xl p-2 w-full"/>
-          <input type="password" placeholder="Password" className="bg-slate-800 border-2 border-slate-700 rounded-xl p-2 w-full"/>
-
-          <div className="flex flex-row items-center gap-3">
-            <input type="checkbox" className="ml-5 bg-slate-300"/>
-            <h6 className="text-sm font-extralight text-slate-400">Remember the Password</h6>
-          </div>
-
-          <Button variant="primary" size="m" className="w-full"> Submit </Button>
-        </form>
+        <LoginPageView />
       </div>
     </div>
   );
