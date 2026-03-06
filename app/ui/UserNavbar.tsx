@@ -1,46 +1,21 @@
-"use client";
-import React, { useEffect, useState } from "react";
+'use client'
+import React, { useState } from "react";
 import Logo from "../ui/Logo";
 import Button from "../ui/Button";
 import Link from "next/link";
-import { House, LibraryBig, Blocks, Menu, X } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
-import LogoutButton from "@/app/ui/LogoutButton";
+import { usePathname } from "next/navigation";
+import { House, LibraryBig, Blocks, Menu, X } from 'lucide-react';
 
 
 const NavBar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  useEffect(() => {
-    const supabase = createClient();
-    let mounted = true;
-
-    const syncAuthState = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (mounted) setIsAuthenticated(Boolean(user));
-    };
-
-    void syncAuthState();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setIsAuthenticated(Boolean(session?.user));
-    });
-
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
-  }, []);
+  const pathname = usePathname();
 
 
   const navLinks = [
     { name: "Home", href: "/", icon: House },
     { name: "Courses", href: "/courses", icon: Blocks },
+    { name: "Courses", href: "/c", icon: LibraryBig },
   ];
 
   return (
@@ -68,18 +43,12 @@ const NavBar: React.FC = () => {
 
         <div className="flex items-center gap-3">
           <div className="hidden sm:flex gap-3">
-            {isAuthenticated ? (
-              <LogoutButton />
-            ) : (
-              <>
-                <Button variant="ghost" href="/login">
-                  Login
-                </Button>
-                <Button variant="secondary" href="/signup">
-                  Sign Up
-                </Button>
-              </>
-            )}
+            <Button variant="ghost" href="/login" >
+              Login
+            </Button>
+            <Button variant="secondary" href="/signup" >
+              Sign Up
+            </Button>
           </div>
 
           <button 
@@ -106,18 +75,8 @@ const NavBar: React.FC = () => {
             </Link>
           ))}
           <div className="flex flex-col gap-3 pt-4 border-t border-slate-800 sm:hidden">
-            {isAuthenticated ? (
-              <LogoutButton />
-            ) : (
-              <>
-                <Button variant="ghost" className="w-full" href="/login">
-                  Login
-                </Button>
-                <Button variant="secondary" className="w-full" href="/signup">
-                  Sign Up
-                </Button>
-              </>
-            )}
+              <Button variant="ghost"  className="w-full" href="/login" >Login</Button>
+              <Button variant="secondary"  className="w-full" href="/signup" >Sign Up</Button>            
           </div>
         </div>
       </div>

@@ -60,7 +60,6 @@ if (isTeacherApplyRoute && !user) {
   return NextResponse.redirect(new URL("/", req.url));
 }
 
-
   if (isStudentRoute) {
     if (!user || role !== "student") {
       return NextResponse.redirect(new URL("/", req.url));
