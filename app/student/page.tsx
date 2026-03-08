@@ -27,7 +27,6 @@ export default async function studentPage() {
       <div className="w-full max-w-3xl text-center space-y-6">
         <h1 className="text-3xl font-bold">Students Page</h1>
         <div className="flex justify-center">
-          <LogoutButton />
         </div>
       </div>
     </main>

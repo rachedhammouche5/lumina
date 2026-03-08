@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { syncRoleTables } from "@/features/users/actions/syncTables";
 
 type FinalizeBody = { teacher?: boolean };
 
@@ -31,6 +32,11 @@ export async function POST(request: Request) {
   }
 
   const admin = createAdminClient(supabaseUrl, serviceRoleKey);
+await syncRoleTables(admin, {
+  userId: user.id,
+  email: user.email ?? null,
+  fullName: (user.user_metadata?.full_name as string | undefined) ?? null,
+}, "student");
 
   let role = (user.app_metadata?.role as string | undefined) ?? null;
 

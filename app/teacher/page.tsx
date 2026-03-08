@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "../../lib/supabase/server";
 import LogoutButton from "@/app/ui/LogoutButton";
 import { getRole } from "@/features/utils/auth/getRole";
+import Link from "next/link";
 export default async function teacherPage() {
   const supabase = await createClient();
 
@@ -21,18 +22,43 @@ export default async function teacherPage() {
   if (role !== "teacher" && role !== "teacher_pending") {
     redirect("/");
   }
-  const isPending = role === "teacher_pending";
+  
+const { data: requestRow, error: requestError } = await supabase
+  .from("teacher_requests")
+  .select("status,admin_note")
+  .eq("user_id", user.id)
+  .maybeSingle();
+
+if (requestError) {
+  console.error("Teacher request fetch error:", requestError.message);
+}
+
+const isPending = role === "teacher_pending";
+const isRejected = isPending && requestRow?.status === "rejected";
+const rejectionReason =
+  requestRow?.admin_note?.trim() || "No explanation was provided by admin.";
+  
   return (
     <main className="min-h-screen pt-28 pb-24 px-4 flex items-center justify-center bg-slate-950">
       <div className="w-full max-w-4xl space-y-6">
         <h1 className="text-3xl font-bold text-center">Teacher Dashboard</h1>
 
-        {isPending ? (
-          <div className="rounded-lg border border-amber-400/40 bg-amber-500/10 px-4 py-3 text-amber-200">
-            Your teacher application is pending admin approval. Actions are
-            disabled until approval.
-          </div>
-        ) : null}
+       {isRejected ? (
+  <div className="rounded-lg border border-red-400/40 bg-red-500/10 px-4 py-3 text-red-200">
+    <p className="font-semibold">Your teacher request was rejected.</p>
+    <p className="mt-1 text-sm">
+      Reason: <span className="font-medium">{rejectionReason}</span>
+    </p>
+    <Link href="/teacher/apply" className="mt-2 inline-block text-sm underline">
+      Submit a new application
+    </Link>
+  </div>
+) : isPending ? (
+  <div className="rounded-lg border border-amber-400/40 bg-amber-500/10 px-4 py-3 text-amber-200">
+    Your teacher application is pending admin approval. Actions are disabled until approval.
+  </div>
+) : null}
+
 
         <div className="grid gap-3 sm:grid-cols-2">
           <button
@@ -62,7 +88,6 @@ export default async function teacherPage() {
         </div>
 
         <div className="flex justify-center pt-2">
-          <LogoutButton />
         </div>
       </div>
     </main>
