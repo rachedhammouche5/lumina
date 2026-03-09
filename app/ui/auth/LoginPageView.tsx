@@ -151,7 +151,7 @@ export default function LoginPageView() {
           </form>
           
           <p className="mt-3 text-sm text-slate-300 text-center ">
-            Don't have an account?{" "}
+            Don&apos;t have an account?{" "}
             <Link href="/signup" className="font-semibold text-orange-400 hover:underline">
               Sign Up
             </Link>
