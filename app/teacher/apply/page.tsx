@@ -94,7 +94,7 @@ export default function TeacherApplyPage() {
               value={motivation}
               onChange={(event) => setMotivation(event.target.value)}
               className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-white outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20"
-              required
+              
             />
           </div>
 
@@ -108,7 +108,7 @@ export default function TeacherApplyPage() {
         </form>
 
         {error ? <p className="mt-4 text-sm text-red-400">{error}</p> : null}
-        {submitted ? (
+        {/* {submitted ? (
           <p className="mt-4 text-sm text-emerald-400">
             Application submitted successfully. It is now pending admin review.
             <span className="ml-1">
@@ -117,7 +117,7 @@ export default function TeacherApplyPage() {
               </Link>
             </span>
           </p>
-        ) : null}
+        ) : null} */}
       </section>
     </main>
   );

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
-
+import { syncRoleTables } from "@/features/users/actions/syncTables";
 export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
@@ -54,9 +54,16 @@ export async function GET(request: NextRequest) {
 
   if (wantsTeacher && role !== "teacher" && role !== "admin") {
     const admin = getAdminClient();
+   
+
     if (!admin) {
       return NextResponse.redirect(new URL("/login?error=config", url.origin));
     }
+     await syncRoleTables(admin, {
+  userId: user.id,
+  email: user.email ?? null,
+  fullName: (user.user_metadata?.full_name as string | undefined) ?? null,
+  }, "student");
 
     const { error: requestError } = await admin.from("teacher_requests").upsert(
       {
