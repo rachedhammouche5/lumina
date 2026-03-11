@@ -48,12 +48,9 @@ export async function POST(request: Request) {
   const { error } = await admin.from("teacher_requests").upsert(
     {
       user_id: user.id,
-      email: user.email ?? null,
-      full_name: fullName,
       cv_url: cvUrl,
       motivation,
       status: "pending",
-      updated_at: new Date().toISOString(),
     },
     { onConflict: "user_id" },
   );

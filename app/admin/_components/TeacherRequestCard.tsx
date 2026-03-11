@@ -1,6 +1,5 @@
 import type { TeacherRequest, TeacherRequestStatus } from "../types";
 import { reviewTeacherRequest} from "@/features/users/actions/reviewTeacherRequests";
-
 type TeacherRequestCardProps = {
   request: TeacherRequest;
 };
@@ -22,7 +21,7 @@ export default function TeacherRequestCard({ request }: TeacherRequestCardProps)
     <li className="rounded-xl border border-slate-700 bg-slate-900 p-4">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <h3 className="text-lg font-semibold text-white">
-            {request.full_name ?? "No name provided"}
+            { request.full_name?? "No name provided"}
           </h3>
           <div className="flex items-center gap-2">
             <span
