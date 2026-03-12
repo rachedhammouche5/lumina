@@ -21,6 +21,12 @@ type TopicContentInput = {
   type: TopicContentType;
   value: string;
 };
+type TopicContent = {
+  id: string;
+  topicId:string;
+  type: TopicContentType;
+  value:string;
+}
 
 type TopicFormState = {
   title: string;
@@ -28,4 +34,4 @@ type TopicFormState = {
   contents: TopicContentInput[];
 };
 
-export type { Topic, Course, TopicContentType, TopicContentInput, TopicFormState };
+export type { Topic, Course, TopicContentType, TopicContentInput, TopicFormState, TopicContent};

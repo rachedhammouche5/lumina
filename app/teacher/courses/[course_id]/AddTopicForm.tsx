@@ -1,23 +1,31 @@
-import { Dispatch, SetStateAction, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import {
   Topic,
   Course,
   TopicFormState,
   TopicContentType,
   TopicContentInput,
+  TopicContent,
 } from "./Types";
 
 export default function AddtopicForm({
   course,
   parentId,
+  prefillTopic,
+  contents,
   closeTopicModal,
   setAllTopics,
+  setAllContents,
 }: {
   course: Course;
   parentId: string | null;
+  prefillTopic: Topic | null;
+  contents:TopicContent[];
   closeTopicModal: () => void;
   setAllTopics: Dispatch<SetStateAction<Topic[]>>;
+  setAllContents: Dispatch<SetStateAction<TopicContent[]>>
 }) {
+
 
   const onClose = () => {
     closeTopicModal();
@@ -27,7 +35,7 @@ export default function AddtopicForm({
       contents: [buildContentInput()],
     });
   };
-  
+
   const buildContentInput = (): TopicContentInput => ({
     id: crypto.randomUUID(),
     type: "video_url",
@@ -50,10 +58,44 @@ export default function AddtopicForm({
       description: form.description,
       parentId,
     };
-
+    form.contents.map((contentInput) => {
+      setAllContents((prev) => [
+        ...prev,
+        {
+          id: `topic-${crypto.randomUUID()}`,
+          topicId: newTopic.id,
+          type: contentInput.type,
+          value: contentInput.value,
+        },
+      ]);
+    });
     setAllTopics((prev) => [...prev, newTopic]);
     onClose();
   };
+
+  const getContentByTpcId = (topicId: string) => {
+    return contents.filter((content) => content.topicId === topicId);
+  };
+
+  const prefillForm = (prefillTopic: Topic | null) => {
+    if (prefillTopic != null) {
+      const topicContents = getContentByTpcId(prefillTopic.id).map((content) => ({
+      id: content.id,
+      type: content.type,
+      value: content.value,
+    }))
+      setForm((prev) => ({
+        title: `${prefillTopic.title}`,
+        description: `${prefillTopic.description}`,
+        contents:topicContents,
+      }));
+    }
+  };
+  useEffect(() => {
+  if (prefillTopic != null) {
+    prefillForm(prefillTopic)
+  }
+}, []) 
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/70 p-4">

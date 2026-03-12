@@ -1,4 +1,5 @@
 import CourseDetailView from "./CourseDetailView";
+import { Topic, TopicContent } from "./Types";
 
 export default function CourseDetailPage({
   params,
@@ -13,7 +14,7 @@ export default function CourseDetailPage({
     "duration": "6 weeks"
   };
   
-  const topics: any[] = [
+  const topics: Topic[] = [
   {
     "id": "topic-1",
     "courseId": "course-101",
@@ -51,8 +52,45 @@ export default function CourseDetailPage({
   }
 ]
 ;
-
+const contents : TopicContent[] = [
+  {
+    id: "content-1",
+    topicId: "topic-1",
+    type: "video_url",
+    value: "https://youtube.com/watch?v=abc123"
+  },
+  {
+    id: "content-2",
+    topicId: "topic-1",
+    type: "doc_url",
+    value: "https://docs.example.com/variables"
+  },
+  {
+    id: "content-3",
+    topicId: "topic-2",
+    type: "pdf_file",
+    value: "simplifying_expressions.pdf"
+  },
+  {
+    id: "content-4",
+    topicId: "topic-2",
+    type: "video_url",
+    value: "https://youtube.com/watch?v=xyz456"
+  },
+  {
+    id: "content-5",
+    topicId: "topic-3",
+    type: "audio_file",
+    value: "linear_equations_lecture.mp3"
+  },
+  {
+    id: "content-6",
+    topicId: "topic-3",
+    type: "doc_url",
+    value: "https://docs.example.com/linear-equations"
+  },
+];
   
 
-  return <CourseDetailView course={course} topics={topics} />;
+  return <CourseDetailView course={course} topics={topics} contents={contents} />;
 }

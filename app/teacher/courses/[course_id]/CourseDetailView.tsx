@@ -3,35 +3,44 @@
 import TopicNode from "./TopicNode";
 import AddTopicForm from "./AddTopicForm";
 import { useMemo, useState } from "react";
-import { Course, Topic } from "./Types";
-
-
+import { Course, Topic, TopicContent } from "./Types";
 
 export default function CourseDetailView({
   course,
   topics,
+  contents,
 }: {
   course: Course;
   topics: Topic[];
+  contents: TopicContent[];
 }) {
   const [allTopics, setAllTopics] = useState<Topic[]>(topics);
+  const [allContents, setAllContents] = useState<TopicContent[]>(contents);
   const [parentId, setParentId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  
+  const [prefillTopic, setPrefillTopic] = useState<Topic | null>(null);
 
   const rootTopics = useMemo(
     () => allTopics.filter((topic) => topic.parentId === null),
     [allTopics],
   );
 
-  const openTopicModal = (topicId: string | null) => {
-    setParentId(topicId);
-    setIsModalOpen(true);
+  const openTopicModal = (topic: Topic | null, editing: boolean) => {
+    if (editing) {
+      setParentId(topic?.parentId ?? null);
+      setIsModalOpen(true);
+      setPrefillTopic(topic);
+    } else {
+      setParentId(topic?.id ?? null);
+      setIsModalOpen(true);
+      setPrefillTopic(null);
+    }
   };
 
   const closeTopicModal = () => {
     setIsModalOpen(false);
     setParentId(null);
+    setPrefillTopic(null);
   };
 
   return (
@@ -47,7 +56,7 @@ export default function CourseDetailView({
           <h3 className="text-xl font-semibold text-white">Course Topics</h3>
           <button
             type="button"
-            onClick={() => openTopicModal(null)}
+            onClick={() => openTopicModal(null, false)}
             className="rounded-md bg-indigo-500 px-3 py-2 text-sm font-semibold text-white transition hover:bg-indigo-400"
           >
             Add Topic
@@ -68,12 +77,27 @@ export default function CourseDetailView({
       </div>
 
       {isModalOpen ? (
-        <AddTopicForm
-          course={course}
-          parentId={parentId}
-          closeTopicModal={closeTopicModal}
-          setAllTopics={setAllTopics}
-        />
+        prefillTopic != null ? (
+          <AddTopicForm
+            course={course}
+            parentId={prefillTopic.id}
+            prefillTopic={prefillTopic}
+            contents={contents}
+            closeTopicModal={closeTopicModal}
+            setAllTopics={setAllTopics}
+            setAllContents={setAllContents}
+          />
+        ) : (
+          <AddTopicForm
+            course={course}
+            parentId={parentId}
+            prefillTopic={null}
+            contents={contents}
+            closeTopicModal={closeTopicModal}
+            setAllTopics={setAllTopics}
+            setAllContents={setAllContents}
+          />
+        )
       ) : null}
     </div>
   );
