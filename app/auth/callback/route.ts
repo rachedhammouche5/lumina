@@ -59,19 +59,22 @@ export async function GET(request: NextRequest) {
     if (!admin) {
       return NextResponse.redirect(new URL("/login?error=config", url.origin));
     }
-     await syncRoleTables(admin, {
+    if(!wantsTeacher){
+    await syncRoleTables(admin, {
   userId: user.id,
   email: user.email ?? null,
   fullName: (user.user_metadata?.full_name as string | undefined) ?? null,
   }, "student");
+    }
+ 
 
     const { error: requestError } = await admin.from("teacher_requests").upsert(
       {
         user_id: user.id,
-        email: user.email ?? null,
-        full_name: user.user_metadata?.full_name ?? null,
+        //email: user.email ?? null,
+       // full_name: user.user_metadata?.full_name ?? null,
         status: "pending",
-        updated_at: new Date().toISOString(),
+        //updated_at: new Date().toISOString(),
       },
       { onConflict: "user_id" },
     );
@@ -109,7 +112,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL("/teacher/apply", url.origin));
   }
 
-  // Default role assignment for users with no role.
+  
   if (!role) {
     const admin = getAdminClient();
     if (!admin) {

@@ -108,16 +108,7 @@ export default function TeacherApplyPage() {
         </form>
 
         {error ? <p className="mt-4 text-sm text-red-400">{error}</p> : null}
-        {/* {submitted ? (
-          <p className="mt-4 text-sm text-emerald-400">
-            Application submitted successfully. It is now pending admin review.
-            <span className="ml-1">
-              <Link href="/teacher" className="font-semibold underline">
-                Go to teacher dashboard
-              </Link>
-            </span>
-          </p>
-        ) : null} */}
+       
       </section>
     </main>
   );

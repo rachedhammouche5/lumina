@@ -32,11 +32,14 @@ export async function POST(request: Request) {
   }
 
   const admin = createAdminClient(supabaseUrl, serviceRoleKey);
+  if(!teacher){
 await syncRoleTables(admin, {
   userId: user.id,
   email: user.email ?? null,
   fullName: (user.user_metadata?.full_name as string | undefined) ?? null,
 }, "student");
+  }
+
 
   let role = (user.app_metadata?.role as string | undefined) ?? null;
 
@@ -57,8 +60,7 @@ await syncRoleTables(admin, {
     const { error: reqError } = await admin.from("teacher_requests").upsert(
       {
         user_id: user.id,
-        full_name: user.user_metadata?.full_name ?? null,
-        email: user.email ?? null,
+       // full_name: user.user_metadata?.full_name ?? null,
         status: "pending",
       },
       { onConflict: "user_id" },

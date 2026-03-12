@@ -4,7 +4,6 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getRole } from "@/features/utils/auth/getRole";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
-import { syncRoleTables } from "./syncTables";
 type ReviewDecision = "approved" | "rejected";
 
 export async function reviewTeacherRequest(formData: FormData) {
@@ -81,15 +80,6 @@ export async function reviewTeacherRequest(formData: FormData) {
       ? "admin"
       : "teacher_pending";
 
-        if (nextRole === "teacher" ) {
-  await syncRoleTables(adminClient, {
-    userId: targetUserResult.user.id,
-    email: targetUserResult.user.email ?? null,
-    fullName: (targetUserResult.user.user_metadata?.full_name as string | undefined) ?? null,
-  }, nextRole);
-}
-
-
   const { error: roleError } = await adminClient.auth.admin.updateUserById(
     requestUserId,
     {
@@ -109,9 +99,7 @@ export async function reviewTeacherRequest(formData: FormData) {
     .update({
       status: decision,
       admin_note: adminNote || null,
-      reviewed_by: user.id,
-      reviewed_at: now,
-      updated_at: now,
+    
     })
     .eq("user_id", requestUserId)
     .eq("status", "pending")

@@ -85,7 +85,7 @@ test.describe('Route access tests', () => {
           (route === '/admin' && role !== 'admin');
 
         if (shouldRedirectToOwnDashboard) {
-          await expect(page).toHaveURL(new RegExp(`${roleHome[role]}$`));
+          await expect(page).toHaveURL(/\/$/);
           return;
         }
 

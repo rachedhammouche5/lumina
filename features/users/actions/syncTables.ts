@@ -8,22 +8,12 @@ type SyncInput = {
   fullName: string | null | undefined;
 };
 
-function splitName(fullName: string | null | undefined) {
-  const clean = (fullName ?? "").trim();
-  if (!clean) return { first: "Unknown", last: "User" };
-
-  const parts = clean.split(/\s+/);
-  const first = parts[0] ?? "Unknown";
-  const last = parts.slice(1).join(" ") || "User";
-  return { first, last };
-}
-
 export async function syncRoleTables(
   adminClient: SupabaseClient,
   input: SyncInput,
   role: SyncRole,
 ) {
-  const { first, last } = splitName(input.fullName);
+  const fullName = (input.fullName ?? "").trim() || "Unknown User";
   const safeEmail = input.email ?? `${input.userId}@missing-email.local`;
 
   if (role === "student") {
@@ -32,8 +22,7 @@ export async function syncRoleTables(
       .upsert(
         {
           std_id: input.userId,
-          std_name: first,
-          std_lastname: last,
+          std_fullname: fullName,
           std_email: safeEmail,
         },
         { onConflict: "std_id" },
@@ -41,7 +30,7 @@ export async function syncRoleTables(
 
     if (upsertStudentError) throw upsertStudentError;
 
-    // optional exclusivity
+    
     const { error: deleteTeacherError } = await adminClient
       .from("Teacher")
       .delete()
@@ -56,8 +45,7 @@ export async function syncRoleTables(
     .upsert(
       {
         tchr_id: input.userId,
-        tchr_name: first,
-        tchr_lastname: last,
+        tchr_fullname: fullName,
         tchr_email: safeEmail,
       },
       { onConflict: "tchr_id" },
@@ -65,7 +53,6 @@ export async function syncRoleTables(
 
   if (upsertTeacherError) throw upsertTeacherError;
 
-  // optional exclusivity
   const { error: deleteStudentError } = await adminClient
     .from("Student")
     .delete()

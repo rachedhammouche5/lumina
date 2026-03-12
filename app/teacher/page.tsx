@@ -1,95 +1,10 @@
-import { redirect } from "next/navigation";
-import { createClient } from "../../lib/supabase/server";
-import LogoutButton from "@/app/ui/LogoutButton";
-import { getRole } from "@/features/utils/auth/getRole";
-import Link from "next/link";
 export default async function teacherPage() {
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
-  if (error) {
-    console.error("Auth error :", error.message);
-    redirect("/");
-  }
-  if (!user) {
-    redirect("/");
-  }
-
-  const role = getRole(user);
-  if (role !== "teacher" && role !== "teacher_pending") {
-    redirect("/");
-  }
-  
-const { data: requestRow, error: requestError } = await supabase
-  .from("teacher_requests")
-  .select("status,admin_note")
-  .eq("user_id", user.id)
-  .maybeSingle();
-
-if (requestError) {
-  console.error("Teacher request fetch error:", requestError.message);
-}
-
-const isPending = role === "teacher_pending";
-const isRejected = isPending && requestRow?.status === "rejected";
-const rejectionReason =
-  requestRow?.admin_note?.trim() || "No explanation was provided by admin.";
-  
   return (
-    <main className="min-h-screen pt-28 pb-24 px-4 flex items-center justify-center bg-slate-950">
-      <div className="w-full max-w-4xl space-y-6">
-        <h1 className="text-3xl font-bold text-center">Teacher Dashboard</h1>
-
-       {isRejected ? (
-  <div className="rounded-lg border border-red-400/40 bg-red-500/10 px-4 py-3 text-red-200">
-    <p className="font-semibold">Your teacher request was rejected.</p>
-    <p className="mt-1 text-sm">
-      Reason: <span className="font-medium">{rejectionReason}</span>
-    </p>
-    <Link href="/teacher/apply" className="mt-2 inline-block text-sm underline">
-      Submit a new application
-    </Link>
-  </div>
-) : isPending ? (
-  <div className="rounded-lg border border-amber-400/40 bg-amber-500/10 px-4 py-3 text-amber-200">
-    Your teacher application is pending admin approval. Actions are disabled until approval.
-  </div>
-) : null}
-
-
-        <div className="grid gap-3 sm:grid-cols-2">
-          <button
-            disabled={isPending}
-            className="rounded-lg border border-slate-700 bg-slate-800 px-4 py-3 text-left font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            Create Course
-          </button>
-          <button
-            disabled={isPending}
-            className="rounded-lg border border-slate-700 bg-slate-800 px-4 py-3 text-left font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            Manage Courses
-          </button>
-          <button
-            disabled={isPending}
-            className="rounded-lg border border-slate-700 bg-slate-800 px-4 py-3 text-left font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            Create Quiz
-          </button>
-          <button
-            disabled={isPending}
-            className="rounded-lg border border-slate-700 bg-slate-800 px-4 py-3 text-left font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            Publish Content
-          </button>
-        </div>
-
-        <div className="flex justify-center pt-2">
-        </div>
-      </div>
-    </main>
+    <div className="space-y-2">
+      <h2 className="text-2xl font-bold text-white">Welcome, Teacher</h2>
+      <p className="text-slate-300">
+        Use the sidebar to navigate to your teaching tools.
+      </p>
+    </div>
   );
 }
