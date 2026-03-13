@@ -1,28 +1,31 @@
 import Link from "next/link";
 import AddCourseForm from "./AddCourseForm";
+import { createClient } from "@/lib/supabase/server";
 
 export default async function TeacherCoursesPage() {
-//   const courses = await getCourses();
-const courses = [
-  {
-    "id": "course-101",
-    "title": "Introduction to Algebra",
-    "description": "Core algebraic concepts with guided practice.",
-    "duration": "6 weeks"
-  },
-  {
-    "id": "course-102",
-    "title": "World History Essentials",
-    "description": "A timeline-based overview from ancient to modern eras.",
-    "duration": "8 weeks"
-  },
-  {
-    "id": "course-103",
-    "title": "Fundamentals of Biology",
-    "description": "Cell biology, genetics, and ecosystems for beginners.",
-    "duration": "10 weeks"
-  }
-]
+  const supabase = await createClient();
+  
+  const {data: courses} = await supabase.from("Skill").select("*");
+// const courses = [
+//   {
+//     "id": "course-101",
+//     "title": "Introduction to Algebra",
+//     "description": "Core algebraic concepts with guided practice.",
+//     "duration": "6 weeks"
+//   },
+//   {
+//     "id": "course-102",
+//     "title": "World History Essentials",
+//     "description": "A timeline-based overview from ancient to modern eras.",
+//     "duration": "8 weeks"
+//   },
+//   {
+//     "id": "course-103",
+//     "title": "Fundamentals of Biology",
+//     "description": "Cell biology, genetics, and ecosystems for beginners.",
+//     "duration": "10 weeks"
+//   }
+// ]
 
   return (
     <div className="space-y-6">
@@ -33,7 +36,7 @@ const courses = [
       </div>
 
       <ul className="space-y-3">
-        {courses.map((course) => (
+        {(courses?? []).map((course) => (
           <li key={course.id}>
             <Link
               href={`/teacher/courses/${course.id}`}
