@@ -21,6 +21,7 @@ export async function addTopic(
   const { data: newTopic, error: topicError } = await supabase
     .from("Topic")
     .insert({
+      tpc_id: crypto.randomUUID(),
       tpc_title: form.title,
       tpc_description: form.description,
       skill_id: skillId,
@@ -36,6 +37,7 @@ export async function addTopic(
       .from("Content")
       .insert(
         form.contents.map((content) => ({
+          cntnt_id: crypto.randomUUID(),
           cntnt_title: content.title,
           cntnt_type: content.type,
           cntnt_value: content.value,

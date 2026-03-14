@@ -551,3 +551,20 @@ export const Constants = {
     },
   },
 } as const
+// add at the bottom of database.types.ts
+export type Skill = Tables<"Skill">
+export type Topic = Tables<"Topic">
+export type Content = Tables<"Content">
+export type Student = Tables<"Student">
+export type Teacher = Tables<"Teacher">
+export type TeacherRequest = Tables<"teacher_requests">
+export type Enroll = Tables<"enroll">
+export type Quiz = Tables<"quiz">
+export type QResponse = Tables<"q_response">
+export type Review = Tables<"review">
+export type Score = Tables<"score">
+
+// enum types
+export type ContentType = Enums<"cntnt_type">
+export type Difficulty = Enums<"difficulty">
+export type Level = Enums<"level">
