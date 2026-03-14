@@ -3,35 +3,33 @@
 import TopicNode from "./TopicNode";
 import AddTopicForm from "./AddTopicForm";
 import { useMemo, useState } from "react";
-import { Course, Topic, TopicContent } from "./Types";
+import { Skill, Topic, Content } from "@/lib/database.types";
 
 export default function CourseDetailView({
-  course,
+  skill,
   topics,
   contents,
 }: {
-  course: Course;
-  topics: Topic[];
-  contents: TopicContent[];
+  skill: Skill ;
+  topics: Topic[] ;
+  contents: Content[];
 }) {
-  const [allTopics, setAllTopics] = useState<Topic[]>(topics);
-  const [allContents, setAllContents] = useState<TopicContent[]>(contents);
   const [parentId, setParentId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [prefillTopic, setPrefillTopic] = useState<Topic | null>(null);
 
   const rootTopics = useMemo(
-    () => allTopics.filter((topic) => topic.parentId === null),
-    [allTopics],
+    () => topics.filter((topic) => topic.parent_id === null),
+    [topics],
   );
 
   const openTopicModal = (topic: Topic | null, editing: boolean) => {
     if (editing) {
-      setParentId(topic?.parentId ?? null);
+      setParentId(topic?.parent_id ?? null);
       setIsModalOpen(true);
       setPrefillTopic(topic);
     } else {
-      setParentId(topic?.id ?? null);
+      setParentId(topic?.tpc_id ?? null);
       setIsModalOpen(true);
       setPrefillTopic(null);
     }
@@ -46,9 +44,9 @@ export default function CourseDetailView({
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <h2 className="text-2xl font-bold text-white">{course.title}</h2>
-        <p className="text-slate-300">{course.description}</p>
-        <p className="text-sm text-slate-400">Duration: {course.duration}</p>
+        <h2 className="text-2xl font-bold text-white">{skill.skl_title}</h2>
+        <p className="text-slate-300">{skill.skl_dscrptn}</p>
+        <p className="text-sm text-slate-400">Duration: {skill.skl_duration}</p>
       </div>
 
       <div className="space-y-3">
@@ -66,9 +64,9 @@ export default function CourseDetailView({
         <ul className="space-y-2">
           {rootTopics.map((topic) => (
             <TopicNode
-              key={topic.id}
+              key={topic.tpc_id}
               topic={topic}
-              allTopics={allTopics}
+              allTopics={topics}
               level={0}
               onAddTopic={openTopicModal}
             />
@@ -79,23 +77,19 @@ export default function CourseDetailView({
       {isModalOpen ? (
         prefillTopic != null ? (
           <AddTopicForm
-            course={course}
-            parentId={prefillTopic.id}
+            skill={skill}
+            parentId={prefillTopic.parent_id}
             prefillTopic={prefillTopic}
             contents={contents}
             closeTopicModal={closeTopicModal}
-            setAllTopics={setAllTopics}
-            setAllContents={setAllContents}
           />
         ) : (
           <AddTopicForm
-            course={course}
+            skill={skill}
             parentId={parentId}
             prefillTopic={null}
             contents={contents}
             closeTopicModal={closeTopicModal}
-            setAllTopics={setAllTopics}
-            setAllContents={setAllContents}
           />
         )
       ) : null}

@@ -39,8 +39,9 @@ export default function LoginPageView() {
     const role = user?.app_metadata?.role;
 
     if (role === "student") router.replace("/student");
-    else if (role === "teacher" || role === "teacher_pending") router.replace("/teacher");
-    else if (role === "admin") router.replace("/admin");
+    else if (role === "teacher" || role === "teacher_pending") {
+      router.replace(`/${user?.id}`);
+    } else if (role === "admin") router.replace("/admin");
     else router.replace("/");
 
     setLoading(false);
@@ -149,10 +150,13 @@ export default function LoginPageView() {
               {loading ? "Signing in..." : "Login"}
             </button>
           </form>
-          
+
           <p className="mt-3 text-sm text-slate-300 text-center ">
             Don&apos;t have an account?{" "}
-            <Link href="/signup" className="font-semibold text-orange-400 hover:underline">
+            <Link
+              href="/signup"
+              className="font-semibold text-orange-400 hover:underline"
+            >
               Sign Up
             </Link>
           </p>

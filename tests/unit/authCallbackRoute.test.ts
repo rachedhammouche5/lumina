@@ -69,7 +69,9 @@ describe("GET /auth/callback", () => {
     });
 
     const response = await GET(
-      new Request("http://localhost:3000/auth/callback?code=test-code") as NextRequest,
+      new Request(
+        "http://localhost:3000/auth/callback?code=test-code",
+      ) as NextRequest,
     );
 
     expect(mocks.exchangeCodeForSession).toHaveBeenCalledWith("test-code");
@@ -80,11 +82,13 @@ describe("GET /auth/callback", () => {
     expect(mocks.updateUserById).toHaveBeenCalledWith("user-1", {
       app_metadata: { role: "student" },
     });
-    expect(response.headers.get("location")).toBe("http://localhost:3000/student");
+    expect(response.headers.get("location")).toBe(
+      "http://localhost:3000/student",
+    );
   });
 
   test.each([
-    { role: "teacher", destination: "/teacher" },
+    { role: "teacher", destination: "/user-2" },
     { role: "admin", destination: "/admin" },
   ])(
     "redirects existing $role user to $destination",
@@ -99,7 +103,9 @@ describe("GET /auth/callback", () => {
       });
 
       const response = await GET(
-        new Request("http://localhost:3000/auth/callback?code=test-code") as NextRequest,
+        new Request(
+          "http://localhost:3000/auth/callback?code=test-code",
+        ) as NextRequest,
       );
 
       expect(mocks.updateUserById).not.toHaveBeenCalled();
