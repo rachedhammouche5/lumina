@@ -23,8 +23,8 @@ export default function HomeLanding() {
         data: { user },
       } = await supabase.auth.getUser();
       const role = user?.app_metadata?.role;
-      if (role === "teacher" || role === "teacher_pending") {
-        router.replace("/teacher");
+      if ((role === "teacher" || role === "teacher_pending") && user?.id) {
+        router.replace(`/${user.id}`);
         return;
       }
       if (role === "student") {

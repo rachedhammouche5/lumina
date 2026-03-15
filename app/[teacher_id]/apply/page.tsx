@@ -1,11 +1,11 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
 export default function TeacherApplyPage() {
   const router = useRouter();
+  const params = useParams<{ teacher_id: string }>();
   const [fullName, setFullName] = useState("");
   const [cvUrl, setCvUrl] = useState("");
   const [motivation, setMotivation] = useState("");
@@ -29,9 +29,9 @@ export default function TeacherApplyPage() {
     });
 
     if (!response.ok) {
-      const payload = (await response.json().catch(() => null)) as
-        | { error?: string }
-        | null;
+      const payload = (await response.json().catch(() => null)) as {
+        error?: string;
+      } | null;
       setError(payload?.error ?? "Failed to submit teacher request.");
       setSubmitting(false);
       return;
@@ -40,7 +40,7 @@ export default function TeacherApplyPage() {
     const payload = (await response.json()) as { nextPath?: string };
     setSubmitted(true);
     setSubmitting(false);
-    router.replace(payload.nextPath ?? "/teacher");
+    router.replace(payload.nextPath ?? `/${params.teacher_id}`);
     router.refresh();
   };
 
@@ -71,9 +71,7 @@ export default function TeacherApplyPage() {
           </div>
 
           <div>
-            <label className="mb-1 block text-sm text-slate-300">
-              CV URL
-            </label>
+            <label className="mb-1 block text-sm text-slate-300">CV URL</label>
             <input
               type="url"
               placeholder="https://..."
@@ -94,7 +92,6 @@ export default function TeacherApplyPage() {
               value={motivation}
               onChange={(event) => setMotivation(event.target.value)}
               className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-white outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20"
-              
             />
           </div>
 
@@ -103,12 +100,15 @@ export default function TeacherApplyPage() {
             disabled={submitting || submitted}
             className="w-full cursor-pointer rounded-lg bg-gradient-to-r from-orange-500 to-amber-500 py-2.5 font-semibold text-white hover:from-orange-600 hover:to-amber-600 disabled:cursor-not-allowed disabled:opacity-70"
           >
-            {submitting ? "Submitting..." : submitted ? "Submitted" : "Submit Application"}
+            {submitting
+              ? "Submitting..."
+              : submitted
+                ? "Submitted"
+                : "Submit Application"}
           </button>
         </form>
 
         {error ? <p className="mt-4 text-sm text-red-400">{error}</p> : null}
-       
       </section>
     </main>
   );

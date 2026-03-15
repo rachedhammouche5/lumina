@@ -1,47 +1,79 @@
+import { Handle, Position, type NodeProps } from "@xyflow/react";
+import { LockIcon, CheckCircle2, CircleDashed, LucideAirVent } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { getNodeStyles, type RoadmapNodeData } from "@/app/ui/roadmapcomp/types";
 
-import type { Node, NodeProps } from "@xyflow/react";
-import { Handle, Position } from "@xyflow/react";
-import { SquareParking, LockIcon } from "lucide-react";
-import {
-    NODE_THEMES,
-    clampDegree,
-    getGlowClass,
-    getHoverClass,
-    getIconColorClass,
-} from "@/app/ui/roadmapcomp/actions";
-import type { RoadmapNodeData } from "@/app/ui/roadmapcomp/types";
+export default function RoadmapNode({ data }: NodeProps<RoadmapNodeData>) {
+  const { title, subtitle, status, degree = 0, icon: Icon = LucideAirVent } = data;
+  const styles = getNodeStyles(status, degree);
 
-export type RoadmapNode = Node<RoadmapNodeData, "roadmap">;
+  const router = useRouter();
+  const isLocked = status === "locked";
+  const isClickable = Boolean(data.href) && !isLocked;
+  const baseClassName = `group relative flex flex-col h-36 w-44 md:h-44 md:w-52 bg-[#0F111A]/90 backdrop-blur-xl rounded-3xl p-4 items-center border-2 transition-all duration-500 pointer-events-auto ${styles.container}`;
+  const interactiveClassName = isClickable
+    ? "cursor-pointer hover:-translate-y-1 hover:border-white/30 hover:shadow-[0_16px_36px_rgba(2,6,23,0.55)]"
+    : "cursor-default";
 
-export default function RoadmapNode({ data }: NodeProps<RoadmapNode>) {
-    const currentTheme = NODE_THEMES[data.status] || NODE_THEMES.locked;
-    const isLocked = data.status === "locked";
-    const degree = clampDegree(data.degree);
-    const glowClass = getGlowClass(data.status, degree);
-    const hoverClass = getHoverClass(data.status, degree);
-    const iconColorClass = getIconColorClass(data.status, degree) ?? currentTheme.iconColor;
-    const subtitleClass =
-        data.status === "completed" ? iconColorClass : currentTheme.textSub;
+  const handleActivate = () => {
+    if (!isClickable) return;
+    router.push(data.href!);
+  };
 
-    return (
-        <div className={`px-6 py-7 rounded-2xl transition-all duration-300 ease-in-out backdrop-blur-md ${currentTheme.container} ${glowClass} ${hoverClass}`}>
-            <Handle type="target" position={Position.Bottom} className={`w-3 h-3 ${currentTheme.handle}`} />
-            <div className={`flex flex-row items-center gap-3`}>
-                <div className={`w-10 h-10 grid place-items-center rounded-xl ${currentTheme.iconBox}`}>
-                    {isLocked ? (
-                        <LockIcon className={`h-6 w-6 ${iconColorClass}`} />
-                    ) : (
-                        <SquareParking className={`h-6 w-6 ${iconColorClass}`} />
-                    )}
-                </div>
-                <div className="leading-tight">
-                    <h2 className={`text-sm font-semibold ${currentTheme.textTitle}`}>{data?.title ?? "Title"}</h2>
-                        {data?.subtitle ? (
-                            <p className={`text-xs ${subtitleClass}`}>{data.subtitle}</p>
-                        ) : null}
-                </div>
-            </div>
-            <Handle type="source" position={Position.Top} className={`w-3 h-3 ${currentTheme.handle}`} />
+  const content = (
+    <>
+      <Handle type="target" position={Position.Left} className="!bg-slate-600 !border-none !w-2 !h-2" />
+      
+      <div className={`h-14 w-14 rounded-2xl justify-center items-center flex border mb-2 transition-all duration-500 ${styles.iconBox}`}>
+        {isLocked ? <LockIcon size={24} /> : <Icon size={28} />}
+      </div>
+
+      <div className="w-full text-center leading-tight">
+        <h3 className="font-black uppercase italic text-sm tracking-tighter text-white truncate">
+          {title}
+        </h3>
+        <div className={`h-[1px] w-full bg-gradient-to-r from-transparent to-transparent my-2 ${styles.divider}`} />
+      </div>
+
+      <div className="w-full px-1">
+        <p className="text-[10px] text-white/40 leading-tight line-clamp-2 text-center">
+          {subtitle || "Explore this module to master your skills."}
+        </p>
+      </div>
+
+      <div className={`mt-auto flex items-center gap-1 text-[9px] font-bold uppercase tracking-widest ${styles.statusText}`}>
+        {status === "completed" && <CheckCircle2 size={10} />}
+        {status === "unlocked" && <CircleDashed size={10} className="animate-spin" />}
+        <span>{status} {status === "completed" && `(${degree}%)`}</span>
+      </div>
+
+      {isClickable && (
+        <div className="mt-2 inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-white/70 group-hover:text-orange-300 transition-colors">
+          Open Module
+          <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
         </div>
+      )}
+
+      <Handle type="source" position={Position.Right} className="!bg-slate-600 !border-none !w-2 !h-2" />
+    </>
+  );
+
+  return (
+    <div
+      role={isClickable ? "button" : undefined}
+      tabIndex={isClickable ? 0 : -1}
+      aria-label={isClickable ? `Open ${title}` : undefined}
+      onClick={handleActivate}
+      onKeyDown={(event) => {
+        if (!isClickable) return;
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          handleActivate();
+        }
+      }}
+      className={`${baseClassName} ${interactiveClassName} ${isClickable ? "focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400/70" : ""}`}
+    >
+      {content}
+    </div>
   );
 }

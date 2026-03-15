@@ -32,25 +32,37 @@ export async function POST(request: Request) {
   }
 
   const admin = createAdminClient(supabaseUrl, serviceRoleKey);
-  if(!teacher){
-await syncRoleTables(admin, {
-  userId: user.id,
-  email: user.email ?? null,
-  fullName: (user.user_metadata?.full_name as string | undefined) ?? null,
-}, "student");
+  if (!teacher) {
+    await syncRoleTables(
+      admin,
+      {
+        userId: user.id,
+        email: user.email ?? null,
+        fullName: (user.user_metadata?.full_name as string | undefined) ?? null,
+      },
+      "student",
+    );
   }
-
 
   let role = (user.app_metadata?.role as string | undefined) ?? null;
 
   if (!role) {
-    const { error: roleError } = await admin.auth.admin.updateUserById(user.id, {
-      app_metadata: { ...(user.app_metadata ?? {}), role: "student" },
-    });
+    const { error: roleError } = await admin.auth.admin.updateUserById(
+      user.id,
+      {
+        app_metadata: { ...(user.app_metadata ?? {}), role: "student" },
+      },
+    );
 
     if (roleError) {
-      console.error("[auth/finalize-signup] Role assignment failed:", roleError.message);
-      return NextResponse.json({ error: "Role assignment failed" }, { status: 500 });
+      console.error(
+        "[auth/finalize-signup] Role assignment failed:",
+        roleError.message,
+      );
+      return NextResponse.json(
+        { error: "Role assignment failed" },
+        { status: 500 },
+      );
     }
 
     role = "student";
@@ -60,33 +72,53 @@ await syncRoleTables(admin, {
     const { error: reqError } = await admin.from("teacher_requests").upsert(
       {
         user_id: user.id,
-       // full_name: user.user_metadata?.full_name ?? null,
+        // full_name: user.user_metadata?.full_name ?? null,
         status: "pending",
       },
       { onConflict: "user_id" },
     );
-  
 
     if (reqError) {
-      console.error("[auth/finalize-signup] Teacher request failed:", reqError.message);
-      return NextResponse.json({ error: "Teacher request failed" }, { status: 500 });
+      console.error(
+        "[auth/finalize-signup] Teacher request failed:",
+        reqError.message,
+      );
+      return NextResponse.json(
+        { error: "Teacher request failed" },
+        { status: 500 },
+      );
     }
-      if (role !== "teacher" && role !== "admin") {
-  const { error: pendingRoleError } = await admin.auth.admin.updateUserById(user.id, {
-    app_metadata: { ...(user.app_metadata ?? {}), role: "teacher_pending" },
-  });
+    if (role !== "teacher" && role !== "admin") {
+      const { error: pendingRoleError } = await admin.auth.admin.updateUserById(
+        user.id,
+        {
+          app_metadata: {
+            ...(user.app_metadata ?? {}),
+            role: "teacher_pending",
+          },
+        },
+      );
 
-  if (pendingRoleError) {
-    console.error("[auth/finalize-signup] Failed to set teacher_pending role:", pendingRoleError.message);
-    return NextResponse.json({ error: "Failed to update role" }, { status: 500 });
-  }
-}
+      if (pendingRoleError) {
+        console.error(
+          "[auth/finalize-signup] Failed to set teacher_pending role:",
+          pendingRoleError.message,
+        );
+        return NextResponse.json(
+          { error: "Failed to update role" },
+          { status: 500 },
+        );
+      }
+    }
 
-    return NextResponse.json({ nextPath: "/teacher/apply" });
+    return NextResponse.json({ nextPath: `/${user.id}/apply` });
   }
 
   const nextPath =
-    role === "admin" ? "/admin" : role === "teacher" ? "/teacher" : "/student";
-
+    role === "admin"
+      ? "/admin"
+      : role === "teacher" || role === "teacher_pending"
+        ? `/${user.id}`
+        : "/student";
   return NextResponse.json({ nextPath });
 }

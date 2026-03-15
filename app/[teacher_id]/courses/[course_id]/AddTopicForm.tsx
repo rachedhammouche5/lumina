@@ -1,31 +1,50 @@
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import {
   Topic,
-  Course,
-  TopicFormState,
-  TopicContentType,
-  TopicContentInput,
-  TopicContent,
-} from "./Types";
+  Skill,
+  Content,
+  ContentType,
+} from "@/lib/database.types";
+import { addTopic } from "./actions";
 
-export default function AddtopicForm({
-  course,
+type ContentInput = {
+  id: string;
+  title: string;
+  type: ContentType;
+  value: string | null;
+};
+
+type TopicFormState = {
+  title: string;
+  description: string;
+  contents: ContentInput[];
+};
+
+export default function AddTopicForm({
+  skill,
   parentId,
   prefillTopic,
   contents,
   closeTopicModal,
-  setAllTopics,
-  setAllContents,
 }: {
-  course: Course;
+  skill: Skill;
   parentId: string | null;
   prefillTopic: Topic | null;
-  contents:TopicContent[];
+  contents: Content[];
   closeTopicModal: () => void;
-  setAllTopics: Dispatch<SetStateAction<Topic[]>>;
-  setAllContents: Dispatch<SetStateAction<TopicContent[]>>
 }) {
+  const buildContentInput = (): ContentInput => ({
+    id: crypto.randomUUID(),
+    title: "",
+    type: "video",
+    value: "",
+  });
 
+  const [form, setForm] = useState<TopicFormState>({
+    title: "",
+    description: "",
+    contents: [buildContentInput()],
+  });
 
   const onClose = () => {
     closeTopicModal();
@@ -36,66 +55,50 @@ export default function AddtopicForm({
     });
   };
 
-  const buildContentInput = (): TopicContentInput => ({
-    id: crypto.randomUUID(),
-    type: "video_url",
-    value: "",
-  });
-
-  const [form, setForm] = useState<TopicFormState>({
-    title: "",
-    description: "",
-    contents: [buildContentInput()],
-  });
-
-  const onSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    const newTopic: Topic = {
-      id: `topic-${crypto.randomUUID()}`,
-      courseId: course.id,
-      title: form.title,
-      description: form.description,
-      parentId,
-    };
-    form.contents.map((contentInput) => {
-      setAllContents((prev) => [
-        ...prev,
-        {
-          id: `topic-${crypto.randomUUID()}`,
-          topicId: newTopic.id,
-          type: contentInput.type,
-          value: contentInput.value,
-        },
-      ]);
-    });
-    setAllTopics((prev) => [...prev, newTopic]);
-    onClose();
-  };
-
   const getContentByTpcId = (topicId: string) => {
-    return contents.filter((content) => content.topicId === topicId);
+    return contents.filter((content) => content.tpc_id === topicId);
   };
 
   const prefillForm = (prefillTopic: Topic | null) => {
     if (prefillTopic != null) {
-      const topicContents = getContentByTpcId(prefillTopic.id).map((content) => ({
-      id: content.id,
-      type: content.type,
-      value: content.value,
-    }))
-      setForm((prev) => ({
-        title: `${prefillTopic.title}`,
-        description: `${prefillTopic.description}`,
-        contents:topicContents,
+      const topicContents: ContentInput[] = getContentByTpcId(
+        prefillTopic.tpc_id
+      ).map((content) => ({
+        id: content.cntnt_id,
+        title: content.cntnt_title,
+        type: content.cntnt_type,
+        value: content.cntnt_value,
       }));
+      setForm({
+        title: prefillTopic.tpc_title,
+        description: prefillTopic.tpc_description ?? "",
+        contents: topicContents.length > 0 ? topicContents : [buildContentInput()],
+      });
     }
   };
+
   useEffect(() => {
-  if (prefillTopic != null) {
-    prefillForm(prefillTopic)
+    if (prefillTopic != null) {
+      prefillForm(prefillTopic);
+    }
+  }, []);
+
+  const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+     event.preventDefault()
+
+  const result = await addTopic(skill.skl_id, parentId, {
+    title: form.title,
+    description: form.description,
+    contents: form.contents,
+  })
+
+  if (result.error) {
+    console.error(result.error)
+    return
   }
-}, []) 
+
+  onClose();
+  };
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/70 p-4">
@@ -161,9 +164,33 @@ export default function AddtopicForm({
               {form.contents.map((content, index) => (
                 <div
                   key={content.id}
-                  className="rounded-md border border-slate-700 p-3"
+                  className="rounded-md border border-slate-700 p-3 space-y-3"
                 >
+                  <div>
+                    <label className="mb-1 block text-xs text-slate-300">
+                      Content Title
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Introduction Video"
+                      value={content.title}
+                      onChange={(event) => {
+                        setForm((prev) => ({
+                          ...prev,
+                          contents: prev.contents.map((item, itemIndex) =>
+                            itemIndex === index
+                              ? { ...item, title: event.target.value }
+                              : item
+                          ),
+                        }));
+                      }}
+                      className="w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-white"
+                      required
+                    />
+                  </div>
+
                   <div className="grid gap-3 sm:grid-cols-2">
+                    {/* Content Type */}
                     <div>
                       <label className="mb-1 block text-xs text-slate-300">
                         Type
@@ -171,35 +198,35 @@ export default function AddtopicForm({
                       <select
                         value={content.type}
                         onChange={(event) => {
-                          const value = event.target.value as TopicContentType;
+                          const value = event.target.value as ContentType;
                           setForm((prev) => ({
                             ...prev,
                             contents: prev.contents.map((item, itemIndex) =>
                               itemIndex === index
                                 ? { ...item, type: value, value: "" }
-                                : item,
+                                : item
                             ),
                           }));
                         }}
                         className="w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-white"
                       >
-                        <option value="video_url">Video URL</option>
-                        <option value="audio_file">Audio file</option>
-                        <option value="pdf_file">PDF file</option>
-                        <option value="doc_url">Documentation URL</option>
+                        <option value="video">Video URL</option>
+                        <option value="audio">Audio file</option>
+                        <option value="pdf">PDF file</option>
+                        <option value="doc">Documentation URL</option>
                       </select>
                     </div>
 
+                    {/* Content Value */}
                     <div>
                       <label className="mb-1 block text-xs text-slate-300">
-                        {content.type === "video_url" && "Video URL"}
-                        {content.type === "audio_file" && "Audio file"}
-                        {content.type === "pdf_file" && "PDF file"}
-                        {content.type === "doc_url" && "Documentation URL"}
+                        {content.type === "video" && "Video URL"}
+                        {content.type === "audio" && "Audio file"}
+                        {content.type === "pdf" && "PDF file"}
+                        {content.type === "docs" && "Documentation URL"}
                       </label>
 
-                      {content.type === "audio_file" ||
-                      content.type === "pdf_file" ? (
+                      {content.type === "audio" || content.type === "pdf" ? (
                         <input
                           type="file"
                           onChange={(event) => {
@@ -210,7 +237,7 @@ export default function AddtopicForm({
                               contents: prev.contents.map((item, itemIndex) =>
                                 itemIndex === index
                                   ? { ...item, value: fileName }
-                                  : item,
+                                  : item
                               ),
                             }));
                           }}
@@ -220,14 +247,14 @@ export default function AddtopicForm({
                         <input
                           type="url"
                           placeholder="https://"
-                          value={content.value}
+                          value={content.value ?? ""}
                           onChange={(event) => {
                             setForm((prev) => ({
                               ...prev,
                               contents: prev.contents.map((item, itemIndex) =>
                                 itemIndex === index
                                   ? { ...item, value: event.target.value }
-                                  : item,
+                                  : item
                               ),
                             }));
                           }}

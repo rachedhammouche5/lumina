@@ -1,4 +1,4 @@
-import { Topic } from "./Types";
+import { Topic } from "@/lib/database.types";
 
 export default function TopicNode({
   topic,
@@ -11,7 +11,7 @@ export default function TopicNode({
   level: number;
   onAddTopic: (topic: Topic | null, editing: boolean) => void;
 }) {
-  const children = allTopics.filter((item) => item.parentId === topic.id);
+  const children = allTopics.filter((item) => item.parent_id === topic.tpc_id);
 
   return (
     <li>
@@ -21,7 +21,7 @@ export default function TopicNode({
       >
         <div className="flex items-center justify-between gap-3">
           <div className="flex">
-          <p className="font-semibold text-white">{topic.title}</p>
+          <p className="font-semibold text-white">{topic.tpc_title}</p>
           <button
             type="button"
             onClick={() => onAddTopic(topic,true)}
@@ -38,14 +38,13 @@ export default function TopicNode({
             Add Topic
           </button>
         </div>
-        <p className="text-sm text-slate-300">{topic.description}</p>
       </div>
 
       {children.length > 0 ? (
         <ul className="mt-2 space-y-2">
           {children.map((child) => (
             <TopicNode
-              key={child.id}
+              key={child.tpc_id}
               topic={child}
               allTopics={allTopics}
               level={level + 1}

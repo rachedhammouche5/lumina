@@ -25,6 +25,30 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+.roadmap-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(249, 115, 22, 0.7) rgba(15, 23, 42, 0.8);
+}
+
+.roadmap-scroll::-webkit-scrollbar {
+  height: 10px;
+}
+
+.roadmap-scroll::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.8);
+  border-radius: 999px;
+}
+
+.roadmap-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(90deg, rgba(249, 115, 22, 0.9), rgba(251, 191, 36, 0.9));
+  border-radius: 999px;
+  border: 2px solid rgba(15, 23, 42, 0.8);
+}
+
+.roadmap-scroll::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(90deg, rgba(251, 146, 60, 0.95), rgba(252, 211, 77, 0.95));
+}
 .no-scrollbar {
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -32,7 +56,15 @@ body {
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
 
+input[type="number"] {
+  -moz-appearance: textfield;
+}
 /* app/globals.css */
 
 @layer utilities {

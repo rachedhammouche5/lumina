@@ -56,15 +56,24 @@ export async function POST(request: Request) {
   );
 
   if (error) {
-    console.error("[auth/teacher-request] Failed to save request:", error.message);
-    return NextResponse.json({ error: "Failed to save request" }, { status: 500 });
+    console.error(
+      "[auth/teacher-request] Failed to save request:",
+      error.message,
+    );
+    return NextResponse.json(
+      { error: "Failed to save request" },
+      { status: 500 },
+    );
   }
 
   const currentRole = user.app_metadata?.role as string | undefined;
   if (currentRole !== "teacher" && currentRole !== "admin") {
-    const { error: roleError } = await admin.auth.admin.updateUserById(user.id, {
-      app_metadata: { ...(user.app_metadata ?? {}), role: "teacher_pending" },
-    });
+    const { error: roleError } = await admin.auth.admin.updateUserById(
+      user.id,
+      {
+        app_metadata: { ...(user.app_metadata ?? {}), role: "teacher_pending" },
+      },
+    );
 
     if (roleError) {
       console.error(
@@ -78,5 +87,8 @@ export async function POST(request: Request) {
     }
   }
 
-  return NextResponse.json({ ok: true, nextPath: "/teacher" }, { status: 200 });
+  return NextResponse.json(
+    { ok: true, nextPath: `/${user.id}` },
+    { status: 200 },
+  );
 }

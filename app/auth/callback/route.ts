@@ -5,7 +5,7 @@ import { syncRoleTables } from "@/features/users/actions/syncTables";
 export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
-  const wantsTeacher=url.searchParams.get("wants_teacher")==="1";
+  const wantsTeacher = url.searchParams.get("wants_teacher") === "1";
   if (!code) {
     console.error("[auth/callback] Missing OAuth code in callback URL.");
     return NextResponse.redirect(
@@ -15,9 +15,8 @@ export async function GET(request: NextRequest) {
 
   const supabase = await createClient();
 
-  const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(
-    code,
-  );
+  const { error: exchangeError } =
+    await supabase.auth.exchangeCodeForSession(code);
   if (exchangeError) {
     console.error(
       "[auth/callback] Failed to exchange OAuth code for session:",
@@ -54,25 +53,28 @@ export async function GET(request: NextRequest) {
 
   if (wantsTeacher && role !== "teacher" && role !== "admin") {
     const admin = getAdminClient();
-   
 
     if (!admin) {
       return NextResponse.redirect(new URL("/login?error=config", url.origin));
     }
-    if(!wantsTeacher){
-    await syncRoleTables(admin, {
-  userId: user.id,
-  email: user.email ?? null,
-  fullName: (user.user_metadata?.full_name as string | undefined) ?? null,
-  }, "student");
+    if (!wantsTeacher) {
+      await syncRoleTables(
+        admin,
+        {
+          userId: user.id,
+          email: user.email ?? null,
+          fullName:
+            (user.user_metadata?.full_name as string | undefined) ?? null,
+        },
+        "student",
+      );
     }
- 
 
     const { error: requestError } = await admin.from("teacher_requests").upsert(
       {
         user_id: user.id,
         //email: user.email ?? null,
-       // full_name: user.user_metadata?.full_name ?? null,
+        // full_name: user.user_metadata?.full_name ?? null,
         status: "pending",
         //updated_at: new Date().toISOString(),
       },
@@ -109,10 +111,9 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    return NextResponse.redirect(new URL("/teacher/apply", url.origin));
+    return NextResponse.redirect(new URL(`/${user.id}/apply`, url.origin));
   }
 
-  
   if (!role) {
     const admin = getAdminClient();
     if (!admin) {
@@ -141,7 +142,7 @@ export async function GET(request: NextRequest) {
     role === "admin"
       ? "/admin"
       : role === "teacher" || role === "teacher_pending"
-        ? "/teacher"
+        ? `/${user.id}`
         : "/student";
 
   return NextResponse.redirect(new URL(destination, url.origin));

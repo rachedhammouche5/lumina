@@ -1,196 +1,192 @@
 "use client";
 
-import { useMemo } from "react";
-import { ReactFlow, Background, Controls } from "@xyflow/react";
-import type { Edge, NodeTypes } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
+import { Background, Controls, MiniMap, ReactFlow, type Edge, type Node } from "@xyflow/react";
+import {
+  GitBranch,
+  GitCommit,
+  GitMerge,
+  GitPullRequest,
+  Rocket,
+  ShieldCheck,
+  Wrench
+} from "lucide-react";
+import RoadmapNode from "@/app/ui/roadmapcomp/node";
+import type { RoadmapNodeData } from "@/app/ui/roadmapcomp/types";
 
-import RoadmapNode, { type RoadmapNode as RoadmapNodeType } from "@/app/ui/roadmapcomp/node";
-import type {
-  RoadmapConnection,
-  RoadmapStep,
-  RoadmapNodeData,
-} from "@/app/ui/roadmapcomp/types";
-
-export const DEFAULT_ROADMAP_STEPS: RoadmapStep[] = [
+const nodes: Node<RoadmapNodeData>[] = [
   {
-    id: "goal",
-    title: "GIT MASTER",
-    subtitle: "The Ultimate Goal: System Architect",
-    status: "locked",
-    position: { x: 260, y: 0 },
-  },
-  {
-    id: "advanced",
-    title: "GIT SURGERY",
-    subtitle: "Rebase & History Rewriting",
-    status: "locked",
-    position: { x: 260, y: 200 },
-  },
-  {
-    id: "collaboration",
-    title: "REMOTE FLOW",
-    subtitle: "Teamwork & PRs",
-    status: "locked",
-    position: { x: 40, y: 400 },
-  },
-  {
-    id: "branching",
-    title: "BRANCHING",
-    subtitle: "Parallel Development",
-    status: "completed",
-    degree: 55,
-    position: { x: 480, y: 400 },
-  },
-  {
-    id: "basics",
-    title: "GIT BASICS",
-    subtitle: "Where your journey begins",
-    status: "completed",
-    degree: 40,
-    position: { x: 260, y: 600 },
-  },
-];
-
-export const DEFAULT_ROADMAP_CONNECTIONS: RoadmapConnection[] = [
-  { id: "e-basics-collab", source: "basics", target: "collaboration" },
-  { id: "e-basics-branch", source: "basics", target: "branching" },
-  { id: "e-collab-adv", source: "collaboration", target: "advanced" },
-  { id: "e-branch-adv", source: "branching", target: "advanced" },
-  { id: "e-adv-goal", source: "advanced", target: "goal" },
-];
-
-type RoadmapFlowProps = {
-  steps?: RoadmapStep[];
-  connections?: RoadmapConnection[];
-  nodes?: RoadmapNodeType[];
-  edges?: Edge[];
-  className?: string;
-  layout?: "custom" | "vertical" | "zigzag";
-  start?: { x: number; y: number };
-  gap?: { x: number; y: number };
-};
-
-const toEdges = (connections: RoadmapConnection[]): Edge[] =>
-  connections.map((connection) => ({
-    id: connection.id ?? `e-${connection.source}-${connection.target}`,
-    source: connection.source,
-    target: connection.target,
-    animated: connection.animated ?? false,
-  }));
-
-const resolvePositions = (
-  steps: RoadmapStep[],
-  layout: NonNullable<RoadmapFlowProps["layout"]>,
-  start: { x: number; y: number },
-  gap: { x: number; y: number }
-): RoadmapStep[] => {
-  const hasAllPositions = steps.every((step) => step.position);
-  if (layout === "custom" && hasAllPositions) {
-    return steps;
-  }
-
-  if (layout === "zigzag") {
-    return steps.map((step, index) => {
-      if (step.position) return step;
-      if (index === 0) {
-        return { ...step, position: { x: start.x, y: start.y } };
-      }
-      const side = index % 2 === 1 ? -1 : 1;
-      const x = start.x + side * gap.x;
-      const y = start.y + index * gap.y;
-      return { ...step, position: { x, y } };
-    });
-  }
-
-  return steps.map((step, index) => ({
-    ...step,
-    position: step.position ?? { x: start.x, y: start.y + index * gap.y },
-  }));
-};
-
-const toNodes = (
-  steps: RoadmapStep[],
-  layout: NonNullable<RoadmapFlowProps["layout"]>,
-  start: { x: number; y: number },
-  gap: { x: number; y: number }
-): RoadmapNodeType[] =>
-  resolvePositions(steps, layout, start, gap).map((step) => ({
-    id: step.id,
+    id: "start",
     type: "roadmap",
-    position: step.position ?? { x: start.x, y: start.y },
+    position: { x: 0, y: 0 },
     data: {
-      title: step.title,
-      subtitle: step.subtitle,
-      status: step.status,
-      degree: step.degree,
-    } satisfies RoadmapNodeData,
-  }));
+      title: "Git Foundations",
+      subtitle: "CLI basics, repos, and the mental model",
+      status: "completed",
+      degree: 85,
+      icon: GitCommit,
+      href: "/courses"
+    }
+  },
+{
+    id: "branching",
+    type: "roadmap",
+    position: { x: 280, y: -40 },
+    data: {
+      title: "Branching Strategy",
+      subtitle: "Feature branches, rebase vs merge",
+      status: "completed",
+      degree: 65,
+      icon: GitBranch,
+      href: "/courses"
+    }
+  },
+  {
+    id: "prs",
+    type: "roadmap",
+    position: { x: 560, y: 20 },
+    data: {
+      title: "Pull Requests",
+      subtitle: "Review workflow and approvals",
+      status: "unlocked",
+      icon: GitPullRequest,
+      href: "/courses"
+    }
+  },
+  {
+    id: "conflicts",
+    type: "roadmap",
+    position: { x: 840, y: -30 },
+    data: {
+      title: "Merge Conflicts",
+      subtitle: "Resolve conflicts with confidence",
+      status: "locked",
+      icon: GitMerge,
+      href: "/courses"
+    }
+  },
+  {
+    id: "hooks",
+    type: "roadmap",
+    position: { x: 1120, y: 40 },
+    data: {
+      title: "Git Hooks",
+      subtitle: "Linting and pre-commit safety nets",
+      status: "locked",
+      icon: Wrench
+    }
+  },
+  {
+    id: "security",
+    type: "roadmap",
+    position: { x: 1400, y: -10 },
+    data: {
+      title: "Secure Practices",
+      subtitle: "Signed commits and protected branches",
+      status: "locked",
+      icon: ShieldCheck
+    }
+  },
+  {
+    id: "release",
+    type: "roadmap",
+    position: { x: 1680, y: 30 },
+    data: {
+      title: "Release Workflow",
+      subtitle: "Tags, changelogs, and versioning",
+      status: "locked",
+      icon: Rocket
+    }
+  }
+];
 
-export default function RoadmapFlow({
-  steps: stepsProp,
-  connections: connectionsProp,
-  nodes: nodesProp,
-  edges: edgesProp,
-  className,
-  layout = "custom",
-  start = { x: 260, y: 0 },
-  gap = { x: 220, y: 200 },
-}: RoadmapFlowProps) {
-  const nodeTypes = useMemo<NodeTypes>(() => ({ roadmap: RoadmapNode }), []);
+const edges: Edge[] = [
+  {
+    id: "e-start-branching",
+    source: "start",
+    target: "branching",
+    type: "smoothstep",
+    animated: true,
+    style: { stroke: "violet", strokeWidth: 2 }
+  },
+  {
+    id: "e-branching-prs",
+    source: "branching",
+    target: "prs",
+    type: "smoothstep",
+    animated: true,
+    style: { stroke: "#ADF802", strokeWidth: 2 }
+  },
+  {
+    id: "e-prs-conflicts",
+    source: "prs",
+    target: "conflicts",
+    type: "smoothstep",
+    style: { stroke: "#64748b", strokeWidth: 2 }
+  },
+  {
+    id: "e-conflicts-hooks",
+    source: "conflicts",
+    target: "hooks",
+    type: "smoothstep",
+    style: { stroke: "#64748b", strokeWidth: 2 }
+  },
+  {
+    id: "e-hooks-security",
+    source: "hooks",
+    target: "security",
+    type: "smoothstep",
+    style: { stroke: "#64748b", strokeWidth: 2 }
+  },
+  {
+    id: "e-security-release",
+    source: "security",
+    target: "release",
+    type: "smoothstep",
+    style: { stroke: "#64748b", strokeWidth: 2 }
+  }
+];
 
-  const nodes = useMemo(() => {
-    if (nodesProp) return nodesProp;
-    const steps = stepsProp ?? DEFAULT_ROADMAP_STEPS;
-    return toNodes(steps, layout, start, gap);
-  }, [nodesProp, stepsProp, layout, start, gap]);
+const nodeTypes = {
+  roadmap: RoadmapNode
+};
 
-  const edges = useMemo(() => {
-    if (edgesProp) return edgesProp;
-    const connections = connectionsProp ?? DEFAULT_ROADMAP_CONNECTIONS;
-    return toEdges(connections);
-  }, [edgesProp, connectionsProp]);
-
+export default function RoadmapFlow() {
   return (
-    <div
-      className={`h-[75vh] w-full rounded-[40px] border border-white/10 shadow-2xl overflow-hidden ${className ?? ""}`}
-      style={{
-        backgroundColor: "#050508",
-        backgroundImage:
-          "radial-gradient(rgba(180,180,190,0.08) 1px, transparent 1px)",
-        backgroundSize: "18px 18px",
-      }}
-    >
-      <ReactFlow<RoadmapNodeType, Edge>
-        nodes={nodes}
-        edges={edges}
-        nodeTypes={nodeTypes}
-        fitView
-        fitViewOptions={{ padding: 0.3 }}
-        proOptions={{ hideAttribution: true }}
-      >
-        <Background gap={20} size={1} color="rgba(255,255,255,0.04)" />
-        <Controls className="!bg-[#0a0a10]/80 !border-white/10 !backdrop-blur-md !rounded-2xl overflow-hidden" />
-      </ReactFlow>
-
-      <style jsx global>{`
-        .react-flow__edge-path {
-          stroke: rgba(255, 255, 255, 0.08);
-          stroke-width: 2.5;
-        }
-        .react-flow__controls-button {
-          background: rgba(8, 8, 12, 0.85);
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          color: rgba(255, 255, 255, 0.85);
-        }
-        .react-flow__controls-button:hover {
-          background: rgba(12, 12, 18, 0.95);
-        }
-        .react-flow__controls-button svg {
-          fill: currentColor;
-          color: currentColor;
-        }
-      `}</style>
+    <div className="w-full max-w-[1400px] border-2 border-slate-400/40 rounded-4xl shadow-2xl shadow-slate-400/40 mb-5">
+      <div className="roadmap-scroll h-[560px] md:h-[720px] w-full overflow-x-auto overflow-y-hidden rounded-[32px] border border-white/20 bg-gradient-to-br from-white/15 via-white/0 to-orange-500/5 backdrop-blur-xl shadow-[0_30px_80px_rgba(0,0,0,0.45)]">
+        <div className="h-full min-w-[1500px] md:min-w-[1900px]">
+          <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            nodeTypes={nodeTypes}
+            fitView
+            minZoom={1}
+            maxZoom={1}
+            zoomOnScroll={false}
+            zoomOnPinch={false}
+            zoomOnDoubleClick={false}
+            panOnScroll={false}
+            panOnDrag
+            nodesDraggable={false}
+            nodesConnectable={false}
+            elementsSelectable={false}
+            proOptions={{ hideAttribution: true }}
+            className="cursor-grab active:cursor-grabbing"
+          >
+            <Background color="#334155" gap={28} size={1} />
+            <MiniMap
+              nodeColor={(node) => {
+                if (node.data?.status === "completed") return "#f97316";
+                if (node.data?.status === "unlocked") return "#22d3ee";
+                return "#475569";
+              }}
+              maskColor="rgba(2, 6, 23, 0.7)"
+              className="!bg-slate-950/60 !border !border-white/10 !rounded-xl"
+            />
+          </ReactFlow>
+        </div>
+      </div>
     </div>
   );
 }

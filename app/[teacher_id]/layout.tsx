@@ -6,9 +6,12 @@ import { getRole } from "@/features/utils/auth/getRole";
 
 export default async function TeacherLayout({
   children,
+  params,
 }: {
   children: ReactNode;
+  params: Promise<{ teacher_id: string }>;
 }) {
+  const { teacher_id } = await params;
   const supabase = await createClient();
 
   const {
@@ -49,7 +52,9 @@ export default async function TeacherLayout({
     <main className="min-h-screen bg-slate-950 pt-24 pb-16 px-4">
       <div className="mx-auto flex w-full max-w-6xl gap-6">
         <aside className="h-fit w-full max-w-xs rounded-xl border border-slate-700 bg-slate-900 p-4">
-          <h1 className="mb-4 text-xl font-bold text-white">Teacher Dashboard</h1>
+          <h1 className="mb-4 text-xl font-bold text-white">
+            Teacher Dashboard
+          </h1>
 
           {isPending ? (
             <button
@@ -60,7 +65,7 @@ export default async function TeacherLayout({
             </button>
           ) : (
             <Link
-              href="/teacher/courses"
+              href={`/${teacher_id}/courses`}
               className="block w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-3 text-left font-semibold text-white transition hover:bg-slate-700"
             >
               Manage Courses
@@ -71,12 +76,14 @@ export default async function TeacherLayout({
         <section className="flex-1 space-y-5 rounded-xl border border-slate-700 bg-slate-900 p-6">
           {isRejected ? (
             <div className="rounded-lg border border-red-400/40 bg-red-500/10 px-4 py-3 text-red-200">
-              <p className="font-semibold">Your teacher request was rejected.</p>
+              <p className="font-semibold">
+                Your teacher request was rejected.
+              </p>
               <p className="mt-1 text-sm">
                 Reason: <span className="font-medium">{rejectionReason}</span>
               </p>
               <Link
-                href="/teacher/apply"
+                href={`/${teacher_id}/apply`}
                 className="mt-2 inline-block text-sm underline"
               >
                 Submit a new application
