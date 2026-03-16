@@ -162,13 +162,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "quiz_courseId_fkey"
-            columns: ["tpc_id"]
-            isOneToOne: false
-            referencedRelation: "Content"
-            referencedColumns: ["cntnt_id"]
-          },
-          {
             foreignKeyName: "quiz_tpc_id_fkey"
             columns: ["tpc_id"]
             isOneToOne: false
