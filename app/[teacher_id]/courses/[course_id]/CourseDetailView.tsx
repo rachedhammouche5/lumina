@@ -2,6 +2,7 @@
 
 import TopicNode from "./TopicNode";
 import AddTopicForm from "./AddTopicForm";
+import AddQuizForm from "./AddQuizForm";
 import { useMemo, useState } from "react";
 import { Skill, Topic, Content } from "@/lib/database.types";
 
@@ -17,6 +18,8 @@ export default function CourseDetailView({
   const [parentId, setParentId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [prefillTopic, setPrefillTopic] = useState<Topic | null>(null);
+  const [isQuizModalOpen, setQuizModalOpen] = useState(false);
+  const [quizTopic, setQuizTopic] = useState<Topic | null>(null);
 
   const rootTopics = useMemo(
     () => topics.filter((topic) => topic.parent_id === null),
@@ -39,6 +42,15 @@ export default function CourseDetailView({
     setIsModalOpen(false);
     setParentId(null);
     setPrefillTopic(null);
+  };
+
+  const openQuizModal = (topic: Topic) => {
+    setQuizTopic(topic);
+    setQuizModalOpen(true);
+  };
+  const closeQuizModal = () => {
+    setQuizTopic(null);
+    setQuizModalOpen(false);
   };
 
   return (
@@ -69,6 +81,7 @@ export default function CourseDetailView({
               allTopics={topics}
               level={0}
               onAddTopic={openTopicModal}
+              onAddQuiz={openQuizModal}
             />
           ))}
         </ul>
@@ -92,6 +105,16 @@ export default function CourseDetailView({
             closeTopicModal={closeTopicModal}
           />
         )
+      ) : null}
+
+      {isQuizModalOpen ? (
+        quizTopic ? (
+          <AddQuizForm
+            skill={skill}
+            topic={quizTopic}
+            onClose={closeQuizModal}
+          />
+        ) : null
       ) : null}
     </div>
   );

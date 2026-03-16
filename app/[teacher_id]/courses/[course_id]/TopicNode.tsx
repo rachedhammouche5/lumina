@@ -5,11 +5,13 @@ export default function TopicNode({
   allTopics,
   level,
   onAddTopic,
+  onAddQuiz,
 }: {
   topic: Topic;
   allTopics: Topic[];
   level: number;
   onAddTopic: (topic: Topic | null, editing: boolean) => void;
+  onAddQuiz: (topic: Topic) => void;
 }) {
   const children = allTopics.filter((item) => item.parent_id === topic.tpc_id);
 
@@ -30,13 +32,22 @@ export default function TopicNode({
             edit Topic
           </button>
           </div>
-          <button
-            type="button"
-            onClick={() => onAddTopic(topic,false)}
-            className="rounded-md border border-slate-500 px-2 py-1 text-xs text-slate-200 transition hover:bg-slate-700"
-          >
-            Add Topic
-          </button>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => onAddQuiz(topic)}
+              className="rounded-md border border-amber-400/60 px-2 py-1 text-xs text-amber-200 transition hover:bg-amber-500/20"
+            >
+              Add Quiz
+            </button>
+            <button
+              type="button"
+              onClick={() => onAddTopic(topic,false)}
+              className="rounded-md border border-slate-500 px-2 py-1 text-xs text-slate-200 transition hover:bg-slate-700"
+            >
+              Add Topic
+            </button>
+          </div>
         </div>
       </div>
 

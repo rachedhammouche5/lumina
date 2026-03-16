@@ -1,0 +1,1500 @@
+              {section.title}
+            </h3>
+            <div className="flex flex-col gap-3">
+              {section.links.map((link) => (
+                <a 
+                  key={link}
+                  href="#" 
+                  className="text-sm text-slate-400 hover:text-orange-500 transition-all duration-200 hover:translate-x-1"
+                >
+                  {link}
+                </a>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+      
+      <div className="max-w-7xl mx-auto pt-8 border-t border-slate-800">
+        <p className="text-xs text-slate-500">
+          &copy; {new Date().getFullYear()} Lumina. All rights reserved.
+        </p>
+      </div>
+    </footer>
+  );
+};
+
+export default Footer;
+
+===== FILE: app\ui\global.css =====
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+@import "tailwindcss";
+:root {
+    --bg-main: #020617;        
+    --bg-card: rgba(255, 255, 255, 0.03);
+    --text-main: #F8FAFC;        
+    --text-dim: #94A3B8;        
+    --indigo-glow: #6366F1;
+    --blue-electric: #0EA5E9;
+    --brand-gradient: linear-gradient(135deg, var(--indigo), var(--electric-blue));
+    --border: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme='light'] {
+    --bg-main: #F8FAFC;        
+    --bg-card: rgba(0, 0, 0, 0.03);
+    --text-main: #0F172A;        
+    --text-dim: #475569;         /* Muted slate */
+    --indigo-glow: #4F46E5;      /* Slightly deeper for contrast */
+    --blue-electric: #0284C7;
+    --brand-gradient: linear-gradient(135deg, var(--indigo), var(--electric-blue));
+    --orange-gradient:linear-gradient(135deg, #FF4D00 0%, #FFB800 100%);
+    --border: rgba(0, 0, 0, 0.1);
+}
+
+body {
+    font-family: "Plus Jakarta Sans", sans-serif;
+    background-color: var(--bg-main);
+    color: var(--text-main);
+       transition: all 0.7s ease;
+    transition: background-color 0.3s ease, color 0.3s ease; 
+  
+}
+.auth{
+    opacity: 1;
+    background: none;
+   
+}
+.auth-hidden{
+    opacity: 0; 
+    background: none;
+}
+
+===== FILE: app\ui\Hero.tsx =====
+import React from "react";
+import Button from "./Button";
+
+interface HeroProps {
+  src: string;
+  subtitle: string;
+}
+
+const Hero: React.FC<HeroProps> = ({ src, subtitle }) => {
+  return (
+    // .hero-wrapper
+    <section className="flex w-full justify-center py-10 md:py-[60px] bg-[#020617]">
+      {/* .hero-card: Margin top applied for mobile, removed for md+ screens */}
+      <div className="mt-16 md:mt-10 relative w-[95vw] md:w-[90vw] max-w-[1400px] h-auto md:h-[650px] rounded-[30px] md:rounded-[40px] overflow-hidden shadow-[-50px_100px_40px_rgba(0,0,58,0.212)]">
+        
+        {/* .hero-video */}
+        <video 
+            autoPlay 
+            loop 
+            muted 
+            playsInline 
+            className="absolute top-0 left-0 w-full h-full object-cover z-10"
+        >
+          <source src={src} type="video/mp4" />
+        </video>
+        
+        {/* .hero-overlay */}
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-950/70 to-slate-950/50 z-20"></div>
+
+        {/* .hero-content */}
+        <div className="relative z-30 w-full h-full flex flex-col md:flex-row items-center justify-between p-6 md:px-20 text-center md:text-left">
+          
+          {/* .hero-texts */}
+          <div className="flex-1 w-full flex flex-col items-center md:items-start md:order-1 order-2 mt-8 md:mt-0">
+            {/* .titles */}
+            <h1 className="text-4xl md:text-7xl font-extrabold leading-[1.1] text-white mb-5">
+              Learn Smarter.<br />
+              Adapt Faster.
+            </h1>
+            
+            {/* .titles-highlight */}
+            <h1 className="text-xl md:text-2xl font-black tracking-[2px] uppercase bg-gradient-to-br from-[#FF4D00] to-[#FFB800] bg-clip-text text-transparent mb-2.5">
+                AI ASSISTED
+            </h1>
+            
+            {/* .subtitle */}
+            <p className="text-sm md:text-base max-w-[500px] text-white/80 mb-8 md:mb-[30px]">
+              {subtitle}
+            </p>
+            
+            {/* .hero-btns */}
+            <div className="flex flex-col sm:flex-row gap-4 sm:gap-5 justify-center md:justify-start items-center w-full sm:w-auto">
+              <Button variant="primary" size="l" className="w-full sm:w-auto"> Start Learning </Button>
+              <Button variant="outline" size="l" className="w-full sm:w-auto"> Explore More</Button>
+            </div>
+          </div>
+
+          {/* .hero-vector */}
+          <div className="flex-1 flex justify-center md:justify-end md:order-2 order-1">
+            <img 
+                src="/png/learning.png" alt="Learning Illustration"
+                className="w-full max-w-[300px] md:max-w-[550px] h-auto drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)] animate-float"
+            />
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+export default Hero;
+
+===== FILE: app\ui\HomeLanding.tsx =====
+"use client";
+import { useRouter } from "next/navigation";
+import "@/app/ui/global.css";
+import Hero from "@/app/ui/Hero";
+import MainIdea from "@/app/ui/MainIdea";
+import Features from "@/app/ui/Features";
+import About from "@/app/ui/About";
+import LastHook from "@/app/ui/LastHook";
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+
+export default function HomeLanding() {
+  const router = useRouter();
+  const [checkingAuth, setCheckingAuth] = useState(true);
+
+  useEffect(() => {
+    const supabase = createClient();
+    let cancelled = false;
+
+    const enforceRoleRedirect = async () => {
+      if (!cancelled) setCheckingAuth(true);
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      const role = user?.app_metadata?.role;
+      if ((role === "teacher" || role === "teacher_pending") && user?.id) {
+        router.replace(`/${user.id}`);
+        return;
+      }
+      if (role === "student") {
+        router.replace("/student");
+        return;
+      }
+      if (role === "admin") {
+        router.replace("/admin");
+        return;
+      }
+      if (!cancelled) setCheckingAuth(false);
+    };
+    const handlePageHide = () => {
+      setCheckingAuth(true);
+    };
+    const disableBfCache = () => {};
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        window.location.reload();
+        return;
+      }
+      void enforceRoleRedirect();
+    };
+
+    enforceRoleRedirect();
+    window.addEventListener("pageshow", handlePageShow);
+    window.addEventListener("pagehide", handlePageHide);
+    window.addEventListener("unload", disableBfCache);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("pageshow", handlePageShow);
+      window.removeEventListener("pagehide", handlePageHide);
+      window.removeEventListener("unload", disableBfCache);
+    };
+  }, [router]);
+
+  if (checkingAuth) {
+    return <div className="min-h-screen bg-slate-950" />;
+  }
+
+  return (
+    <div>
+      <div className="body">
+        <Hero
+          src="/videos/homeVideo.mp4"
+          subtitle="Lumina is an AI-powered adaptive learning platform designed for 
+          university students. It personalizes learning paths based on 
+          performance, engagement, and skill level."
+        />
+        <MainIdea
+          question="What is Lumina?"
+          answer="Lumina is an AI-powered adaptive learning platform designed for university students. It personalizes learning paths based on performance, engagement, and skill level."
+        />
+        <Features />
+        <About />
+        <LastHook />
+      </div>
+    </div>
+  );
+}
+
+===== FILE: app\ui\LastHook.tsx =====
+import React from "react";
+import Button from "./Button";
+
+const LastHook: React.FC = () => {
+  return (
+    // .last-hook-container + radial gradient background
+    <section className="flex flex-col items-center justify-center p-6 py-20 md:p-20 bg-[radial-gradient(circle_at_center,rgba(255,77,0,0.05)_0%,transparent_70%)]">
+      
+      {/* .last-hook */}
+      <div className="w-full max-w-4xl flex flex-col items-center justify-center text-center">
+        
+        {/* .last-hook-title */}
+        <h2 className="w-full max-w-3xl mb-5 text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight text-slate-50">
+          Ready to Illuminate Your Learning Journey?
+        </h2>
+        
+        {/* .last-hook-subtitle */}
+        <p className="text-sm md:text-lg text-slate-400 mb-12 font-semibold">
+          AI Assisted. self-improvement. Built for performance
+        </p>
+        
+        <Button variant="primary" size="l" className="w-full sm:w-auto"> Start With Lumina</Button>
+      </div>
+      
+    </section>
+  );
+};
+
+export default LastHook;
+
+===== FILE: app\ui\Logo.tsx =====
+import React from "react";
+import Image from "next/image"
+import LuminaLogo from "../../public/png/LuminaLogo.png"
+
+interface LogoProps {
+  size?: number;
+}
+
+const Logo: React.FC<LogoProps> = () => {
+  return (
+    // .logo-wrapper
+    <div className="flex items-center justify-center w-full h-full m-0 p-0">
+      <Image 
+        width={400}
+        height={100}
+        src={LuminaLogo} 
+        alt="Lumina Logo" 
+        // 1. Used aspect-ratio to match image file
+        // 2. Used object-cover to fill container
+        className="cursor-pointer w-full h-autoobject-contain" 
+        priority
+      />
+    </div>
+  );
+};
+
+export default Logo;
+
+===== FILE: app\ui\LogoutButton.tsx =====
+"use client";
+import { useRouter } from "next/navigation";
+import { createClient } from "../../lib/supabase/client";
+import Button from "./Button";
+import { useState } from "react";
+
+export default function LogoutButton() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const handleLogout = async () => {
+    setLoading(true);
+    setErrorMsg(null);
+    const supabase = createClient();
+    const { error } = await supabase.auth.signOut({ scope: "global" });
+    if (error) {
+      console.error("logout failed :", error.message);
+      setErrorMsg("logout failed. Please try again...");
+      setLoading(false);
+      return;
+    }
+    router.replace("/");
+    router.refresh();
+  };
+  return (
+    <>
+      <Button variant="ghost" onClick={handleLogout} disabled={loading}>
+        {loading ? "logging out..." : "Logout"}
+      </Button>
+      {errorMsg && <p style={{ color: "red" }}>{errorMsg}</p>}
+    </>
+  );
+}
+
+===== FILE: app\ui\MainIdea.tsx =====
+import React from "react";
+
+interface MainIdeaProps {
+  question: string;
+  answer: string;
+}
+const MainIdea: React.FC<MainIdeaProps> = ({ question, answer }) => {
+  return (
+    // .main-idea-wrapper
+    <section className="flex flex-col items-center text-center py-10 md:py-16 px-4 md:px-6 gap-6 md:gap-8 z-[1000]">
+
+      {/* .main-idea-card */}
+      <div className="p-6 md:p-8 max-w-[900px] w-full">
+
+        {/* .main-idea-question */}
+        <h2 className="text-3xl md:text-5xl font-extrabold mb-4 md:mb-5 text-white leading-tight">
+          {question}
+        </h2>
+
+        {/* .main-idea-answer */}
+        <p className="text-sm md:text-lg text-white/80 leading-relaxed">
+          {answer}
+        </p>
+
+        
+      </div>
+    </section>
+  );
+}
+
+export default MainIdea;
+
+===== FILE: app\ui\NavBar.tsx =====
+"use client";
+import React, { useEffect, useState } from "react";
+import Logo from "../ui/Logo";
+import Button from "../ui/Button";
+import Link from "next/link";
+import { House, LibraryBig, Blocks, Menu, X } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+import LogoutButton from "@/app/ui/LogoutButton";
+
+
+const NavBar: React.FC = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    const supabase = createClient();
+    let mounted = true;
+
+    const syncAuthState = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (mounted) setIsAuthenticated(Boolean(user));
+    };
+
+    void syncAuthState();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAuthenticated(Boolean(session?.user));
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
+
+
+  const navLinks = [
+    { name: "Home", href: "/", icon: House },
+    { name: "Courses", href: "/courses", icon: Blocks },
+  ];
+
+  return (
+
+    <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md bg-[rgba(2,6,23,0.6)] border-b border-slate-800 z-[1000]">
+
+      <div className="flex items-center justify-between px-6 md:px-8 py-2">
+        
+        <div className="flex items-center justify-center h-11 w-30 md:h-11 md:w-30">
+            <Logo />
+        </div>
+
+        <div className="hidden md:flex flex-row gap-8 text-slate-400">
+          {navLinks.map((link) => (
+            <Link 
+              key={link.name} 
+              href={link.href} 
+              className="hover:text-slate-100 transition-all duration-200 ease-in flex justify-center items-center gap-1.5 font-medium"
+            >
+              <link.icon size={16} />
+              <h3>{link.name}</h3>
+            </Link>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-3">
+          <div className="hidden sm:flex gap-3">
+            {isAuthenticated ? (
+              <LogoutButton />
+            ) : (
+              <>
+                <Button variant="ghost" href="/login">
+                  Login
+                </Button>
+                <Button variant="secondary" href="/signup">
+                  Sign Up
+                </Button>
+              </>
+            )}
+          </div>
+
+          <button 
+            className="md:hidden text-slate-100 p-2"
+            onClick={() => setIsOpen(!isOpen)}
+            aria-label="Toggle Menu"
+          >
+            {isOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
+      </div>
+
+      <div className={`md:hidden overflow-hidden transition-all border-slate-700  backdrop-blur-md bg-[rgba(2,6,23,0.6)] duration-300 ease-in-out ${isOpen ? "max-h-96 border-b border-slate-800" : "max-h-0"}`}>
+        <div className="backdrop-blur-md bg-[rgba(2,6,23,0.6)] border-b border-slate-700 px-6 py-4 flex flex-col gap-4">
+          {navLinks.map((link) => (
+            <Link 
+              key={link.name} 
+              href={link.href} 
+              className="text-slate-200 hover:text-white transition-all flex items-center gap-3 p-2 rounded-lg hover:bg-slate-800"
+              onClick={() => setIsOpen(false)}
+            >
+              <link.icon size={20} />
+              <h3 className="text-lg font-medium">{link.name}</h3>
+            </Link>
+          ))}
+          <div className="flex flex-col gap-3 pt-4 border-t border-slate-800 sm:hidden">
+            {isAuthenticated ? (
+              <LogoutButton />
+            ) : (
+              <>
+                <Button variant="ghost" className="w-full" href="/login">
+                  Login
+                </Button>
+                <Button variant="secondary" className="w-full" href="/signup">
+                  Sign Up
+                </Button>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    </nav>
+  );
+};
+
+export default NavBar;
+
+===== FILE: app\ui\UserNavbar.tsx =====
+'use client'
+import React, { useState } from "react";
+import Logo from "../ui/Logo";
+import Button from "../ui/Button";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { House, LibraryBig, Blocks, Menu, X } from 'lucide-react';
+
+
+const NavBar: React.FC = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const pathname = usePathname();
+
+
+  const navLinks = [
+    { name: "Home", href: "/", icon: House },
+    { name: "Courses", href: "/courses", icon: Blocks },
+    { name: "Courses", href: "/c", icon: LibraryBig },
+  ];
+
+  return (
+
+    <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md bg-[rgba(2,6,23,0.6)] border-b border-slate-800 z-[1000]">
+
+      <div className="flex items-center justify-between px-6 md:px-8 py-2">
+        
+        <div className="flex items-center justify-center h-11 w-30 md:h-11 md:w-30">
+            <Logo />
+        </div>
+
+        <div className="hidden md:flex flex-row gap-8 text-slate-400">
+          {navLinks.map((link) => (
+            <Link 
+              key={link.name} 
+              href={link.href} 
+              className="hover:text-slate-100 transition-all duration-200 ease-in flex justify-center items-center gap-1.5 font-medium"
+            >
+              <link.icon size={16} />
+              <h3>{link.name}</h3>
+            </Link>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-3">
+          <div className="hidden sm:flex gap-3">
+            <Button variant="ghost" href="/login" >
+              Login
+            </Button>
+            <Button variant="secondary" href="/signup" >
+              Sign Up
+            </Button>
+          </div>
+
+          <button 
+            className="md:hidden text-slate-100 p-2"
+            onClick={() => setIsOpen(!isOpen)}
+            aria-label="Toggle Menu"
+          >
+            {isOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
+      </div>
+
+      <div className={`md:hidden overflow-hidden transition-all border-slate-700  backdrop-blur-md bg-[rgba(2,6,23,0.6)] duration-300 ease-in-out ${isOpen ? "max-h-96 border-b border-slate-800" : "max-h-0"}`}>
+        <div className="backdrop-blur-md bg-[rgba(2,6,23,0.6)] border-b border-slate-700 px-6 py-4 flex flex-col gap-4">
+          {navLinks.map((link) => (
+            <Link 
+              key={link.name} 
+              href={link.href} 
+              className="text-slate-200 hover:text-white transition-all flex items-center gap-3 p-2 rounded-lg hover:bg-slate-800"
+              onClick={() => setIsOpen(false)}
+            >
+              <link.icon size={20} />
+              <h3 className="text-lg font-medium">{link.name}</h3>
+            </Link>
+          ))}
+          <div className="flex flex-col gap-3 pt-4 border-t border-slate-800 sm:hidden">
+              <Button variant="ghost"  className="w-full" href="/login" >Login</Button>
+              <Button variant="secondary"  className="w-full" href="/signup" >Sign Up</Button>            
+          </div>
+        </div>
+      </div>
+    </nav>
+  );
+};
+
+export default NavBar;
+
+===== FILE: app\ui\auth\LoginPageView.tsx =====
+"use client";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+import { useState } from "react";
+import clsx from "clsx";
+import Link from "next/link";
+import { Eye, EyeOff, Lock, Mail } from "lucide-react";
+
+export default function LoginPageView() {
+  const router = useRouter();
+  const supabase = createClient();
+  const [error, setError] = useState("");
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (signInError) {
+      setError("Invalid email or password. Please try again.");
+      setLoading(false);
+      return;
+    }
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    const role = user?.app_metadata?.role;
+
+    if (role === "student") router.replace("/student");
+    else if (role === "teacher" || role === "teacher_pending") {
+      router.replace(`/${user?.id}`);
+    } else if (role === "admin") router.replace("/admin");
+    else router.replace("/");
+
+    setLoading(false);
+  }
+
+  return (
+    <div className="w-full overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/95 shadow-[0_25px_80px_rgba(2,6,23,0.55)]">
+      <div className="grid grid-cols-1 md:grid-cols-[44%_56%]">
+        <div className="relative hidden md:block">
+          <img
+            src="/png/auth.jpg"
+            alt="Authentication visual"
+            className="h-full w-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-950/75 via-slate-950/35 to-orange-500/20" />
+          <div className="absolute top-5 left-5 right-5">
+            <p className="text-sm font-semibold tracking-wide text-orange-300">
+              LUMINA
+            </p>
+            <p className="mt-1 text-lg font-semibold leading-snug text-white">
+              Learn smarter with adaptive guidance.
+            </p>
+          </div>
+        </div>
+
+        <div className="p-6 sm:p-7">
+          <h2 className="text-3xl font-black tracking-tight text-white">
+            Welcome back
+          </h2>
+          <p className="mt-1 text-sm text-slate-300">
+            We are happy to see you again :)
+          </p>
+
+          <form className="mt-6 space-y-4" onSubmit={onSubmit}>
+            <div>
+              <label className="mb-1 block text-sm text-slate-300">Email</label>
+              <div className="relative">
+                <Mail
+                  size={16}
+                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                />
+                <input
+                  type="email"
+                  placeholder="johndoe@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className={clsx(
+                    "w-full rounded-lg border border-slate-700 bg-slate-800 px-10 py-2.5 text-white outline-none",
+                    "focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20",
+                  )}
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-1 block text-sm text-slate-300">
+                Password
+              </label>
+              <div className="relative">
+                <Lock
+                  size={16}
+                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                />
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className={clsx(
+                    "w-full rounded-lg border border-slate-700 bg-slate-800 px-10 py-2.5 pr-10 text-white outline-none",
+                    "focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20",
+                  )}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                  aria-label="Toggle password visibility"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+            </div>
+
+            <div className="text-right">
+              <Link
+                href="/forgot-password"
+                className="text-sm text-orange-400 hover:underline"
+              >
+                Forgot password?
+              </Link>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className={clsx(
+                "w-full cursor-pointer rounded-lg py-2.5 font-semibold text-white transition-all disabled:cursor-not-allowed",
+                loading
+                  ? "cursor-not-allowed bg-slate-700 text-slate-300"
+                  : "bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600",
+              )}
+            >
+              {loading ? "Signing in..." : "Login"}
+            </button>
+          </form>
+
+          <p className="mt-3 text-sm text-slate-300 text-center ">
+            Don&apos;t have an account?{" "}
+            <Link
+              href="/signup"
+              className="font-semibold text-orange-400 hover:underline"
+            >
+              Sign Up
+            </Link>
+          </p>
+          {error ? <p className="text-sm text-red-400">{error}</p> : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+===== FILE: app\ui\auth\SignupPageView.tsx =====
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import clsx from "clsx";
+import { Eye, EyeOff, Lock, Mail, User } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
+
+export default function SignupPageView() {
+  const router = useRouter();
+  const supabase = createClient();
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const[teacher,setTeacher]=useState(false);
+    
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return;
+    }
+
+    setLoading(true);
+
+    const { data, error: signUpError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: fullName,
+        },
+      },
+    });
+
+    if (signUpError) {
+      setError(signUpError.message);
+      setLoading(false);
+      return;
+    }
+
+    if (data.session && !rememberMe) {
+      await supabase.auth.signOut({ scope: "global" });
+    }
+    if (data.session) {
+  const res = await fetch("/auth/finalize-signup", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ teacher }),
+  });
+
+  if (!res.ok) {
+    setError("Account created, but setup failed.");
+    setLoading(false);
+    return;
+  }
+  
+  const payload = (await res.json()) as { nextPath?: string };
+  router.replace(payload.nextPath ?? "/student");
+  router.refresh();
+  setLoading(false);
+  return;
+}
+
+
+    // setSuccess("Account created. Check your email to confirm your signup.");
+    setLoading(false);
+  }
+
+  async function signUpWithGoogle() {
+    setError("");
+    setSuccess("");
+    setGoogleLoading(true);
+    const callbackUrl=new URL("/auth/callback",window.location.origin);
+    if(teacher){
+      callbackUrl.searchParams.set("wants_teacher","1");
+    }
+
+    const { error: googleError } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: callbackUrl.toString(),
+      },
+    });
+
+    if (googleError) {
+      setError(googleError.message);
+      setGoogleLoading(false);
+    }
+  }
+
+  return (
+    <div className="w-full overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/95 shadow-[0_25px_80px_rgba(2,6,23,0.55)]">
+      <div className="grid grid-cols-1 md:grid-cols-[44%_56%]">
+        <div className="relative hidden md:block">
+          <img
+            src="/png/auth.jpg"
+            alt="Authentication visual"
+            className="h-full w-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-950/75 via-slate-950/35 to-orange-500/20" />
+          <div className="absolute top-5 left-5 right-5">
+            <p className="text-sm font-semibold tracking-wide text-orange-300">
+              LUMINA
+            </p>
+            <p className="mt-1 text-lg font-semibold leading-snug text-white">
+              Build your personalized learning journey.
+            </p>
+          </div>
+        </div>
+
+        <div className="p-5 sm:p-6">
+          <h2 className="text-2xl font-black tracking-tight text-white">
+            Create account
+          </h2>
+
+          <form className="mt-4 space-y-3" onSubmit={onSubmit}>
+            <div>
+              <label className="mb-1 block text-xs text-slate-300">Name</label>
+              <div className="relative">
+                <User
+                  size={16}
+                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                />
+                <input
+                  type="text"
+                  placeholder="John Doe"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className={clsx(
+                    "w-full rounded-lg border border-slate-700 bg-slate-800 px-10 py-2 text-sm text-white outline-none",
+                    "focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20",
+                  )}
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-1 block text-xs text-slate-300">Email</label>
+              <div className="relative">
+                <Mail
+                  size={16}
+                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                />
+                <input
+                  type="email"
+                  placeholder="email@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className={clsx(
+                    "w-full rounded-lg border border-slate-700 bg-slate-800 px-10 py-2 text-sm text-white outline-none",
+                    "focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20",
+                  )}
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-1 block text-xs text-slate-300">
+                Password
+              </label>
+              <div className="relative">
+                <Lock
+                  size={16}
+                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                />
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className={clsx(
+                    "w-full rounded-lg border border-slate-700 bg-slate-800 px-10 py-2 pr-10 text-sm text-white outline-none",
+                    "focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20",
+                  )}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                  aria-label="Toggle password visibility"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-1 block text-xs text-slate-300">
+                Confirm password
+              </label>
+              <div className="relative">
+                <Lock
+                  size={16}
+                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                />
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  placeholder="Confirm password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className={clsx(
+                    "w-full rounded-lg border border-slate-700 bg-slate-800 px-10 py-2 pr-10 text-sm text-white outline-none",
+                    "focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20",
+                  )}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword((v) => !v)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                  aria-label="Toggle confirm password visibility"
+                >
+                  {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+            </div>
+
+            <label className="flex items-center gap-2 text-sm text-slate-300">
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="flex items-center gap-2 text-sm text-slate-300"
+              />
+              Remember me
+            </label>
+            <label className="flex items-center gap-2 text-sm text-slate-300">
+              <input
+                type="checkbox"
+                checked={teacher}
+                onChange={(e) => setTeacher(e.target.checked)}
+              />
+               I want to become a teacher
+            </label>
+ 
+
+            <button
+              type="submit"
+              disabled={loading}
+              className={clsx(
+                "w-full cursor-pointer rounded-lg py-2 font-semibold text-white transition-all disabled:cursor-not-allowed",
+                loading
+                  ? "cursor-not-allowed bg-slate-700 text-slate-300"
+                  : "bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600",
+              )}
+            >
+              {loading ? "Creating account..." : "Sign Up"}
+            </button>
+          </form>
+
+          <button
+            type="button"
+            onClick={signUpWithGoogle}
+            disabled={googleLoading}
+            className={clsx(
+              "mt-2 flex w-full items-center justify-center cursor-pointer gap-2 rounded-lg border border-slate-700 bg-slate-800 py-2 text-sm font-semibold text-white transition-all",
+              "hover:border-slate-500 hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-70",
+            )}
+          >
+            <GoogleIcon />
+            {googleLoading ? "Redirecting..." : "Sign up with Google"}
+          </button>
+
+
+          <p className="mt-2 text-sm text-slate-300 text-center">
+            Already have an account?{" "}
+            <Link href="/login" className="font-semibold text-orange-400 hover:underline">
+              Login
+            </Link>
+          </p>
+
+          {error ? <p className="mt-3 text-sm text-red-400">{error}</p> : null}
+          {success ? <p className="mt-3 text-sm text-emerald-400">{success}</p> : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function GoogleIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        fill="#EA4335"
+        d="M12 10.2v3.9h5.4c-.2 1.3-1.5 3.9-5.4 3.9-3.2 0-5.9-2.7-5.9-6s2.7-6 5.9-6c1.8 0 3 .8 3.7 1.5l2.5-2.4C16.6 3.6 14.5 2.7 12 2.7 6.9 2.7 2.8 6.9 2.8 12s4.1 9.3 9.2 9.3c5.3 0 8.8-3.7 8.8-8.9 0-.6-.1-1.1-.2-1.5H12z"
+      />
+      <path
+        fill="#34A853"
+        d="M2.8 7.4l3.2 2.3c.9-1.8 2.7-3 5-3 1.8 0 3 .8 3.7 1.5l2.5-2.4C16.6 3.6 14.5 2.7 12 2.7c-3.6 0-6.7 2-8.3 4.7z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M12 21.3c2.4 0 4.5-.8 6-2.3l-2.8-2.2c-.8.6-1.8 1-3.2 1-2.7 0-4.9-1.8-5.7-4.3l-3.3 2.6c1.6 3.1 4.8 5.2 9 5.2z"
+      />
+      <path
+        fill="#4285F4"
+        d="M20.8 12.4c0-.6-.1-1.1-.2-1.5H12v3.9h5.4c-.3 1.5-1.2 2.6-2.2 3.4l2.8 2.2c1.7-1.6 2.8-4 2.8-8z"
+      />
+    </svg>
+  );
+}
+
+
+===== FILE: app\ui\roadmapcomp\actions.ts =====
+export const NODE_THEMES = {
+    locked: {
+        container: "border-white/5 bg-[#0a0a0f] opacity-40 grayscale cursor-not-allowed shadow-none",
+        iconBox: "border-white/50 bg-white/5",
+        iconColor: "text-white/80",
+        textTitle: "text-white/80",
+        textSub: "text-white/50",
+        handle: "opacity-0"
+    },
+    
+    unlocked: {
+        container: "border-[#3b82f6] bg-[#08080c] shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:shadow-[0_0_35px_rgba(59,130,246,0.55)] cursor-pointer transition-all duration-300",
+        iconBox: "border-blue-500/20 bg-blue-500/10",
+        iconColor: "text-[#3b82f6]",
+        textTitle: "text-white",
+        textSub: "text-blue-400/70",
+        handle: "bg-[#3b82f6] shadow-[0_0_10px_#3b82f6]"
+    },
+
+    completed: {
+        container: "border-[#00f2fe] bg-[#08080c] shadow-[0_0_20px_rgba(0,242,254,0.3)] hover:shadow-[0_0_35px_rgba(0,242,254,0.5)] cursor-pointer",
+        iconBox: "border-cyan-500/20 bg-cyan-500/10",
+        iconColor: "text-[#00f2fe]",
+        textTitle: "text-white",
+        textSub: "text-cyan-500/60",
+        handle: "bg-[#00f2fe] shadow-[0_0_10px_#00f2fe]"
+    }
+};
+
+export type RoadmapStatus = "locked" | "unlocked" | "completed";
+
+export const clampDegree = (degree?: number) =>
+    Math.max(0, Math.min(100, degree ?? 0));
+
+export const getGlowClass = (status: RoadmapStatus, degree?: number) => {
+    if (status !== "completed") return "";
+    const d = clampDegree(degree);
+    if (d <= 50) return "glow-red";
+    if (d <= 60) return "glow-orange";
+    if (d <= 80) return "glow-green";
+    return "glow-purple";
+};
+
+export const getHoverClass = (status: RoadmapStatus, degree?: number) => {
+    if (status !== "completed") return "";
+    const d = clampDegree(degree);
+    if (d <= 50) return "hover:shadow-[0_0_42px_rgba(255,0,85,0.9)] hover:border-[#ff0055]";
+    if (d <= 60) return "hover:shadow-[0_0_42px_rgba(255,119,0,0.8)] hover:border-[#ff7700]";
+    if (d <= 80) return "hover:shadow-[0_0_42px_rgba(0,242,254,0.8)] hover:border-[#00f2fe]";
+    return "hover:shadow-[0_0_46px_rgba(191,0,255,0.9)] hover:border-[#bf00ff]";
+};
+
+export const getIconColorClass = (status: RoadmapStatus, degree?: number) => {
+    if (status !== "completed") return null;
+    const d = clampDegree(degree);
+    if (d <= 50) return "text-[#ff0055]";
+    if (d <= 60) return "text-[#ff7700]";
+    if (d <= 80) return "text-[#00f2fe]";
+    return "text-[#bf00ff]";
+};
+
+===== FILE: app\ui\roadmapcomp\InfoCard.tsx =====
+import { Projector, LucideIcon, GitBranch } from "lucide-react";
+
+interface InfoCardProps {
+  title: string;
+  subtitle: string;
+  icon?: LucideIcon;
+}
+
+function InfoCard({ title, subtitle, icon: Icon = GitBranch }: InfoCardProps) {
+  return (
+    <div
+      className="
+        flex flex-row items-center
+        h-auto md:h-48 w-full
+        border border-orange-200/50 rounded-[32px]
+        p-5 md:p-6
+        bg-gradient-to-br from-orange-200/20 via-transparent to-transparent
+        backdrop-blur-xl
+        overflow-hidden
+        gap-6
+        relative
+        shadow-2xl
+        shadow-orange-300/30
+        group
+      "
+    >
+      <div className="absolute -top-10 -left-10 w-32 h-32 bg-orange-500/20 blur-[60px] rounded-full pointer-events-none" />
+
+      <div className="flex flex-col h-full justify-center flex-1 min-w-0 z-10">
+        <h2 className="font-black italic text-2xl md:text-3xl uppercase tracking-tighter leading-[1.1] line-clamp-2 text-white shadow-orange-500/50 drop-shadow-sm">
+          {title}
+        </h2>
+
+        <div className="h-[1px] w-3/4 bg-gradient-to-r from-orange-400/80 to-transparent my-4 shadow-[0_0_8px_rgba(249,115,22,0.4)]" />
+
+        <p className="font-medium text-white/40 text-[10px] md:text-xs truncate uppercase tracking-widest">
+          {subtitle}
+        </p>
+      </div>
+
+      <div className="flex-shrink-0 z-10">
+        <div
+          className="
+            h-24 w-24 md:h-32 md:w-32
+            rounded-2xl justify-center items-center flex
+            bg-orange-300/10 border border-orange-200/20
+            shadow-[0_0_30px_rgba(249,115,22,0.2)]
+            transition-all duration-500
+          "
+        >
+          <Icon size={48} className="text-orange-500 drop-shadow-[0_0_10px_rgba(249,115,22,0.8)]" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default InfoCard;
+
+===== FILE: app\ui\roadmapcomp\node.tsx =====
+import { Handle, Position, type NodeProps } from "@xyflow/react";
+import { LockIcon, CheckCircle2, CircleDashed, LucideAirVent } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { getNodeStyles, type RoadmapNodeData } from "@/app/ui/roadmapcomp/types";
+
+export default function RoadmapNode({ data }: NodeProps<RoadmapNodeData>) {
+  const { title, subtitle, status, degree = 0, icon: Icon = LucideAirVent } = data;
+  const styles = getNodeStyles(status, degree);
+
+  const router = useRouter();
+  const isLocked = status === "locked";
+  const isClickable = Boolean(data.href) && !isLocked;
+  const baseClassName = `group relative flex flex-col h-36 w-44 md:h-44 md:w-52 bg-[#0F111A]/90 backdrop-blur-xl rounded-3xl p-4 items-center border-2 transition-all duration-500 pointer-events-auto ${styles.container}`;
+  const interactiveClassName = isClickable
+    ? "cursor-pointer hover:-translate-y-1 hover:border-white/30 hover:shadow-[0_16px_36px_rgba(2,6,23,0.55)]"
+    : "cursor-default";
+
+  const handleActivate = () => {
+    if (!isClickable) return;
+    router.push(data.href!);
+  };
+
+  const content = (
+    <>
+      <Handle type="target" position={Position.Left} className="!bg-slate-600 !border-none !w-2 !h-2" />
+      
+      <div className={`h-14 w-14 rounded-2xl justify-center items-center flex border mb-2 transition-all duration-500 ${styles.iconBox}`}>
+        {isLocked ? <LockIcon size={24} /> : <Icon size={28} />}
+      </div>
+
+      <div className="w-full text-center leading-tight">
+        <h3 className="font-black uppercase italic text-sm tracking-tighter text-white truncate">
+          {title}
+        </h3>
+        <div className={`h-[1px] w-full bg-gradient-to-r from-transparent to-transparent my-2 ${styles.divider}`} />
+      </div>
+
+      <div className="w-full px-1">
+        <p className="text-[10px] text-white/40 leading-tight line-clamp-2 text-center">
+          {subtitle || "Explore this module to master your skills."}
+        </p>
+      </div>
+
+      <div className={`mt-auto flex items-center gap-1 text-[9px] font-bold uppercase tracking-widest ${styles.statusText}`}>
+        {status === "completed" && <CheckCircle2 size={10} />}
+        {status === "unlocked" && <CircleDashed size={10} className="animate-spin" />}
+        <span>{status} {status === "completed" && `(${degree}%)`}</span>
+      </div>
+
+      {isClickable && (
+        <div className="mt-2 inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-white/70 group-hover:text-orange-300 transition-colors">
+          Open Module
+          <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
+        </div>
+      )}
+
+      <Handle type="source" position={Position.Right} className="!bg-slate-600 !border-none !w-2 !h-2" />
+    </>
+  );
+
+  return (
+    <div
+      role={isClickable ? "button" : undefined}
+      tabIndex={isClickable ? 0 : -1}
+      aria-label={isClickable ? `Open ${title}` : undefined}
+      onClick={handleActivate}
+      onKeyDown={(event) => {
+        if (!isClickable) return;
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          handleActivate();
+        }
+      }}
+      className={`${baseClassName} ${interactiveClassName} ${isClickable ? "focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400/70" : ""}`}
+    >
+      {content}
+    </div>
+  );
+}
+
+===== FILE: app\ui\roadmapcomp\ProgressBar.tsx =====
+import Button from "../Button";
+
+interface Props {
+  title: string;
+  value?: number;
+}
+
+function ProgressBar({ title, value = 0 }: Props) {
+  return (
+    <div className="h-auto md:h-48 flex flex-col w-full border-2 border-slate-500/60 rounded-[32px] bg-linear-130 from-slate-300/20 to-slate-900/10 p-5 backdrop-blur-xl shadow-2xl shadow-slate-300/20">
+      <div className="flex flex-row w-full justify-between items-center">
+        <h3 className="text-sm md:text-base font-semibold">{title}</h3>
+        <h2 className="font-black italic text-xl md:text-2xl text-orange-300">{value}%</h2>
+      </div>
+      <div className="h-10 md:h-14 w-full flex flex-row items-center">
+        <div className="w-full h-1.5 rounded-full bg-slate-800 mb-3">
+          <div
+            className="w-full h-1.5 rounded-full bg-linear-90 from-orange-600 to-orange-300 mb-3"
+            style={{ width: `${value}%` }}
+          />
+        </div>
+      </div>
+      <div className="mt-1">
+        <Button variant="primary" size="l" className="flex flex-col w-full h-14 items-start">
+          <h3 className="uppercase text-sm">next Progress</h3>
+          <p className="text-[11px] text-slate-950 font-bold">Content he will be in the roadmaop.</p>
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+export default ProgressBar;
+
+===== FILE: app\ui\roadmapcomp\RoadmapFlow.tsx =====
+"use client";
+
+import "@xyflow/react/dist/style.css";
+import { Background, Controls, MiniMap, ReactFlow, type Edge, type Node } from "@xyflow/react";
+import {
+  GitBranch,
+  GitCommit,
+  GitMerge,
+  GitPullRequest,
+  Rocket,
+  ShieldCheck,
+  Wrench
+} from "lucide-react";
+import RoadmapNode from "@/app/ui/roadmapcomp/node";
+import type { RoadmapNodeData } from "@/app/ui/roadmapcomp/types";
+
+const nodes: Node<RoadmapNodeData>[] = [
+  {
+    id: "start",
+    type: "roadmap",
+    position: { x: 0, y: 0 },
+    data: {
+      title: "Git Foundations",
+      subtitle: "CLI basics, repos, and the mental model",
+      status: "completed",
+      degree: 85,
+      icon: GitCommit,
+      href: "/courses"
+    }
+  },
+{
+    id: "branching",
+    type: "roadmap",
+    position: { x: 280, y: -40 },
+    data: {
+      title: "Branching Strategy",
+      subtitle: "Feature branches, rebase vs merge",
+      status: "completed",
+      degree: 65,
+      icon: GitBranch,
+      href: "/courses"
+    }
+  },
+  {
+    id: "prs",
+    type: "roadmap",
+    position: { x: 560, y: 20 },
+    data: {
+      title: "Pull Requests",
+      subtitle: "Review workflow and approvals",
+      status: "unlocked",
+      icon: GitPullRequest,
+      href: "/courses"
+    }
+  },
+  {
+    id: "conflicts",
+    type: "roadmap",
+    position: { x: 840, y: -30 },
+    data: {
+      title: "Merge Conflicts",
+      subtitle: "Resolve conflicts with confidence",
+      status: "locked",
+      icon: GitMerge,
+      href: "/courses"
+    }
+  },
+  {
+    id: "hooks",
+    type: "roadmap",
+    position: { x: 1120, y: 40 },
+    data: {
+      title: "Git Hooks",
+      subtitle: "Linting and pre-commit safety nets",
+      status: "locked",
+      icon: Wrench
+    }
+  },
+  {
+    id: "security",
+    type: "roadmap",
+    position: { x: 1400, y: -10 },
+    data: {
+      title: "Secure Practices",
+      subtitle: "Signed commits and protected branches",
+      status: "locked",
+      icon: ShieldCheck
+    }
+  },
+  {
+    id: "release",
+    type: "roadmap",
+    position: { x: 1680, y: 30 },
+    data: {
+      title: "Release Workflow",
+      subtitle: "Tags, changelogs, and versioning",
+      status: "locked",
+      icon: Rocket
+    }
+  }
+];
+
+const edges: Edge[] = [
+  {
+    id: "e-start-branching",
+    source: "start",
+    target: "branching",
+    type: "smoothstep",
+    animated: true,
+    style: { stroke: "violet", strokeWidth: 2 }
+  },
+  {
+    id: "e-branching-prs",
+    source: "branching",
+    target: "prs",
+    type: "smoothstep",
+    animated: true,
+    style: { stroke: "#ADF802", strokeWidth: 2 }
+  },
+  {
+    id: "e-prs-conflicts",
+    source: "prs",
+    target: "conflicts",
+    type: "smoothstep",
+    style: { stroke: "#64748b", strokeWidth: 2 }
+  },
+  {
+    id: "e-conflicts-hooks",
+    source: "conflicts",
+    target: "hooks",
+    type: "smoothstep",
+    style: { stroke: "#64748b", strokeWidth: 2 }
+  },
+  {
+    id: "e-hooks-security",
+    source: "hooks",
+    target: "security",
+    type: "smoothstep",
+    style: { stroke: "#64748b", strokeWidth: 2 }
+  },
+  {
+    id: "e-security-release",
+    source: "security",
+    target: "release",
+    type: "smoothstep",
+    style: { stroke: "#64748b", strokeWidth: 2 }
+  }
+];
+
+const nodeTypes = {
+  roadmap: RoadmapNode
+};
+
+export default function RoadmapFlow() {
+  return (
+    <div className="w-full max-w-[1400px] border-2 border-slate-400/40 rounded-4xl shadow-2xl shadow-slate-400/40 mb-5">
+      <div className="roadmap-scroll h-[560px] md:h-[720px] w-full overflow-x-auto overflow-y-hidden rounded-[32px] border border-white/20 bg-gradient-to-br from-white/15 via-white/0 to-orange-500/5 backdrop-blur-xl shadow-[0_30px_80px_rgba(0,0,0,0.45)]">
+        <div className="h-full min-w-[1500px] md:min-w-[1900px]">
+          <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            nodeTypes={nodeTypes}
+            fitView
+            minZoom={1}
+            maxZoom={1}
+            zoomOnScroll={false}
+            zoomOnPinch={false}
+            zoomOnDoubleClick={false}
+            panOnScroll={false}
+            panOnDrag
+            nodesDraggable={false}
+            nodesConnectable={false}
+            elementsSelectable={false}
+            proOptions={{ hideAttribution: true }}
+            className="cursor-grab active:cursor-grabbing"
+          >
+            <Background color="#334155" gap={28} size={1} />
+            <MiniMap
+              nodeColor={(node) => {
+                if (node.data?.status === "completed") return "#f97316";
+                if (node.data?.status === "unlocked") return "#22d3ee";
+                return "#475569";
+              }}
+              maskColor="rgba(2, 6, 23, 0.7)"

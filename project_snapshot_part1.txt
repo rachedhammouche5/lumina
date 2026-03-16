@@ -1,0 +1,1500 @@
+===== FILE: app\globals.css =====
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+  
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.roadmap-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(249, 115, 22, 0.7) rgba(15, 23, 42, 0.8);
+}
+
+.roadmap-scroll::-webkit-scrollbar {
+  height: 10px;
+}
+
+.roadmap-scroll::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.8);
+  border-radius: 999px;
+}
+
+.roadmap-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(90deg, rgba(249, 115, 22, 0.9), rgba(251, 191, 36, 0.9));
+  border-radius: 999px;
+  border: 2px solid rgba(15, 23, 42, 0.8);
+}
+
+.roadmap-scroll::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(90deg, rgba(251, 146, 60, 0.95), rgba(252, 211, 77, 0.95));
+}
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+/* app/globals.css */
+
+@layer utilities {
+  .glow-red {
+    @apply border-[#ff0055] bg-[#ff0055]/20 shadow-[0_0_32px_rgba(255,0,85,0.85)];
+  }
+  
+  .glow-orange {
+    @apply border-[#ff7700] bg-[#ff7700]/10 shadow-[0_0_20px_rgba(255,119,0,0.6)];
+  }
+  
+  .glow-green {
+    @apply border-[#00f2fe] bg-[#00f2fe]/10 shadow-[0_0_20px_rgba(0,242,254,0.6)];
+  }
+  
+  .glow-purple {
+    @apply border-[#bf00ff] bg-[#bf00ff]/10 shadow-[0_0_30px_rgba(191,0,255,0.8)];
+  }
+  .glow-locked {
+    @apply border-white/5 bg-white/[0.02] shadow-none opacity-40 grayscale;
+  } 
+}
+
+===== FILE: app\layout.tsx =====
+import type { Metadata } from "next";
+import { Plus_Jakarta_Sans } from 'next/font/google'
+import "./globals.css";
+import Footer from "./ui/Footer";
+import NavBar from "./ui/NavBar";
+
+const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'] })
+
+export const metadata: Metadata = {
+  title: "Lumina",
+  description: "Adaptive Learning WebApp",
+};
+
+export default function RootLayout({
+  children,
+  auth,
+}: Readonly<{
+  children: React.ReactNode;
+  auth:React.ReactNode;
+}>) {
+  return (
+    <html lang="en">
+      <body className={jakarta.className}>
+        <NavBar />
+        
+        <main className="relative">
+          {children}
+          
+        </main>
+        {auth}
+        <Footer />
+      </body>
+    </html>
+  );
+}
+
+===== FILE: app\page.tsx =====
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import HomeLanding from "@/app/ui/HomeLanding";
+import { getRole } from "@/features/utils/auth/getRole";
+
+export default async function Page() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const role = getRole(user);
+  if (role === "teacher" || role === "teacher_pending") redirect(`/${user?.id}`);
+  if (role === "student") redirect("/student");
+  if (role === "admin") redirect("/admin");
+
+  return <HomeLanding />;
+}
+
+===== FILE: app\@auth\default.tsx =====
+export default function defaultAuth(){
+    return null
+}
+
+===== FILE: app\@auth\(.)login\page.tsx =====
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { X } from "lucide-react";
+import LoginPageView from "@/app/ui/auth/LoginPageView";
+
+export default function LoginModal() {
+  const router = useRouter();
+  const panelRef = useRef<HTMLDivElement>(null);
+  const [isOpen, setIsOpen] = useState(false);
+  const isClosingRef = useRef(false);
+
+  const closeModal = () => {
+    if (isClosingRef.current) return;
+    isClosingRef.current = true;
+    setIsOpen(false);
+    window.setTimeout(() => {
+      if (window.history.length > 1) router.back();
+      else router.push("/");
+    }, 180);
+  };
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "auto" });
+    panelRef.current?.focus();
+    const frame = window.requestAnimationFrame(() => setIsOpen(true));
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeModal();
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, []);
+
+
+
+  return (
+    <div
+      className={`fixed inset-0 z-[2000] bg-black/55 backdrop-blur-sm flex items-center justify-center p-4 transition-opacity duration-200 ${
+        isOpen ? "opacity-100" : "opacity-0"
+      }`}
+      onClick={closeModal}
+      aria-hidden="true"
+    >
+      <div
+        ref={panelRef}
+        tabIndex={-1}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Login modal"
+        className={`relative w-full max-w-2xl outline-none transition-all duration-200 ${
+          isOpen ? "translate-y-0 scale-100 opacity-100" : "translate-y-2 scale-95 opacity-0"
+        }`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          type="button"
+          onClick={closeModal}
+          className="absolute right-3 top-3 z-10 rounded-full border border-slate-600 bg-slate-800/95 p-2 text-white shadow-lg hover:bg-slate-700"
+          aria-label="Close login modal"
+        >
+          <X size={16} />
+        </button>
+
+        <LoginPageView />
+      </div>
+    </div>
+  );
+}
+
+===== FILE: app\@auth\(.)signup\page.tsx =====
+"use client";
+
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { X } from "lucide-react";
+import SignupPageView from "@/app/ui/auth/SignupPageView";
+
+export default function SignupModal() {
+  const router = useRouter();
+  const panelRef = useRef<HTMLDivElement>(null);
+  const [isOpen, setIsOpen] = useState(false);
+  const isClosingRef = useRef(false);
+
+  const closeModal = useCallback(() => {
+    if (isClosingRef.current) return;
+    isClosingRef.current = true;
+    setIsOpen(false);
+    window.setTimeout(() => {
+      if (window.history.length > 1) router.back();
+      else router.push("/");
+    }, 180);
+  }, [router]);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "auto" });
+    panelRef.current?.focus();
+    const frame = window.requestAnimationFrame(() => setIsOpen(true));
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeModal();
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [closeModal]);
+
+  return (
+    <div
+      className={`fixed inset-0 z-[2000] bg-black/55 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 transition-opacity duration-200 ${
+        isOpen ? "opacity-100" : "opacity-0"
+      }`}
+      onClick={closeModal}
+      aria-hidden="true"
+    >
+      <div
+        ref={panelRef}
+        tabIndex={-1}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Signup modal"
+        className={`relative w-full max-w-2xl outline-none transition-all duration-200 ${
+          isOpen ? "translate-y-0 scale-100 opacity-100" : "translate-y-2 scale-95 opacity-0"
+        }`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          type="button"
+          onClick={closeModal}
+          className="absolute right-3 top-3 z-20 flex rounded-full border border-slate-600 bg-slate-800/95 p-2 text-white shadow-lg hover:bg-slate-700"
+          aria-label="Close signup modal"
+        >
+          <X size={16} />
+        </button>
+
+        <SignupPageView />
+      </div>
+    </div>
+  );
+}
+
+===== FILE: app\@auth\[...catchAll]\page.tsx =====
+export default function AuthCatchAll() {
+  return null;
+}
+
+===== FILE: app\admin\layout.tsx =====
+import type { Metadata } from "next";
+import { Plus_Jakarta_Sans } from 'next/font/google'
+import "../globals.css";
+// import Footer from "../ui/Footer";
+// import NavBar from "../ui/NavBar";
+
+const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'] })
+
+export const metadata: Metadata = {
+  title: "Lumina",
+  description: "Adaptive Learning WebApp",
+};
+
+export default function RootLayout({
+  children,
+  auth,
+}: Readonly<{
+  children: React.ReactNode;
+  auth:React.ReactNode;
+}>) {
+  return (
+    <html lang="en">
+      <body className={jakarta.className}>
+        
+        
+        <main className="relative">
+          {children}
+          
+        </main>
+        {auth}
+       
+      </body>
+    </html>
+  );
+}
+
+===== FILE: app\admin\page.tsx =====
+import { createClient } from "../../lib/supabase/server";
+import { redirect } from "next/navigation";
+import { getRole } from "../../features/utils/auth/getRole";
+import TeacherRequestsSection from "./_components/TeacherRequestsSection";
+import type { TeacherRequest } from "./types";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
+
+export default async function AdminPage() {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    redirect("/");
+  }
+
+  const role = getRole(user);
+
+  if (role !== "admin") {
+    redirect("/");
+  }
+
+  const { data: requests, error: requestsError } = await supabase
+    .from("teacher_requests")
+    .select("user_id,cv_url,motivation,status,created_at")
+    .eq("status", "pending")
+    .order("created_at", { ascending: false });
+
+  const teacherRequests = (requests ?? []) as TeacherRequest[];
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (teacherRequests.length > 0 && supabaseUrl && serviceRoleKey) {
+    const adminClient = createAdminClient(supabaseUrl, serviceRoleKey);
+    const userResults = await Promise.all(
+      teacherRequests.map(async (request) => {
+        const { data, error } = await adminClient.auth.admin.getUserById(
+          request.user_id,
+        );
+        return { id: request.user_id, user: data?.user ?? null, error };
+      }),
+    );
+
+    const userMap = new Map(
+      userResults
+        .filter((result) => !result.error && result.user)
+        .map((result) => [
+          result.id,
+          {
+            email: result.user?.email ?? null,
+            full_name:
+              (result.user?.user_metadata?.name as string | undefined) ??
+              null,
+          },
+        ]),
+    );
+
+    for (const request of teacherRequests) {
+      const userInfo = userMap.get(request.user_id);
+      request.email = userInfo?.email ?? null;
+      request.full_name = userInfo?.full_name ?? null;
+    }
+  } else {
+    for (const request of teacherRequests) {
+      request.email = null;
+      request.full_name = null;
+    }
+  }
+
+  return (
+    <main className="min-h-screen bg-slate-950 pt-28 pb-24 px-4">
+      <div className="mx-auto w-full max-w-5xl space-y-8">
+        <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-1">
+            <h1 className="text-3xl font-bold text-white">Admin Dashboard</h1>
+            <p className="text-sm text-slate-300">
+              Validate teacher submissions and approve or reject requests.
+            </p>
+          </div>
+        </header>
+
+        <TeacherRequestsSection
+          requests={teacherRequests}
+          errorMessage={requestsError?.message ?? null}
+        />
+      </div>
+    </main>
+  );
+}
+
+===== FILE: app\admin\types.ts =====
+export type TeacherRequestStatus = "pending" | "approved" | "rejected";
+
+export type TeacherRequest = {
+   email: string | null;
+  full_name: string | null;
+  user_id: string;
+  cv_url: string | null;
+  motivation: string | null;
+  status: TeacherRequestStatus;
+  created_at: string;
+};
+
+===== FILE: app\admin\_components\TeacherRequestCard.tsx =====
+import type { TeacherRequest, TeacherRequestStatus } from "../types";
+import { reviewTeacherRequest} from "@/features/users/actions/reviewTeacherRequests";
+type TeacherRequestCardProps = {
+  request: TeacherRequest;
+};
+
+function statusClasses(status: TeacherRequestStatus) {
+  if (status === "approved") {
+    return "border-emerald-400/40 bg-emerald-500/10 text-emerald-300";
+  }
+
+  if (status === "rejected") {
+    return "border-red-400/40 bg-red-500/10 text-red-300";
+  }
+
+  return "border-amber-400/40 bg-amber-500/10 text-amber-300";
+}
+
+export default function TeacherRequestCard({ request }: TeacherRequestCardProps) {
+  return (
+    <li className="rounded-xl border border-slate-700 bg-slate-900 p-4">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <h3 className="text-lg font-semibold text-white">
+            { request.full_name?? "No name provided"}
+          </h3>
+          <div className="flex items-center gap-2">
+            <span
+              className={`rounded-md border px-2 py-1 text-xs font-semibold uppercase tracking-wide ${statusClasses(
+                request.status,
+              )}`}
+            >
+              {request.status}
+            </span>
+            <p className="text-xs text-slate-400">
+              {new Date(request.created_at).toLocaleString()}
+            </p>
+          </div>
+        </div>
+
+        <p className="text-sm text-slate-300">{request.email ?? "No email available"}</p>
+
+        {request.cv_url ? (
+          <a
+            href={request.cv_url}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-block text-sm font-semibold text-amber-300 underline underline-offset-2"
+          >
+            Open CV
+          </a>
+        ) : (
+          <p className="text-sm text-slate-400">No CV link provided.</p>
+        )}
+
+        <div className="rounded-lg border border-slate-700 bg-slate-950/70 p-3">
+          <p className="text-xs uppercase tracking-wide text-slate-400">Motivation</p>
+          <p className="mt-1 whitespace-pre-wrap text-sm text-slate-200">
+            {request.motivation ?? "No motivation provided."}
+          </p>
+        </div>
+      <form action={reviewTeacherRequest} className="space-y-3">
+      <input type="hidden" name="requestUserId" value={request.user_id} />
+          <div>
+            <label
+              htmlFor={`admin-note-${request.user_id}`}
+              className="mb-1 block text-sm text-slate-300"
+            >
+              Admin note 
+            </label>
+            <textarea
+              id={`admin-note-${request.user_id}`}
+              rows={3}
+              name="adminNote"
+              placeholder="Reason for approval/rejection..."
+              className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-white outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
+              required
+            />
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="submit"
+              name="decision"
+              value="approved"
+              className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-500"
+            >
+              Approve
+            </button>
+            <button
+              type="submit"
+              name="decision"
+              value="rejected"
+              className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-500"
+            >
+              Reject
+            </button>
+          </div>
+      </form>
+    </li>
+  );
+}
+
+===== FILE: app\admin\_components\TeacherRequestsSection.tsx =====
+import TeacherRequestCard from "./TeacherRequestCard";
+import type { TeacherRequest } from "../types";
+
+type TeacherRequestsSectionProps = {
+  requests: TeacherRequest[];
+  errorMessage: string | null;
+};
+
+export default function TeacherRequestsSection({
+  requests,
+  errorMessage,
+}: TeacherRequestsSectionProps) {
+  return (
+    <section className="rounded-2xl border border-slate-800 bg-slate-900/80 p-6 shadow-[0_20px_70px_rgba(2,6,23,0.55)]">
+      <div className="mb-5 flex items-center justify-between">
+        <h2 className="text-xl font-semibold text-white">Teacher Requests</h2>
+        <span className="rounded-md border border-slate-700 bg-slate-800 px-2 py-1 text-xs font-semibold text-slate-200">
+          {requests.length}
+        </span>
+      </div>
+
+      {errorMessage ? (
+        <p className="rounded-md border border-red-400/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
+          Failed to load teacher requests. {errorMessage}
+        </p>
+      ) : requests.length === 0 ? (
+        <p className="rounded-md border border-emerald-400/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-300">
+          No teacher requests yet.
+        </p>
+      ) : (
+        <ul className="space-y-4">
+          {requests.map((request) => (
+            <TeacherRequestCard key={request.user_id} request={request} />
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+===== FILE: app\api\courses\route.ts =====
+import { NextResponse } from "next/server";
+import {createClient} from "@/lib/supabase/server";
+
+
+export async function GET(request: Request) {
+    const supabase = await createClient();
+  const { searchParams } = new URL(request.url);
+  const q = (searchParams.get("q") ?? "").toLowerCase();
+
+  let query=supabase
+  .from("Skill")
+  .select("skl_id,skl_title,skl_dscrptn,skl_duration")
+  .order("skl_title",{ascending:true});
+  if(q){
+    query=query.or(
+        `skl_title.ilike.%${q}%,skl_dscrptn.ilike.%${q}%`,
+    );
+  }
+  const {data,error}=await query;
+  if(error){
+    console.error("[api/skills] Supabase error:",error.message);
+    return NextResponse.json({error:"failed to load skills"},{
+        status: 500
+    });
+  }
+  const mapped=
+  data?.map((row)=>({
+    id:row.skl_id,
+    title:row.skl_title,
+    description:row.skl_dscrptn ?? "no description",
+  })) ?? [];
+  return NextResponse.json({data:mapped});
+}
+
+===== FILE: app\auth\callback\route.ts =====
+import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { syncRoleTables } from "@/features/users/actions/syncTables";
+export async function GET(request: NextRequest) {
+  const url = new URL(request.url);
+  const code = url.searchParams.get("code");
+  const wantsTeacher = url.searchParams.get("wants_teacher") === "1";
+  if (!code) {
+    console.error("[auth/callback] Missing OAuth code in callback URL.");
+    return NextResponse.redirect(
+      new URL("/login?error=missing_oauth_code", url.origin),
+    );
+  }
+
+  const supabase = await createClient();
+
+  const { error: exchangeError } =
+    await supabase.auth.exchangeCodeForSession(code);
+  if (exchangeError) {
+    console.error(
+      "[auth/callback] Failed to exchange OAuth code for session:",
+      exchangeError.message,
+    );
+    return NextResponse.redirect(new URL("/login?error=oauth", url.origin));
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.redirect(new URL("/login", url.origin));
+  }
+
+  let role = user.app_metadata?.role as string | undefined;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  const getAdminClient = () => {
+    if (!supabaseUrl || !serviceRoleKey) {
+      const missingEnvVars = [
+        !supabaseUrl ? "NEXT_PUBLIC_SUPABASE_URL" : null,
+        !serviceRoleKey ? "SUPABASE_SERVICE_ROLE_KEY" : null,
+      ].filter((value): value is string => value !== null);
+      console.error(
+        `[auth/callback] Missing required env vars: ${missingEnvVars.join(", ")}`,
+      );
+      return null;
+    }
+    return createAdminClient(supabaseUrl, serviceRoleKey);
+  };
+
+  if (wantsTeacher && role !== "teacher" && role !== "admin") {
+    const admin = getAdminClient();
+
+    if (!admin) {
+      return NextResponse.redirect(new URL("/login?error=config", url.origin));
+    }
+    if (!wantsTeacher) {
+      await syncRoleTables(
+        admin,
+        {
+          userId: user.id,
+          email: user.email ?? null,
+          fullName:
+            (user.user_metadata?.full_name as string | undefined) ?? null,
+        },
+        "student",
+      );
+    }
+
+    const { error: requestError } = await admin.from("teacher_requests").upsert(
+      {
+        user_id: user.id,
+        //email: user.email ?? null,
+        // full_name: user.user_metadata?.full_name ?? null,
+        status: "pending",
+        //updated_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id" },
+    );
+
+    if (requestError) {
+      console.error(
+        "[auth/callback] Teacher request failed:",
+        requestError.message,
+      );
+      return NextResponse.redirect(
+        new URL("/login?error=teacher_request", url.origin),
+      );
+    }
+
+    if (role !== "teacher_pending") {
+      const { error: pendingRoleError } = await admin.auth.admin.updateUserById(
+        user.id,
+        {
+          app_metadata: {
+            ...(user.app_metadata ?? {}),
+            role: "teacher_pending",
+          },
+        },
+      );
+
+      if (pendingRoleError) {
+        console.error(
+          "[auth/callback] Failed to set teacher_pending role:",
+          pendingRoleError.message,
+        );
+        return NextResponse.redirect(new URL("/login?error=role", url.origin));
+      }
+    }
+
+    return NextResponse.redirect(new URL(`/${user.id}/apply`, url.origin));
+  }
+
+  if (!role) {
+    const admin = getAdminClient();
+    if (!admin) {
+      return NextResponse.redirect(new URL("/login?error=config", url.origin));
+    }
+
+    const { error: updateError } = await admin.auth.admin.updateUserById(
+      user.id,
+      {
+        app_metadata: { ...(user.app_metadata ?? {}), role: "student" },
+      },
+    );
+
+    if (updateError) {
+      console.error(
+        "[auth/callback] Failed to auto-assign student role:",
+        updateError.message,
+      );
+      return NextResponse.redirect(new URL("/login?error=role", url.origin));
+    }
+
+    role = "student";
+  }
+
+  const destination =
+    role === "admin"
+      ? "/admin"
+      : role === "teacher" || role === "teacher_pending"
+        ? `/${user.id}`
+        : "/student";
+
+  return NextResponse.redirect(new URL(destination, url.origin));
+}
+
+===== FILE: app\auth\finalize-signup\route.ts =====
+import { NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { syncRoleTables } from "@/features/users/actions/syncTables";
+
+type FinalizeBody = { teacher?: boolean };
+
+export async function POST(request: Request) {
+  let teacher = false;
+  try {
+    const body = (await request.json()) as FinalizeBody;
+    teacher = Boolean(body?.teacher);
+  } catch {
+    teacher = false;
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    console.error("[auth/finalize-signup] Missing env vars.");
+    return NextResponse.json({ error: "Server config error" }, { status: 500 });
+  }
+
+  const admin = createAdminClient(supabaseUrl, serviceRoleKey);
+  if (!teacher) {
+    await syncRoleTables(
+      admin,
+      {
+        userId: user.id,
+        email: user.email ?? null,
+        fullName: (user.user_metadata?.full_name as string | undefined) ?? null,
+      },
+      "student",
+    );
+  }
+
+  let role = (user.app_metadata?.role as string | undefined) ?? null;
+
+  if (!role) {
+    const { error: roleError } = await admin.auth.admin.updateUserById(
+      user.id,
+      {
+        app_metadata: { ...(user.app_metadata ?? {}), role: "student" },
+      },
+    );
+
+    if (roleError) {
+      console.error(
+        "[auth/finalize-signup] Role assignment failed:",
+        roleError.message,
+      );
+      return NextResponse.json(
+        { error: "Role assignment failed" },
+        { status: 500 },
+      );
+    }
+
+    role = "student";
+  }
+
+  if (teacher) {
+    const { error: reqError } = await admin.from("teacher_requests").upsert(
+      {
+        user_id: user.id,
+        // full_name: user.user_metadata?.full_name ?? null,
+        status: "pending",
+      },
+      { onConflict: "user_id" },
+    );
+
+    if (reqError) {
+      console.error(
+        "[auth/finalize-signup] Teacher request failed:",
+        reqError.message,
+      );
+      return NextResponse.json(
+        { error: "Teacher request failed" },
+        { status: 500 },
+      );
+    }
+    if (role !== "teacher" && role !== "admin") {
+      const { error: pendingRoleError } = await admin.auth.admin.updateUserById(
+        user.id,
+        {
+          app_metadata: {
+            ...(user.app_metadata ?? {}),
+            role: "teacher_pending",
+          },
+        },
+      );
+
+      if (pendingRoleError) {
+        console.error(
+          "[auth/finalize-signup] Failed to set teacher_pending role:",
+          pendingRoleError.message,
+        );
+        return NextResponse.json(
+          { error: "Failed to update role" },
+          { status: 500 },
+        );
+      }
+    }
+
+    return NextResponse.json({ nextPath: `/${user.id}/apply` });
+  }
+
+  const nextPath =
+    role === "admin"
+      ? "/admin"
+      : role === "teacher" || role === "teacher_pending"
+        ? `/${user.id}`
+        : "/student";
+  return NextResponse.json({ nextPath });
+}
+
+===== FILE: app\auth\teacher-request\route.ts =====
+import { NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
+
+type TeacherRequestBody = {
+  fullName?: string;
+  cvUrl?: string;
+  motivation?: string;
+};
+
+export async function POST(request: Request) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  let payload: TeacherRequestBody;
+  try {
+    payload = (await request.json()) as TeacherRequestBody;
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
+
+  const fullName = payload.fullName?.trim() ?? "";
+  const cvUrl = payload.cvUrl?.trim() ?? "";
+  const motivation = payload.motivation?.trim() ?? "";
+
+  if (!fullName || !cvUrl || !motivation) {
+    return NextResponse.json(
+      { error: "fullName, cvUrl and motivation are required" },
+      { status: 400 },
+    );
+  }
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    console.error("[auth/teacher-request] Missing required env vars.");
+    return NextResponse.json({ error: "Server config error" }, { status: 500 });
+  }
+
+  const admin = createAdminClient(supabaseUrl, serviceRoleKey);
+  const { error } = await admin.from("teacher_requests").upsert(
+    {
+      user_id: user.id,
+      cv_url: cvUrl,
+      motivation,
+      status: "pending",
+    },
+    { onConflict: "user_id" },
+  );
+
+  if (error) {
+    console.error(
+      "[auth/teacher-request] Failed to save request:",
+      error.message,
+    );
+    return NextResponse.json(
+      { error: "Failed to save request" },
+      { status: 500 },
+    );
+  }
+
+  const currentRole = user.app_metadata?.role as string | undefined;
+  if (currentRole !== "teacher" && currentRole !== "admin") {
+    const { error: roleError } = await admin.auth.admin.updateUserById(
+      user.id,
+      {
+        app_metadata: { ...(user.app_metadata ?? {}), role: "teacher_pending" },
+      },
+    );
+
+    if (roleError) {
+      console.error(
+        "[auth/teacher-request] Failed to set teacher_pending role:",
+        roleError.message,
+      );
+      return NextResponse.json(
+        { error: "Application saved, but failed to update role" },
+        { status: 500 },
+      );
+    }
+  }
+
+  return NextResponse.json(
+    { ok: true, nextPath: `/${user.id}` },
+    { status: 200 },
+  );
+}
+
+===== FILE: app\courses\CourseSearchClient.tsx =====
+"use client";
+import { Search } from "lucide-react";
+import { useEffect,useMemo,useState } from "react";
+import CourseCard from "../ui/CourseCard";
+import CourseCardSkeleton from "../ui/CourseCardSkeleton";
+import Button from "../ui/Button";
+type Course = {
+    id:string;
+    title:string;
+    description:string;
+};
+
+export default function CourseSearchClient(){
+    const [query,setQuery]=useState("");
+    const [courses,setCourses]=useState<Course[]>([]);
+    const [loading,setLoading]=useState(false);
+    const [error,setError]=useState("");
+
+    const debounceQuery=useMemo(()=>query.trim(),[query]);
+
+    useEffect(()=>{
+        let cancelled=false;
+        const controller=new AbortController();
+
+        async function load(){
+            setLoading(true);
+            setError("");
+            try{
+                const res=await fetch(`/api/courses?q=${encodeURIComponent(debounceQuery)}`,{
+                    signal:controller.signal,
+                });
+                if(!res.ok)throw new Error("failed to load courses");
+                const payload=(await res.json()) as{data:Course[]};
+
+                if(!cancelled)setCourses(payload.data ?? []);
+
+            }catch(err){
+                if(!cancelled &&(err as Error).name!=="AbortError"){
+                    setError("failed to load courses");
+                }
+
+            }finally{
+                if(!cancelled)setLoading(false);
+            }
+        }
+
+        const t=setTimeout(load,350);
+        return () =>{
+            cancelled=true;
+            controller.abort();
+            clearTimeout(t);
+        };
+
+    },[debounceQuery]);
+   return(
+    <>
+    <div className="relative w-full max-w-2xl mb-12 group ">
+            <div className="absolute inset-0 bg-orange-500/20 blur-3xl rounded-full opacity-50 group-hover:opacity-70 transition-opacity duration-500"/>
+            <div className="relative flex items-center bg-slate-900/50 backdrop-blur-xl border border-white/10 p-2 rounded-3xl shadow-2xl">
+                <div className="flex items-center justify-center w-12 h-12 ml-2 bg-slate-800/50 rounded-2xl">
+                    <Search className="text-orange-500" size={20} />
+                </div>
+                <input 
+                type="text"
+                 placeholder="Search for skills eg: How to write a clean code ... "   
+                 className="flex-1 bg-transparent px-4 py-3 text-white placeholder:text-slate-500 outline-none text-lg" 
+                 value={query}
+                 onChange={(e)=>setQuery(e.target.value)}
+                  />
+                <Button variant="primary" size="m" className="mr-2"> Explore    </Button>
+            </div> 
+        </div>
+        {error?(
+            <p className="text-red-400 mb-6">{error}</p>
+        ):null}
+        <div className="relative w-full max-w-4xl mb-12">
+            <div className="absolute left-0 top-0 bottom-0 w-16 bg-gradient from-slate-950 to to-transparent z-10 pointer-events-none" />
+            <div className="flex overflow-x-auto gap-3 no-scroll-bar pb-4 px-12 mask-fade-edges [scrollbar-width:none] [&::-webkit-scrollbar]:hidden
+                [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]">
+                <button className="whitespace-nowrap px-8 py-2.5 rounded-2xl text-sm font-bold bg-orange-500 text-white shadow-[0_0_20px_rgba(249,115,22,0.3)] transition-all">
+                    All Paths
+                </button>
+                {[
+            'Clean Code Writing', 
+            'Unit & Integration Testing', 
+            'Frontend Architecture', 
+            'Backend Systems', 
+            'DevOps & Deployment',
+            'Data Structures',
+            'Mobile Engineering',
+            'UI/UX Design Systems'
+        ].map((category) => (
+            <button 
+                key={category} 
+                className="whitespace-nowrap px-8 py-2.5 rounded-2xl text-sm font-medium text-slate-400 bg-slate-900/60 border border-white/5 hover:border-orange-500/30 hover:text-white transition-all"
+            >
+                {category}
+            </button>
+        ))}
+            </div>
+            <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-slate-950 to-transparent z-10 pointer-events-none" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-7xl mb-10">
+            {loading
+             ?Array.from({length:12}).map((_,i)=><CourseCardSkeleton key={i}/>)
+             :courses.map((course)=>(
+                <CourseCard
+                key={course.id}
+                title={course.title}
+                description={course.description}
+                />
+             ))
+            
+            }
+        </div>
+    </>
+     
+   );
+}
+
+===== FILE: app\courses\page.tsx =====
+import { Sparkles } from "lucide-react";
+
+import CourseCard from "../ui/CourseCard";
+import CourseSearchClient from "./CourseSearchClient";
+export default function GuestDomain() {
+    return (
+    <div className="min-h-screen bg-slate-950 flex flex-col items-center pt-24 px-6">
+        <div className="flex items-center gap-2 border border-orange-500/30 bg-orange-500/10 px-4 py-1.5 rounded-full mb-2">
+            <Sparkles className="text-orange-500" size={16}/>
+            <span className="text-orange-500 text-xs font-bold tracking-widest uppercase">LEARN SMARTER</span>
+        </div>
+
+        <div className="text-4xl md:text-5xl font-bold text-center mb-10">
+            <h1 className="text-white tracking-tight">What will you <span className="uppercase  bg-gradient-to-br from-[#FF4D00] to-[#FFB800] bg-clip-text text-transparent">Master</span> today ?</h1>
+        </div>
+       
+
+           
+
+        
+
+        <CourseSearchClient />
+    </div>
+    );
+}
+
+===== FILE: app\courses\roadmap\page.tsx =====
+import InfoCard from "@/app/ui/roadmapcomp/InfoCard";
+import RoadmapFlow from "@/app/ui/roadmapcomp/RoadmapFlow";
+import ProgressBar from "@/app/ui/roadmapcomp/ProgressBar";
+import Button from "@/app/ui/Button";
+
+
+export default function RoadmapPage() {
+  return (
+    <main className="min-h-screen min-w-screen bg-slate-950 text-white flex flex-col items-center pt-16 md:pt-20 px-4 sm:px-6 relative overflow-hidden font-sans gap-3">
+      <div className="w-full justify-between flex flex-row pl-10 pr-10">
+        <Button variant="outline" size="s" className="bg-linear-to-br from-slate-300/50 to-slate-500/10 border-2 border-slate-700/40"> {"<\t Back to courses"} </Button>
+        <Button variant="outline" size="s" className="bg-linear-to-br from-slate-300/50 to-slate-500/10 border-2 border-slate-700/40"> {" Enroll"} </Button>
+      </div>
+      <div className="w-full max-w-[1400px] flex flex-col md:flex-row gap-5 mb-8 md:mb-10">
+        <div className="w-full md:flex-[2]">
+          <InfoCard title="git master v1.0" subtitle="start learning team works and devlopments using tools like git " />
+        </div>
+        <div className="w-full md:flex-1">
+          <ProgressBar title="Your Next Progres" value={40} />
+        </div>
+      </div>
+      <div className="w-full max-w-[1400px]">
+        <h3 className="text-xl md:text-2xl font-black italic tracking-tight mb-4">COURSE PATH</h3>
+        <RoadmapFlow />
+      </div>
+    </main>
+  );
+}
+
+===== FILE: app\login\page.tsx =====
+import LoginPageView from "@/app/ui/auth/LoginPageView";
+
+export default function Page() {
+  return (
+    <main className="min-h-screen bg-slate-950 px-4 py-10 flex items-center justify-center">
+      <div className="w-full max-w-2xl">
+        <LoginPageView />
+      </div>
+    </main>
+  );
+}
+
+===== FILE: app\signup\page.tsx =====
+import SignupPageView from "@/app/ui/auth/SignupPageView";
+
+export default function SignupPage() {
+  return (
+    <main className="min-h-screen bg-slate-950 px-3 py-15 flex items-center justify-center">
+      <div className="w-full max-w-2xl">
+        <SignupPageView />
+      </div>
+    </main>
+  );
+}
+
+===== FILE: app\student\page.tsx =====
+import { redirect } from "next/navigation";
+import { createClient } from "../../lib/supabase/server";
+import LogoutButton from "@/app/ui/LogoutButton";
+import { getRole } from "@/features/utils/auth/getRole";
+
+export default async function studentPage() {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+  if (error) {
+    console.error("Auth error :", error.message);
+    redirect("/");
+  }
+  if (!user) {
+    redirect("/");
+  }
+
+  const role = getRole(user);
+  if (role !== "student") {
+    redirect("/");
+  }
+  return (
+    <main className="min-h-screen pt-28 pb-24 px-4 flex items-center justify-center">
+      <div className="w-full max-w-3xl text-center space-y-6">
+        <h1 className="text-3xl font-bold">Students Page</h1>
+        <div className="flex justify-center">
+        </div>
+      </div>
+    </main>
+  );
+}
+
+===== FILE: app\ui\About.tsx =====
+import React from "react";
+
+const About: React.FC = () => {
+  return (
+    <section className="flex flex-col items-center p-16 md:p-20">
+      
+      <h2 className="mt-8 mb-12 text-5xl md:text-6xl font-extrabold text-white">
+        About Us
+      </h2>
+
+      <div className="w-full max-w-7xl flex flex-col md:flex-row items-center justify-between gap-10">
+        
+        <div className="flex-1 flex justify-center w-full md:w-1/2">
+          <img 
+            src="/png/about.png" 
+            alt="About Us" 
+            className="w-4/5 md:w-full max-w-md h-auto animate-float"
+          />
+        </div>
+        
+        <div className="flex-1 w-full md:w-1/2 text-left p-2">
+          <p className="text-sm md:text-lg  md:leading-relaxed text-slate-400">
+            Lumina was developed at the University of Abdelhamid Mehri Constantine 2 to address a critical challenge in modern education: the &quot;one-size-fits-all&quot; approach. Traditional learning platforms often deliver identical content to every student, regardless of their individual skill level or learning pace. This lack of personalization frequently leads to student disengagement and learning difficulties, as some learners require reinforcement while others are ready for more advanced material.
+            Our platform transforms the educational experience into an Adaptive Learning System (ALS). By tailoring content specifically to each learner&apos;s unique profile, performance, and engagement levels, Lumina ensures a personalized journey for every student. Built on the principles of Software Product Line (SPL) engineering, Lumina is designed as a family of applications that share a robust common core while offering modular, customizable features. This technical architecture allows us to integrate a functional AI Assistance Agent that provides real-time FAQ support, pedagogical guidance, and personalized content recommendations.
+            At Lumina, our mission is to move beyond static curriculum. We empower 3rd-year Software Engineering students at the NTIC Faculty to master complex concepts through a system that adapts to them, rather than forcing them to adapt to the system.
+          </p>
+        </div>
+      </div>
+      
+    </section>
+  );
+};
+
+export default About;
+
+===== FILE: app\ui\Button.tsx =====
+import React from 'react';
+import Link from 'next/link';
+import type { LinkProps } from 'next/link';
+
+interface AnchorProps extends Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, 'href'> {
+  href: string;
+  children: React.ReactNode;
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
+  size?: 's' | 'm' | 'l';
+  replace?: LinkProps['replace'];
+  scroll?: LinkProps['scroll'];
+  prefetch?: LinkProps['prefetch'];
+}
+
+interface RegularButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  href?: never;
+  children: React.ReactNode;
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
+  size?: 's' | 'm' | 'l';
+}
+
+type ButtonProps = AnchorProps | RegularButtonProps;
+
+const Button: React.FC<ButtonProps> = (props) => {
+  const { 
+    variant = 'primary', 
+    size = 'm',
+    children,
+    className = '', 
+    ...rest 
+  } = props;
+
+  const baseStyles = "font-semibold rounded-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 inline-flex items-center justify-center";
+
+  const variants = {
+    primary: "text-base font-semibold rounded-4xl border-none cursor-pointer transition-all duration-300 bg-gradient-to-br from-[#FF4D00] to-[#FFB800] text-white hover:-translate-y-0.5 hover:shadow-lg hover:shadow-yellow-500/40",
+    secondary: "bg-gradient-to-br from-indigo-600 via-blue-500 to-sky-400 text-white hover:bg-none hover:bg-white hover:text-black focus:ring-blue-500 hover:-translate-y-0.5 transition-all duration-300 ease-out hover:shadow-[0_5px_20px_blue]",
+    outline: "bg-transparent border-2 border-white text-white hover:bg-white hover:text-black focus:ring-white transition-all duration-300 ease-out",
+    ghost: "text-white hover:bg-white/10"
+  };
+  
+  const sizes = {
+    s: "px-3 py-1.5 text-sm",
+    m: "px-4 py-2 text-base",
+    l: "px-10 py-5 text-lg"
+  };
+
+  const buttonStyle = `${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`.trim();
+
+  if ('href' in rest && rest.href) {
+    const { href, ...linkProps } = rest;
+    
+    return (
+      <Link href={href} className={buttonStyle} {...linkProps}>
+        {children}
+      </Link>
+    );
+  }
+
+  return (
+    <button className={buttonStyle} {...(rest as React.ButtonHTMLAttributes<HTMLButtonElement>)}>
+      {children}
+    </button>
+  );
+};
+
+export default Button;
+
+===== FILE: app\ui\Card.tsx =====
+import React from "react";
+import { LucideIcon } from 'lucide-react';
+
+interface CardProps {
+  title: string;
+  subtitle?: string;
+  icon?: LucideIcon;
+  iconColor?: string;
+}
+
+const Card: React.FC<CardProps> = ({ title, subtitle, icon: Icon, iconColor = "text-white" }) => {
+  return (
+    // ✨ جرب تزيد 'transition-transform' صراحة
+    <div className="flex bg-slate-900 border border-slate-800 rounded-2xl p-6 items-center gap-4 transition-all duration-300 transform hover:-translate-y-1 hover:border-slate-600 hover:shadow-lg hover:shadow-sky-500/10">
+      
+      {Icon && (
+        <div className="size-12 flex items-center justify-center rounded-lg bg-slate-800 shrink-0">
+          <Icon className={`size-6 ${iconColor}`} strokeWidth={1.5} />
+        </div>
+      )}
+      
+      <div>
+        <h3 className="text-lg font-semibold text-white">{title}</h3>
+        {subtitle && <p className="text-sm text-slate-400">{subtitle}</p>}
+      </div>
+    </div>
+  );
+};
+
+export default Card;
+
+===== FILE: app\ui\CourseCard.tsx =====
+import Button from "./Button";
+
+interface CourseCardProps {
+    title: string;
+    description: string;
+    image?: string;
+}
+
+function CourseCard({ title, description, image }: CourseCardProps) {
+    return (
+        <div className="group relative bg-slate-900/40 w-full aspect-[3/2] backdrop-blur-md border border-white/5 rounded-[2rem] p-5 overflow-hidden transition-all duration-500 hover:border-orange-500/40 hover:scale-[1.02] flex flex-col">
+            <div className="relative w-full h-[60%] rounded-2xl overflow-hidden mb-4 bg-slate-800">
+                {image ? (
+                    <img src={image} alt={title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                ) : (
+                    <div className="h-full w-full bg-slate-800" />
+                )}
+        
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 to-transparent" />
+            </div>
+
+            <div className="flex flex-col flex-grow justify-between">
+                <div>
+                    <h3 className="text-lg font-bold text-white group-hover:text-orange-500 transition-colors line-clamp-1">
+                        {title}
+                    </h3>
+                    <p className="text-slate-500 text-[11px] mt-1 line-clamp-2 leading-snug font-medium">
+                        {description}
+                    </p>
+                </div>
+
+                <div className="mt-3 items-left flex flex-1">
+                    <Button variant="outline" className=" text-xs py-2">
+                        Let&apos;s Start
+                    </Button>
+                </div>
+            </div>
+        </div>
+  );
+}
+
+export default CourseCard;
+
+===== FILE: app\ui\CourseCardSkeleton.tsx =====
+export default function CourseCardSkeleton() {
+  return (
+    <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 animate-pulse">
+      <div className="h-5 w-2/3 rounded bg-slate-700/60" />
+      <div className="mt-3 h-4 w-full rounded bg-slate-700/40" />
+      <div className="mt-2 h-4 w-5/6 rounded bg-slate-700/40" />
+      <div className="mt-6 h-9 w-24 rounded-full bg-slate-700/50" />
+    </div>
+  );
+}
+
+===== FILE: app\ui\Features.tsx =====
+import React from 'react';
+import { Brain, MessageSquare, Code2 } from 'lucide-react'; 
+import Card from './Card';
+
+const Features = () => {
+  return (
+    <section className="p-6 md:p-10">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        <Card 
+          icon={Brain} 
+          title="Adaptive Learning Engine"
+          subtitle="Adjusts content difficulty based on quiz performance."
+          iconColor="text-orange-500"
+        />
+
+        <Card 
+          icon={MessageSquare} 
+          title="AI Study Assistant"
+          subtitle="Chat-based assistant for explanations and recommendations."
+          iconColor="text-blue-500"
+        />
+
+        <Card 
+          icon={Code2} 
+          title="Developer-Ready Architecture"
+          subtitle="API-based system for integration into platforms."
+          iconColor="text-orange-500"
+        />
+
+      </div>
+    </section>
+  );
+};
+
+export default Features;
+
+===== FILE: app\ui\Footer.tsx =====
+import React from "react";
+import Logo from "../ui/Logo";
+
+const Footer: React.FC = () => {
+  return (
+    <footer className="bg-slate-950 p-10 pt-16 pb-8 border-t border-slate-800 text-center">
+      
+      <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start gap-12 mb-10 text-left">
+        
+        <div className="w-full md:w-80 flex flex-col gap-4">
+          <div className="flex items-center gap-3">
+            <Logo size={24} />
+          </div>
+          <p className="text-sm font-light text-slate-400 leading-relaxed">
+            Empowering University Students with AI-Driven Personalized Learning
+          </p>
+        </div>
+        
+        {[
+          { title: "Product", links: ["Home", "Domains", "Courses"] },
+          { title: "Resources", links: ["Blog", "Help Center", "Contact Us"] },
+          { title: "Developers", links: ["API Documentation", "Open Source", "GitHub"] },
+          { title: "Company", links: ["About Us", "Careers", "Press"] },
+        ].map((section) => (
+          <div key={section.title} className="flex flex-col gap-4 w-full md:w-auto">
+            <h3 className="font-semibold text-white text-sm uppercase tracking-wider">

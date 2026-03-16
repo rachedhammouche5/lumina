@@ -1,0 +1,6139 @@
+===== FILE: app\globals.css =====
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+  
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.roadmap-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(249, 115, 22, 0.7) rgba(15, 23, 42, 0.8);
+}
+
+.roadmap-scroll::-webkit-scrollbar {
+  height: 10px;
+}
+
+.roadmap-scroll::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.8);
+  border-radius: 999px;
+}
+
+.roadmap-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(90deg, rgba(249, 115, 22, 0.9), rgba(251, 191, 36, 0.9));
+  border-radius: 999px;
+  border: 2px solid rgba(15, 23, 42, 0.8);
+}
+
+.roadmap-scroll::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(90deg, rgba(251, 146, 60, 0.95), rgba(252, 211, 77, 0.95));
+}
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+/* app/globals.css */
+
+@layer utilities {
+  .glow-red {
+    @apply border-[#ff0055] bg-[#ff0055]/20 shadow-[0_0_32px_rgba(255,0,85,0.85)];
+  }
+  
+  .glow-orange {
+    @apply border-[#ff7700] bg-[#ff7700]/10 shadow-[0_0_20px_rgba(255,119,0,0.6)];
+  }
+  
+  .glow-green {
+    @apply border-[#00f2fe] bg-[#00f2fe]/10 shadow-[0_0_20px_rgba(0,242,254,0.6)];
+  }
+  
+  .glow-purple {
+    @apply border-[#bf00ff] bg-[#bf00ff]/10 shadow-[0_0_30px_rgba(191,0,255,0.8)];
+  }
+  .glow-locked {
+    @apply border-white/5 bg-white/[0.02] shadow-none opacity-40 grayscale;
+  } 
+}
+
+===== FILE: app\layout.tsx =====
+import type { Metadata } from "next";
+import { Plus_Jakarta_Sans } from 'next/font/google'
+import "./globals.css";
+import Footer from "./ui/Footer";
+import NavBar from "./ui/NavBar";
+
+const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'] })
+
+export const metadata: Metadata = {
+  title: "Lumina",
+  description: "Adaptive Learning WebApp",
+};
+
+export default function RootLayout({
+  children,
+  auth,
+}: Readonly<{
+  children: React.ReactNode;
+  auth:React.ReactNode;
+}>) {
+  return (
+    <html lang="en">
+      <body className={jakarta.className}>
+        <NavBar />
+        
+        <main className="relative">
+          {children}
+          
+        </main>
+        {auth}
+        <Footer />
+      </body>
+    </html>
+  );
+}
+
+===== FILE: app\page.tsx =====
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import HomeLanding from "@/app/ui/HomeLanding";
+import { getRole } from "@/features/utils/auth/getRole";
+
+export default async function Page() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const role = getRole(user);
+  if (role === "teacher" || role === "teacher_pending") redirect(`/${user?.id}`);
+  if (role === "student") redirect("/student");
+  if (role === "admin") redirect("/admin");
+
+  return <HomeLanding />;
+}
+
+===== FILE: app\@auth\default.tsx =====
+export default function defaultAuth(){
+    return null
+}
+
+===== FILE: app\@auth\(.)login\page.tsx =====
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { X } from "lucide-react";
+import LoginPageView from "@/app/ui/auth/LoginPageView";
+
+export default function LoginModal() {
+  const router = useRouter();
+  const panelRef = useRef<HTMLDivElement>(null);
+  const [isOpen, setIsOpen] = useState(false);
+  const isClosingRef = useRef(false);
+
+  const closeModal = () => {
+    if (isClosingRef.current) return;
+    isClosingRef.current = true;
+    setIsOpen(false);
+    window.setTimeout(() => {
+      if (window.history.length > 1) router.back();
+      else router.push("/");
+    }, 180);
+  };
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "auto" });
+    panelRef.current?.focus();
+    const frame = window.requestAnimationFrame(() => setIsOpen(true));
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeModal();
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, []);
+
+
+
+  return (
+    <div
+      className={`fixed inset-0 z-[2000] bg-black/55 backdrop-blur-sm flex items-center justify-center p-4 transition-opacity duration-200 ${
+        isOpen ? "opacity-100" : "opacity-0"
+      }`}
+      onClick={closeModal}
+      aria-hidden="true"
+    >
+      <div
+        ref={panelRef}
+        tabIndex={-1}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Login modal"
+        className={`relative w-full max-w-2xl outline-none transition-all duration-200 ${
+          isOpen ? "translate-y-0 scale-100 opacity-100" : "translate-y-2 scale-95 opacity-0"
+        }`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          type="button"
+          onClick={closeModal}
+          className="absolute right-3 top-3 z-10 rounded-full border border-slate-600 bg-slate-800/95 p-2 text-white shadow-lg hover:bg-slate-700"
+          aria-label="Close login modal"
+        >
+          <X size={16} />
+        </button>
+
+        <LoginPageView />
+      </div>
+    </div>
+  );
+}
+
+===== FILE: app\@auth\(.)signup\page.tsx =====
+"use client";
+
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { X } from "lucide-react";
+import SignupPageView from "@/app/ui/auth/SignupPageView";
+
+export default function SignupModal() {
+  const router = useRouter();
+  const panelRef = useRef<HTMLDivElement>(null);
+  const [isOpen, setIsOpen] = useState(false);
+  const isClosingRef = useRef(false);
+
+  const closeModal = useCallback(() => {
+    if (isClosingRef.current) return;
+    isClosingRef.current = true;
+    setIsOpen(false);
+    window.setTimeout(() => {
+      if (window.history.length > 1) router.back();
+      else router.push("/");
+    }, 180);
+  }, [router]);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "auto" });
+    panelRef.current?.focus();
+    const frame = window.requestAnimationFrame(() => setIsOpen(true));
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeModal();
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [closeModal]);
+
+  return (
+    <div
+      className={`fixed inset-0 z-[2000] bg-black/55 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 transition-opacity duration-200 ${
+        isOpen ? "opacity-100" : "opacity-0"
+      }`}
+      onClick={closeModal}
+      aria-hidden="true"
+    >
+      <div
+        ref={panelRef}
+        tabIndex={-1}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Signup modal"
+        className={`relative w-full max-w-2xl outline-none transition-all duration-200 ${
+          isOpen ? "translate-y-0 scale-100 opacity-100" : "translate-y-2 scale-95 opacity-0"
+        }`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          type="button"
+          onClick={closeModal}
+          className="absolute right-3 top-3 z-20 flex rounded-full border border-slate-600 bg-slate-800/95 p-2 text-white shadow-lg hover:bg-slate-700"
+          aria-label="Close signup modal"
+        >
+          <X size={16} />
+        </button>
+
+        <SignupPageView />
+      </div>
+    </div>
+  );
+}
+
+===== FILE: app\@auth\[...catchAll]\page.tsx =====
+export default function AuthCatchAll() {
+  return null;
+}
+
+===== FILE: app\admin\layout.tsx =====
+import type { Metadata } from "next";
+import { Plus_Jakarta_Sans } from 'next/font/google'
+import "../globals.css";
+// import Footer from "../ui/Footer";
+// import NavBar from "../ui/NavBar";
+
+const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'] })
+
+export const metadata: Metadata = {
+  title: "Lumina",
+  description: "Adaptive Learning WebApp",
+};
+
+export default function RootLayout({
+  children,
+  auth,
+}: Readonly<{
+  children: React.ReactNode;
+  auth:React.ReactNode;
+}>) {
+  return (
+    <html lang="en">
+      <body className={jakarta.className}>
+        
+        
+        <main className="relative">
+          {children}
+          
+        </main>
+        {auth}
+       
+      </body>
+    </html>
+  );
+}
+
+===== FILE: app\admin\page.tsx =====
+import { createClient } from "../../lib/supabase/server";
+import { redirect } from "next/navigation";
+import { getRole } from "../../features/utils/auth/getRole";
+import TeacherRequestsSection from "./_components/TeacherRequestsSection";
+import type { TeacherRequest } from "./types";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
+
+export default async function AdminPage() {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    redirect("/");
+  }
+
+  const role = getRole(user);
+
+  if (role !== "admin") {
+    redirect("/");
+  }
+
+  const { data: requests, error: requestsError } = await supabase
+    .from("teacher_requests")
+    .select("user_id,cv_url,motivation,status,created_at")
+    .eq("status", "pending")
+    .order("created_at", { ascending: false });
+
+  const teacherRequests = (requests ?? []) as TeacherRequest[];
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (teacherRequests.length > 0 && supabaseUrl && serviceRoleKey) {
+    const adminClient = createAdminClient(supabaseUrl, serviceRoleKey);
+    const userResults = await Promise.all(
+      teacherRequests.map(async (request) => {
+        const { data, error } = await adminClient.auth.admin.getUserById(
+          request.user_id,
+        );
+        return { id: request.user_id, user: data?.user ?? null, error };
+      }),
+    );
+
+    const userMap = new Map(
+      userResults
+        .filter((result) => !result.error && result.user)
+        .map((result) => [
+          result.id,
+          {
+            email: result.user?.email ?? null,
+            full_name:
+              (result.user?.user_metadata?.name as string | undefined) ??
+              null,
+          },
+        ]),
+    );
+
+    for (const request of teacherRequests) {
+      const userInfo = userMap.get(request.user_id);
+      request.email = userInfo?.email ?? null;
+      request.full_name = userInfo?.full_name ?? null;
+    }
+  } else {
+    for (const request of teacherRequests) {
+      request.email = null;
+      request.full_name = null;
+    }
+  }
+
+  return (
+    <main className="min-h-screen bg-slate-950 pt-28 pb-24 px-4">
+      <div className="mx-auto w-full max-w-5xl space-y-8">
+        <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-1">
+            <h1 className="text-3xl font-bold text-white">Admin Dashboard</h1>
+            <p className="text-sm text-slate-300">
+              Validate teacher submissions and approve or reject requests.
+            </p>
+          </div>
+        </header>
+
+        <TeacherRequestsSection
+          requests={teacherRequests}
+          errorMessage={requestsError?.message ?? null}
+        />
+      </div>
+    </main>
+  );
+}
+
+===== FILE: app\admin\types.ts =====
+export type TeacherRequestStatus = "pending" | "approved" | "rejected";
+
+export type TeacherRequest = {
+   email: string | null;
+  full_name: string | null;
+  user_id: string;
+  cv_url: string | null;
+  motivation: string | null;
+  status: TeacherRequestStatus;
+  created_at: string;
+};
+
+===== FILE: app\admin\_components\TeacherRequestCard.tsx =====
+import type { TeacherRequest, TeacherRequestStatus } from "../types";
+import { reviewTeacherRequest} from "@/features/users/actions/reviewTeacherRequests";
+type TeacherRequestCardProps = {
+  request: TeacherRequest;
+};
+
+function statusClasses(status: TeacherRequestStatus) {
+  if (status === "approved") {
+    return "border-emerald-400/40 bg-emerald-500/10 text-emerald-300";
+  }
+
+  if (status === "rejected") {
+    return "border-red-400/40 bg-red-500/10 text-red-300";
+  }
+
+  return "border-amber-400/40 bg-amber-500/10 text-amber-300";
+}
+
+export default function TeacherRequestCard({ request }: TeacherRequestCardProps) {
+  return (
+    <li className="rounded-xl border border-slate-700 bg-slate-900 p-4">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <h3 className="text-lg font-semibold text-white">
+            { request.full_name?? "No name provided"}
+          </h3>
+          <div className="flex items-center gap-2">
+            <span
+              className={`rounded-md border px-2 py-1 text-xs font-semibold uppercase tracking-wide ${statusClasses(
+                request.status,
+              )}`}
+            >
+              {request.status}
+            </span>
+            <p className="text-xs text-slate-400">
+              {new Date(request.created_at).toLocaleString()}
+            </p>
+          </div>
+        </div>
+
+        <p className="text-sm text-slate-300">{request.email ?? "No email available"}</p>
+
+        {request.cv_url ? (
+          <a
+            href={request.cv_url}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-block text-sm font-semibold text-amber-300 underline underline-offset-2"
+          >
+            Open CV
+          </a>
+        ) : (
+          <p className="text-sm text-slate-400">No CV link provided.</p>
+        )}
+
+        <div className="rounded-lg border border-slate-700 bg-slate-950/70 p-3">
+          <p className="text-xs uppercase tracking-wide text-slate-400">Motivation</p>
+          <p className="mt-1 whitespace-pre-wrap text-sm text-slate-200">
+            {request.motivation ?? "No motivation provided."}
+          </p>
+        </div>
+      <form action={reviewTeacherRequest} className="space-y-3">
+      <input type="hidden" name="requestUserId" value={request.user_id} />
+          <div>
+            <label
+              htmlFor={`admin-note-${request.user_id}`}
+              className="mb-1 block text-sm text-slate-300"
+            >
+              Admin note 
+            </label>
+            <textarea
+              id={`admin-note-${request.user_id}`}
+              rows={3}
+              name="adminNote"
+              placeholder="Reason for approval/rejection..."
+              className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-white outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
+              required
+            />
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="submit"
+              name="decision"
+              value="approved"
+              className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-500"
+            >
+              Approve
+            </button>
+            <button
+              type="submit"
+              name="decision"
+              value="rejected"
+              className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-500"
+            >
+              Reject
+            </button>
+          </div>
+      </form>
+    </li>
+  );
+}
+
+===== FILE: app\admin\_components\TeacherRequestsSection.tsx =====
+import TeacherRequestCard from "./TeacherRequestCard";
+import type { TeacherRequest } from "../types";
+
+type TeacherRequestsSectionProps = {
+  requests: TeacherRequest[];
+  errorMessage: string | null;
+};
+
+export default function TeacherRequestsSection({
+  requests,
+  errorMessage,
+}: TeacherRequestsSectionProps) {
+  return (
+    <section className="rounded-2xl border border-slate-800 bg-slate-900/80 p-6 shadow-[0_20px_70px_rgba(2,6,23,0.55)]">
+      <div className="mb-5 flex items-center justify-between">
+        <h2 className="text-xl font-semibold text-white">Teacher Requests</h2>
+        <span className="rounded-md border border-slate-700 bg-slate-800 px-2 py-1 text-xs font-semibold text-slate-200">
+          {requests.length}
+        </span>
+      </div>
+
+      {errorMessage ? (
+        <p className="rounded-md border border-red-400/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
+          Failed to load teacher requests. {errorMessage}
+        </p>
+      ) : requests.length === 0 ? (
+        <p className="rounded-md border border-emerald-400/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-300">
+          No teacher requests yet.
+        </p>
+      ) : (
+        <ul className="space-y-4">
+          {requests.map((request) => (
+            <TeacherRequestCard key={request.user_id} request={request} />
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+===== FILE: app\api\courses\route.ts =====
+import { NextResponse } from "next/server";
+import {createClient} from "@/lib/supabase/server";
+
+
+export async function GET(request: Request) {
+    const supabase = await createClient();
+  const { searchParams } = new URL(request.url);
+  const q = (searchParams.get("q") ?? "").toLowerCase();
+
+  let query=supabase
+  .from("Skill")
+  .select("skl_id,skl_title,skl_dscrptn,skl_duration")
+  .order("skl_title",{ascending:true});
+  if(q){
+    query=query.or(
+        `skl_title.ilike.%${q}%,skl_dscrptn.ilike.%${q}%`,
+    );
+  }
+  const {data,error}=await query;
+  if(error){
+    console.error("[api/skills] Supabase error:",error.message);
+    return NextResponse.json({error:"failed to load skills"},{
+        status: 500
+    });
+  }
+  const mapped=
+  data?.map((row)=>({
+    id:row.skl_id,
+    title:row.skl_title,
+    description:row.skl_dscrptn ?? "no description",
+  })) ?? [];
+  return NextResponse.json({data:mapped});
+}
+
+===== FILE: app\auth\callback\route.ts =====
+import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { syncRoleTables } from "@/features/users/actions/syncTables";
+export async function GET(request: NextRequest) {
+  const url = new URL(request.url);
+  const code = url.searchParams.get("code");
+  const wantsTeacher = url.searchParams.get("wants_teacher") === "1";
+  if (!code) {
+    console.error("[auth/callback] Missing OAuth code in callback URL.");
+    return NextResponse.redirect(
+      new URL("/login?error=missing_oauth_code", url.origin),
+    );
+  }
+
+  const supabase = await createClient();
+
+  const { error: exchangeError } =
+    await supabase.auth.exchangeCodeForSession(code);
+  if (exchangeError) {
+    console.error(
+      "[auth/callback] Failed to exchange OAuth code for session:",
+      exchangeError.message,
+    );
+    return NextResponse.redirect(new URL("/login?error=oauth", url.origin));
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.redirect(new URL("/login", url.origin));
+  }
+
+  let role = user.app_metadata?.role as string | undefined;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  const getAdminClient = () => {
+    if (!supabaseUrl || !serviceRoleKey) {
+      const missingEnvVars = [
+        !supabaseUrl ? "NEXT_PUBLIC_SUPABASE_URL" : null,
+        !serviceRoleKey ? "SUPABASE_SERVICE_ROLE_KEY" : null,
+      ].filter((value): value is string => value !== null);
+      console.error(
+        `[auth/callback] Missing required env vars: ${missingEnvVars.join(", ")}`,
+      );
+      return null;
+    }
+    return createAdminClient(supabaseUrl, serviceRoleKey);
+  };
+
+  if (wantsTeacher && role !== "teacher" && role !== "admin") {
+    const admin = getAdminClient();
+
+    if (!admin) {
+      return NextResponse.redirect(new URL("/login?error=config", url.origin));
+    }
+    if (!wantsTeacher) {
+      await syncRoleTables(
+        admin,
+        {
+          userId: user.id,
+          email: user.email ?? null,
+          fullName:
+            (user.user_metadata?.full_name as string | undefined) ?? null,
+        },
+        "student",
+      );
+    }
+
+    const { error: requestError } = await admin.from("teacher_requests").upsert(
+      {
+        user_id: user.id,
+        //email: user.email ?? null,
+        // full_name: user.user_metadata?.full_name ?? null,
+        status: "pending",
+        //updated_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id" },
+    );
+
+    if (requestError) {
+      console.error(
+        "[auth/callback] Teacher request failed:",
+        requestError.message,
+      );
+      return NextResponse.redirect(
+        new URL("/login?error=teacher_request", url.origin),
+      );
+    }
+
+    if (role !== "teacher_pending") {
+      const { error: pendingRoleError } = await admin.auth.admin.updateUserById(
+        user.id,
+        {
+          app_metadata: {
+            ...(user.app_metadata ?? {}),
+            role: "teacher_pending",
+          },
+        },
+      );
+
+      if (pendingRoleError) {
+        console.error(
+          "[auth/callback] Failed to set teacher_pending role:",
+          pendingRoleError.message,
+        );
+        return NextResponse.redirect(new URL("/login?error=role", url.origin));
+      }
+    }
+
+    return NextResponse.redirect(new URL(`/${user.id}/apply`, url.origin));
+  }
+
+  if (!role) {
+    const admin = getAdminClient();
+    if (!admin) {
+      return NextResponse.redirect(new URL("/login?error=config", url.origin));
+    }
+
+    const { error: updateError } = await admin.auth.admin.updateUserById(
+      user.id,
+      {
+        app_metadata: { ...(user.app_metadata ?? {}), role: "student" },
+      },
+    );
+
+    if (updateError) {
+      console.error(
+        "[auth/callback] Failed to auto-assign student role:",
+        updateError.message,
+      );
+      return NextResponse.redirect(new URL("/login?error=role", url.origin));
+    }
+
+    role = "student";
+  }
+
+  const destination =
+    role === "admin"
+      ? "/admin"
+      : role === "teacher" || role === "teacher_pending"
+        ? `/${user.id}`
+        : "/student";
+
+  return NextResponse.redirect(new URL(destination, url.origin));
+}
+
+===== FILE: app\auth\finalize-signup\route.ts =====
+import { NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { syncRoleTables } from "@/features/users/actions/syncTables";
+
+type FinalizeBody = { teacher?: boolean };
+
+export async function POST(request: Request) {
+  let teacher = false;
+  try {
+    const body = (await request.json()) as FinalizeBody;
+    teacher = Boolean(body?.teacher);
+  } catch {
+    teacher = false;
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    console.error("[auth/finalize-signup] Missing env vars.");
+    return NextResponse.json({ error: "Server config error" }, { status: 500 });
+  }
+
+  const admin = createAdminClient(supabaseUrl, serviceRoleKey);
+  if (!teacher) {
+    await syncRoleTables(
+      admin,
+      {
+        userId: user.id,
+        email: user.email ?? null,
+        fullName: (user.user_metadata?.full_name as string | undefined) ?? null,
+      },
+      "student",
+    );
+  }
+
+  let role = (user.app_metadata?.role as string | undefined) ?? null;
+
+  if (!role) {
+    const { error: roleError } = await admin.auth.admin.updateUserById(
+      user.id,
+      {
+        app_metadata: { ...(user.app_metadata ?? {}), role: "student" },
+      },
+    );
+
+    if (roleError) {
+      console.error(
+        "[auth/finalize-signup] Role assignment failed:",
+        roleError.message,
+      );
+      return NextResponse.json(
+        { error: "Role assignment failed" },
+        { status: 500 },
+      );
+    }
+
+    role = "student";
+  }
+
+  if (teacher) {
+    const { error: reqError } = await admin.from("teacher_requests").upsert(
+      {
+        user_id: user.id,
+        // full_name: user.user_metadata?.full_name ?? null,
+        status: "pending",
+      },
+      { onConflict: "user_id" },
+    );
+
+    if (reqError) {
+      console.error(
+        "[auth/finalize-signup] Teacher request failed:",
+        reqError.message,
+      );
+      return NextResponse.json(
+        { error: "Teacher request failed" },
+        { status: 500 },
+      );
+    }
+    if (role !== "teacher" && role !== "admin") {
+      const { error: pendingRoleError } = await admin.auth.admin.updateUserById(
+        user.id,
+        {
+          app_metadata: {
+            ...(user.app_metadata ?? {}),
+            role: "teacher_pending",
+          },
+        },
+      );
+
+      if (pendingRoleError) {
+        console.error(
+          "[auth/finalize-signup] Failed to set teacher_pending role:",
+          pendingRoleError.message,
+        );
+        return NextResponse.json(
+          { error: "Failed to update role" },
+          { status: 500 },
+        );
+      }
+    }
+
+    return NextResponse.json({ nextPath: `/${user.id}/apply` });
+  }
+
+  const nextPath =
+    role === "admin"
+      ? "/admin"
+      : role === "teacher" || role === "teacher_pending"
+        ? `/${user.id}`
+        : "/student";
+  return NextResponse.json({ nextPath });
+}
+
+===== FILE: app\auth\teacher-request\route.ts =====
+import { NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
+
+type TeacherRequestBody = {
+  fullName?: string;
+  cvUrl?: string;
+  motivation?: string;
+};
+
+export async function POST(request: Request) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  let payload: TeacherRequestBody;
+  try {
+    payload = (await request.json()) as TeacherRequestBody;
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
+
+  const fullName = payload.fullName?.trim() ?? "";
+  const cvUrl = payload.cvUrl?.trim() ?? "";
+  const motivation = payload.motivation?.trim() ?? "";
+
+  if (!fullName || !cvUrl || !motivation) {
+    return NextResponse.json(
+      { error: "fullName, cvUrl and motivation are required" },
+      { status: 400 },
+    );
+  }
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    console.error("[auth/teacher-request] Missing required env vars.");
+    return NextResponse.json({ error: "Server config error" }, { status: 500 });
+  }
+
+  const admin = createAdminClient(supabaseUrl, serviceRoleKey);
+  const { error } = await admin.from("teacher_requests").upsert(
+    {
+      user_id: user.id,
+      cv_url: cvUrl,
+      motivation,
+      status: "pending",
+    },
+    { onConflict: "user_id" },
+  );
+
+  if (error) {
+    console.error(
+      "[auth/teacher-request] Failed to save request:",
+      error.message,
+    );
+    return NextResponse.json(
+      { error: "Failed to save request" },
+      { status: 500 },
+    );
+  }
+
+  const currentRole = user.app_metadata?.role as string | undefined;
+  if (currentRole !== "teacher" && currentRole !== "admin") {
+    const { error: roleError } = await admin.auth.admin.updateUserById(
+      user.id,
+      {
+        app_metadata: { ...(user.app_metadata ?? {}), role: "teacher_pending" },
+      },
+    );
+
+    if (roleError) {
+      console.error(
+        "[auth/teacher-request] Failed to set teacher_pending role:",
+        roleError.message,
+      );
+      return NextResponse.json(
+        { error: "Application saved, but failed to update role" },
+        { status: 500 },
+      );
+    }
+  }
+
+  return NextResponse.json(
+    { ok: true, nextPath: `/${user.id}` },
+    { status: 200 },
+  );
+}
+
+===== FILE: app\courses\CourseSearchClient.tsx =====
+"use client";
+import { Search } from "lucide-react";
+import { useEffect,useMemo,useState } from "react";
+import CourseCard from "../ui/CourseCard";
+import CourseCardSkeleton from "../ui/CourseCardSkeleton";
+import Button from "../ui/Button";
+type Course = {
+    id:string;
+    title:string;
+    description:string;
+};
+
+export default function CourseSearchClient(){
+    const [query,setQuery]=useState("");
+    const [courses,setCourses]=useState<Course[]>([]);
+    const [loading,setLoading]=useState(false);
+    const [error,setError]=useState("");
+
+    const debounceQuery=useMemo(()=>query.trim(),[query]);
+
+    useEffect(()=>{
+        let cancelled=false;
+        const controller=new AbortController();
+
+        async function load(){
+            setLoading(true);
+            setError("");
+            try{
+                const res=await fetch(`/api/courses?q=${encodeURIComponent(debounceQuery)}`,{
+                    signal:controller.signal,
+                });
+                if(!res.ok)throw new Error("failed to load courses");
+                const payload=(await res.json()) as{data:Course[]};
+
+                if(!cancelled)setCourses(payload.data ?? []);
+
+            }catch(err){
+                if(!cancelled &&(err as Error).name!=="AbortError"){
+                    setError("failed to load courses");
+                }
+
+            }finally{
+                if(!cancelled)setLoading(false);
+            }
+        }
+
+        const t=setTimeout(load,350);
+        return () =>{
+            cancelled=true;
+            controller.abort();
+            clearTimeout(t);
+        };
+
+    },[debounceQuery]);
+   return(
+    <>
+    <div className="relative w-full max-w-2xl mb-12 group ">
+            <div className="absolute inset-0 bg-orange-500/20 blur-3xl rounded-full opacity-50 group-hover:opacity-70 transition-opacity duration-500"/>
+            <div className="relative flex items-center bg-slate-900/50 backdrop-blur-xl border border-white/10 p-2 rounded-3xl shadow-2xl">
+                <div className="flex items-center justify-center w-12 h-12 ml-2 bg-slate-800/50 rounded-2xl">
+                    <Search className="text-orange-500" size={20} />
+                </div>
+                <input 
+                type="text"
+                 placeholder="Search for skills eg: How to write a clean code ... "   
+                 className="flex-1 bg-transparent px-4 py-3 text-white placeholder:text-slate-500 outline-none text-lg" 
+                 value={query}
+                 onChange={(e)=>setQuery(e.target.value)}
+                  />
+                <Button variant="primary" size="m" className="mr-2"> Explore    </Button>
+            </div> 
+        </div>
+        {error?(
+            <p className="text-red-400 mb-6">{error}</p>
+        ):null}
+        <div className="relative w-full max-w-4xl mb-12">
+            <div className="absolute left-0 top-0 bottom-0 w-16 bg-gradient from-slate-950 to to-transparent z-10 pointer-events-none" />
+            <div className="flex overflow-x-auto gap-3 no-scroll-bar pb-4 px-12 mask-fade-edges [scrollbar-width:none] [&::-webkit-scrollbar]:hidden
+                [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]">
+                <button className="whitespace-nowrap px-8 py-2.5 rounded-2xl text-sm font-bold bg-orange-500 text-white shadow-[0_0_20px_rgba(249,115,22,0.3)] transition-all">
+                    All Paths
+                </button>
+                {[
+            'Clean Code Writing', 
+            'Unit & Integration Testing', 
+            'Frontend Architecture', 
+            'Backend Systems', 
+            'DevOps & Deployment',
+            'Data Structures',
+            'Mobile Engineering',
+            'UI/UX Design Systems'
+        ].map((category) => (
+            <button 
+                key={category} 
+                className="whitespace-nowrap px-8 py-2.5 rounded-2xl text-sm font-medium text-slate-400 bg-slate-900/60 border border-white/5 hover:border-orange-500/30 hover:text-white transition-all"
+            >
+                {category}
+            </button>
+        ))}
+            </div>
+            <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-slate-950 to-transparent z-10 pointer-events-none" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-7xl mb-10">
+            {loading
+             ?Array.from({length:12}).map((_,i)=><CourseCardSkeleton key={i}/>)
+             :courses.map((course)=>(
+                <CourseCard
+                key={course.id}
+                title={course.title}
+                description={course.description}
+                />
+             ))
+            
+            }
+        </div>
+    </>
+     
+   );
+}
+
+===== FILE: app\courses\page.tsx =====
+import { Sparkles } from "lucide-react";
+
+import CourseCard from "../ui/CourseCard";
+import CourseSearchClient from "./CourseSearchClient";
+export default function GuestDomain() {
+    return (
+    <div className="min-h-screen bg-slate-950 flex flex-col items-center pt-24 px-6">
+        <div className="flex items-center gap-2 border border-orange-500/30 bg-orange-500/10 px-4 py-1.5 rounded-full mb-2">
+            <Sparkles className="text-orange-500" size={16}/>
+            <span className="text-orange-500 text-xs font-bold tracking-widest uppercase">LEARN SMARTER</span>
+        </div>
+
+        <div className="text-4xl md:text-5xl font-bold text-center mb-10">
+            <h1 className="text-white tracking-tight">What will you <span className="uppercase  bg-gradient-to-br from-[#FF4D00] to-[#FFB800] bg-clip-text text-transparent">Master</span> today ?</h1>
+        </div>
+       
+
+           
+
+        
+
+        <CourseSearchClient />
+    </div>
+    );
+}
+
+===== FILE: app\courses\roadmap\page.tsx =====
+import InfoCard from "@/app/ui/roadmapcomp/InfoCard";
+import RoadmapFlow from "@/app/ui/roadmapcomp/RoadmapFlow";
+import ProgressBar from "@/app/ui/roadmapcomp/ProgressBar";
+import Button from "@/app/ui/Button";
+
+
+export default function RoadmapPage() {
+  return (
+    <main className="min-h-screen min-w-screen bg-slate-950 text-white flex flex-col items-center pt-16 md:pt-20 px-4 sm:px-6 relative overflow-hidden font-sans gap-3">
+      <div className="w-full justify-between flex flex-row pl-10 pr-10">
+        <Button variant="outline" size="s" className="bg-linear-to-br from-slate-300/50 to-slate-500/10 border-2 border-slate-700/40"> {"<\t Back to courses"} </Button>
+        <Button variant="outline" size="s" className="bg-linear-to-br from-slate-300/50 to-slate-500/10 border-2 border-slate-700/40"> {" Enroll"} </Button>
+      </div>
+      <div className="w-full max-w-[1400px] flex flex-col md:flex-row gap-5 mb-8 md:mb-10">
+        <div className="w-full md:flex-[2]">
+          <InfoCard title="git master v1.0" subtitle="start learning team works and devlopments using tools like git " />
+        </div>
+        <div className="w-full md:flex-1">
+          <ProgressBar title="Your Next Progres" value={40} />
+        </div>
+      </div>
+      <div className="w-full max-w-[1400px]">
+        <h3 className="text-xl md:text-2xl font-black italic tracking-tight mb-4">COURSE PATH</h3>
+        <RoadmapFlow />
+      </div>
+    </main>
+  );
+}
+
+===== FILE: app\login\page.tsx =====
+import LoginPageView from "@/app/ui/auth/LoginPageView";
+
+export default function Page() {
+  return (
+    <main className="min-h-screen bg-slate-950 px-4 py-10 flex items-center justify-center">
+      <div className="w-full max-w-2xl">
+        <LoginPageView />
+      </div>
+    </main>
+  );
+}
+
+===== FILE: app\signup\page.tsx =====
+import SignupPageView from "@/app/ui/auth/SignupPageView";
+
+export default function SignupPage() {
+  return (
+    <main className="min-h-screen bg-slate-950 px-3 py-15 flex items-center justify-center">
+      <div className="w-full max-w-2xl">
+        <SignupPageView />
+      </div>
+    </main>
+  );
+}
+
+===== FILE: app\student\page.tsx =====
+import { redirect } from "next/navigation";
+import { createClient } from "../../lib/supabase/server";
+import LogoutButton from "@/app/ui/LogoutButton";
+import { getRole } from "@/features/utils/auth/getRole";
+
+export default async function studentPage() {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+  if (error) {
+    console.error("Auth error :", error.message);
+    redirect("/");
+  }
+  if (!user) {
+    redirect("/");
+  }
+
+  const role = getRole(user);
+  if (role !== "student") {
+    redirect("/");
+  }
+  return (
+    <main className="min-h-screen pt-28 pb-24 px-4 flex items-center justify-center">
+      <div className="w-full max-w-3xl text-center space-y-6">
+        <h1 className="text-3xl font-bold">Students Page</h1>
+        <div className="flex justify-center">
+        </div>
+      </div>
+    </main>
+  );
+}
+
+===== FILE: app\ui\About.tsx =====
+import React from "react";
+
+const About: React.FC = () => {
+  return (
+    <section className="flex flex-col items-center p-16 md:p-20">
+      
+      <h2 className="mt-8 mb-12 text-5xl md:text-6xl font-extrabold text-white">
+        About Us
+      </h2>
+
+      <div className="w-full max-w-7xl flex flex-col md:flex-row items-center justify-between gap-10">
+        
+        <div className="flex-1 flex justify-center w-full md:w-1/2">
+          <img 
+            src="/png/about.png" 
+            alt="About Us" 
+            className="w-4/5 md:w-full max-w-md h-auto animate-float"
+          />
+        </div>
+        
+        <div className="flex-1 w-full md:w-1/2 text-left p-2">
+          <p className="text-sm md:text-lg  md:leading-relaxed text-slate-400">
+            Lumina was developed at the University of Abdelhamid Mehri Constantine 2 to address a critical challenge in modern education: the &quot;one-size-fits-all&quot; approach. Traditional learning platforms often deliver identical content to every student, regardless of their individual skill level or learning pace. This lack of personalization frequently leads to student disengagement and learning difficulties, as some learners require reinforcement while others are ready for more advanced material.
+            Our platform transforms the educational experience into an Adaptive Learning System (ALS). By tailoring content specifically to each learner&apos;s unique profile, performance, and engagement levels, Lumina ensures a personalized journey for every student. Built on the principles of Software Product Line (SPL) engineering, Lumina is designed as a family of applications that share a robust common core while offering modular, customizable features. This technical architecture allows us to integrate a functional AI Assistance Agent that provides real-time FAQ support, pedagogical guidance, and personalized content recommendations.
+            At Lumina, our mission is to move beyond static curriculum. We empower 3rd-year Software Engineering students at the NTIC Faculty to master complex concepts through a system that adapts to them, rather than forcing them to adapt to the system.
+          </p>
+        </div>
+      </div>
+      
+    </section>
+  );
+};
+
+export default About;
+
+===== FILE: app\ui\Button.tsx =====
+import React from 'react';
+import Link from 'next/link';
+import type { LinkProps } from 'next/link';
+
+interface AnchorProps extends Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, 'href'> {
+  href: string;
+  children: React.ReactNode;
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
+  size?: 's' | 'm' | 'l';
+  replace?: LinkProps['replace'];
+  scroll?: LinkProps['scroll'];
+  prefetch?: LinkProps['prefetch'];
+}
+
+interface RegularButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  href?: never;
+  children: React.ReactNode;
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
+  size?: 's' | 'm' | 'l';
+}
+
+type ButtonProps = AnchorProps | RegularButtonProps;
+
+const Button: React.FC<ButtonProps> = (props) => {
+  const { 
+    variant = 'primary', 
+    size = 'm',
+    children,
+    className = '', 
+    ...rest 
+  } = props;
+
+  const baseStyles = "font-semibold rounded-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 inline-flex items-center justify-center";
+
+  const variants = {
+    primary: "text-base font-semibold rounded-4xl border-none cursor-pointer transition-all duration-300 bg-gradient-to-br from-[#FF4D00] to-[#FFB800] text-white hover:-translate-y-0.5 hover:shadow-lg hover:shadow-yellow-500/40",
+    secondary: "bg-gradient-to-br from-indigo-600 via-blue-500 to-sky-400 text-white hover:bg-none hover:bg-white hover:text-black focus:ring-blue-500 hover:-translate-y-0.5 transition-all duration-300 ease-out hover:shadow-[0_5px_20px_blue]",
+    outline: "bg-transparent border-2 border-white text-white hover:bg-white hover:text-black focus:ring-white transition-all duration-300 ease-out",
+    ghost: "text-white hover:bg-white/10"
+  };
+  
+  const sizes = {
+    s: "px-3 py-1.5 text-sm",
+    m: "px-4 py-2 text-base",
+    l: "px-10 py-5 text-lg"
+  };
+
+  const buttonStyle = `${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`.trim();
+
+  if ('href' in rest && rest.href) {
+    const { href, ...linkProps } = rest;
+    
+    return (
+      <Link href={href} className={buttonStyle} {...linkProps}>
+        {children}
+      </Link>
+    );
+  }
+
+  return (
+    <button className={buttonStyle} {...(rest as React.ButtonHTMLAttributes<HTMLButtonElement>)}>
+      {children}
+    </button>
+  );
+};
+
+export default Button;
+
+===== FILE: app\ui\Card.tsx =====
+import React from "react";
+import { LucideIcon } from 'lucide-react';
+
+interface CardProps {
+  title: string;
+  subtitle?: string;
+  icon?: LucideIcon;
+  iconColor?: string;
+}
+
+const Card: React.FC<CardProps> = ({ title, subtitle, icon: Icon, iconColor = "text-white" }) => {
+  return (
+    // ✨ جرب تزيد 'transition-transform' صراحة
+    <div className="flex bg-slate-900 border border-slate-800 rounded-2xl p-6 items-center gap-4 transition-all duration-300 transform hover:-translate-y-1 hover:border-slate-600 hover:shadow-lg hover:shadow-sky-500/10">
+      
+      {Icon && (
+        <div className="size-12 flex items-center justify-center rounded-lg bg-slate-800 shrink-0">
+          <Icon className={`size-6 ${iconColor}`} strokeWidth={1.5} />
+        </div>
+      )}
+      
+      <div>
+        <h3 className="text-lg font-semibold text-white">{title}</h3>
+        {subtitle && <p className="text-sm text-slate-400">{subtitle}</p>}
+      </div>
+    </div>
+  );
+};
+
+export default Card;
+
+===== FILE: app\ui\CourseCard.tsx =====
+import Button from "./Button";
+
+interface CourseCardProps {
+    title: string;
+    description: string;
+    image?: string;
+}
+
+function CourseCard({ title, description, image }: CourseCardProps) {
+    return (
+        <div className="group relative bg-slate-900/40 w-full aspect-[3/2] backdrop-blur-md border border-white/5 rounded-[2rem] p-5 overflow-hidden transition-all duration-500 hover:border-orange-500/40 hover:scale-[1.02] flex flex-col">
+            <div className="relative w-full h-[60%] rounded-2xl overflow-hidden mb-4 bg-slate-800">
+                {image ? (
+                    <img src={image} alt={title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                ) : (
+                    <div className="h-full w-full bg-slate-800" />
+                )}
+        
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 to-transparent" />
+            </div>
+
+            <div className="flex flex-col flex-grow justify-between">
+                <div>
+                    <h3 className="text-lg font-bold text-white group-hover:text-orange-500 transition-colors line-clamp-1">
+                        {title}
+                    </h3>
+                    <p className="text-slate-500 text-[11px] mt-1 line-clamp-2 leading-snug font-medium">
+                        {description}
+                    </p>
+                </div>
+
+                <div className="mt-3 items-left flex flex-1">
+                    <Button variant="outline" className=" text-xs py-2">
+                        Let&apos;s Start
+                    </Button>
+                </div>
+            </div>
+        </div>
+  );
+}
+
+export default CourseCard;
+
+===== FILE: app\ui\CourseCardSkeleton.tsx =====
+export default function CourseCardSkeleton() {
+  return (
+    <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 animate-pulse">
+      <div className="h-5 w-2/3 rounded bg-slate-700/60" />
+      <div className="mt-3 h-4 w-full rounded bg-slate-700/40" />
+      <div className="mt-2 h-4 w-5/6 rounded bg-slate-700/40" />
+      <div className="mt-6 h-9 w-24 rounded-full bg-slate-700/50" />
+    </div>
+  );
+}
+
+===== FILE: app\ui\Features.tsx =====
+import React from 'react';
+import { Brain, MessageSquare, Code2 } from 'lucide-react'; 
+import Card from './Card';
+
+const Features = () => {
+  return (
+    <section className="p-6 md:p-10">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        <Card 
+          icon={Brain} 
+          title="Adaptive Learning Engine"
+          subtitle="Adjusts content difficulty based on quiz performance."
+          iconColor="text-orange-500"
+        />
+
+        <Card 
+          icon={MessageSquare} 
+          title="AI Study Assistant"
+          subtitle="Chat-based assistant for explanations and recommendations."
+          iconColor="text-blue-500"
+        />
+
+        <Card 
+          icon={Code2} 
+          title="Developer-Ready Architecture"
+          subtitle="API-based system for integration into platforms."
+          iconColor="text-orange-500"
+        />
+
+      </div>
+    </section>
+  );
+};
+
+export default Features;
+
+===== FILE: app\ui\Footer.tsx =====
+import React from "react";
+import Logo from "../ui/Logo";
+
+const Footer: React.FC = () => {
+  return (
+    <footer className="bg-slate-950 p-10 pt-16 pb-8 border-t border-slate-800 text-center">
+      
+      <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start gap-12 mb-10 text-left">
+        
+        <div className="w-full md:w-80 flex flex-col gap-4">
+          <div className="flex items-center gap-3">
+            <Logo size={24} />
+          </div>
+          <p className="text-sm font-light text-slate-400 leading-relaxed">
+            Empowering University Students with AI-Driven Personalized Learning
+          </p>
+        </div>
+        
+        {[
+          { title: "Product", links: ["Home", "Domains", "Courses"] },
+          { title: "Resources", links: ["Blog", "Help Center", "Contact Us"] },
+          { title: "Developers", links: ["API Documentation", "Open Source", "GitHub"] },
+          { title: "Company", links: ["About Us", "Careers", "Press"] },
+        ].map((section) => (
+          <div key={section.title} className="flex flex-col gap-4 w-full md:w-auto">
+            <h3 className="font-semibold text-white text-sm uppercase tracking-wider">
+              {section.title}
+            </h3>
+            <div className="flex flex-col gap-3">
+              {section.links.map((link) => (
+                <a 
+                  key={link}
+                  href="#" 
+                  className="text-sm text-slate-400 hover:text-orange-500 transition-all duration-200 hover:translate-x-1"
+                >
+                  {link}
+                </a>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+      
+      <div className="max-w-7xl mx-auto pt-8 border-t border-slate-800">
+        <p className="text-xs text-slate-500">
+          &copy; {new Date().getFullYear()} Lumina. All rights reserved.
+        </p>
+      </div>
+    </footer>
+  );
+};
+
+export default Footer;
+
+===== FILE: app\ui\global.css =====
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+@import "tailwindcss";
+:root {
+    --bg-main: #020617;        
+    --bg-card: rgba(255, 255, 255, 0.03);
+    --text-main: #F8FAFC;        
+    --text-dim: #94A3B8;        
+    --indigo-glow: #6366F1;
+    --blue-electric: #0EA5E9;
+    --brand-gradient: linear-gradient(135deg, var(--indigo), var(--electric-blue));
+    --border: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme='light'] {
+    --bg-main: #F8FAFC;        
+    --bg-card: rgba(0, 0, 0, 0.03);
+    --text-main: #0F172A;        
+    --text-dim: #475569;         /* Muted slate */
+    --indigo-glow: #4F46E5;      /* Slightly deeper for contrast */
+    --blue-electric: #0284C7;
+    --brand-gradient: linear-gradient(135deg, var(--indigo), var(--electric-blue));
+    --orange-gradient:linear-gradient(135deg, #FF4D00 0%, #FFB800 100%);
+    --border: rgba(0, 0, 0, 0.1);
+}
+
+body {
+    font-family: "Plus Jakarta Sans", sans-serif;
+    background-color: var(--bg-main);
+    color: var(--text-main);
+       transition: all 0.7s ease;
+    transition: background-color 0.3s ease, color 0.3s ease; 
+  
+}
+.auth{
+    opacity: 1;
+    background: none;
+   
+}
+.auth-hidden{
+    opacity: 0; 
+    background: none;
+}
+
+===== FILE: app\ui\Hero.tsx =====
+import React from "react";
+import Button from "./Button";
+
+interface HeroProps {
+  src: string;
+  subtitle: string;
+}
+
+const Hero: React.FC<HeroProps> = ({ src, subtitle }) => {
+  return (
+    // .hero-wrapper
+    <section className="flex w-full justify-center py-10 md:py-[60px] bg-[#020617]">
+      {/* .hero-card: Margin top applied for mobile, removed for md+ screens */}
+      <div className="mt-16 md:mt-10 relative w-[95vw] md:w-[90vw] max-w-[1400px] h-auto md:h-[650px] rounded-[30px] md:rounded-[40px] overflow-hidden shadow-[-50px_100px_40px_rgba(0,0,58,0.212)]">
+        
+        {/* .hero-video */}
+        <video 
+            autoPlay 
+            loop 
+            muted 
+            playsInline 
+            className="absolute top-0 left-0 w-full h-full object-cover z-10"
+        >
+          <source src={src} type="video/mp4" />
+        </video>
+        
+        {/* .hero-overlay */}
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-950/70 to-slate-950/50 z-20"></div>
+
+        {/* .hero-content */}
+        <div className="relative z-30 w-full h-full flex flex-col md:flex-row items-center justify-between p-6 md:px-20 text-center md:text-left">
+          
+          {/* .hero-texts */}
+          <div className="flex-1 w-full flex flex-col items-center md:items-start md:order-1 order-2 mt-8 md:mt-0">
+            {/* .titles */}
+            <h1 className="text-4xl md:text-7xl font-extrabold leading-[1.1] text-white mb-5">
+              Learn Smarter.<br />
+              Adapt Faster.
+            </h1>
+            
+            {/* .titles-highlight */}
+            <h1 className="text-xl md:text-2xl font-black tracking-[2px] uppercase bg-gradient-to-br from-[#FF4D00] to-[#FFB800] bg-clip-text text-transparent mb-2.5">
+                AI ASSISTED
+            </h1>
+            
+            {/* .subtitle */}
+            <p className="text-sm md:text-base max-w-[500px] text-white/80 mb-8 md:mb-[30px]">
+              {subtitle}
+            </p>
+            
+            {/* .hero-btns */}
+            <div className="flex flex-col sm:flex-row gap-4 sm:gap-5 justify-center md:justify-start items-center w-full sm:w-auto">
+              <Button variant="primary" size="l" className="w-full sm:w-auto"> Start Learning </Button>
+              <Button variant="outline" size="l" className="w-full sm:w-auto"> Explore More</Button>
+            </div>
+          </div>
+
+          {/* .hero-vector */}
+          <div className="flex-1 flex justify-center md:justify-end md:order-2 order-1">
+            <img 
+                src="/png/learning.png" alt="Learning Illustration"
+                className="w-full max-w-[300px] md:max-w-[550px] h-auto drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)] animate-float"
+            />
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+export default Hero;
+
+===== FILE: app\ui\HomeLanding.tsx =====
+"use client";
+import { useRouter } from "next/navigation";
+import "@/app/ui/global.css";
+import Hero from "@/app/ui/Hero";
+import MainIdea from "@/app/ui/MainIdea";
+import Features from "@/app/ui/Features";
+import About from "@/app/ui/About";
+import LastHook from "@/app/ui/LastHook";
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+
+export default function HomeLanding() {
+  const router = useRouter();
+  const [checkingAuth, setCheckingAuth] = useState(true);
+
+  useEffect(() => {
+    const supabase = createClient();
+    let cancelled = false;
+
+    const enforceRoleRedirect = async () => {
+      if (!cancelled) setCheckingAuth(true);
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      const role = user?.app_metadata?.role;
+      if ((role === "teacher" || role === "teacher_pending") && user?.id) {
+        router.replace(`/${user.id}`);
+        return;
+      }
+      if (role === "student") {
+        router.replace("/student");
+        return;
+      }
+      if (role === "admin") {
+        router.replace("/admin");
+        return;
+      }
+      if (!cancelled) setCheckingAuth(false);
+    };
+    const handlePageHide = () => {
+      setCheckingAuth(true);
+    };
+    const disableBfCache = () => {};
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        window.location.reload();
+        return;
+      }
+      void enforceRoleRedirect();
+    };
+
+    enforceRoleRedirect();
+    window.addEventListener("pageshow", handlePageShow);
+    window.addEventListener("pagehide", handlePageHide);
+    window.addEventListener("unload", disableBfCache);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("pageshow", handlePageShow);
+      window.removeEventListener("pagehide", handlePageHide);
+      window.removeEventListener("unload", disableBfCache);
+    };
+  }, [router]);
+
+  if (checkingAuth) {
+    return <div className="min-h-screen bg-slate-950" />;
+  }
+
+  return (
+    <div>
+      <div className="body">
+        <Hero
+          src="/videos/homeVideo.mp4"
+          subtitle="Lumina is an AI-powered adaptive learning platform designed for 
+          university students. It personalizes learning paths based on 
+          performance, engagement, and skill level."
+        />
+        <MainIdea
+          question="What is Lumina?"
+          answer="Lumina is an AI-powered adaptive learning platform designed for university students. It personalizes learning paths based on performance, engagement, and skill level."
+        />
+        <Features />
+        <About />
+        <LastHook />
+      </div>
+    </div>
+  );
+}
+
+===== FILE: app\ui\LastHook.tsx =====
+import React from "react";
+import Button from "./Button";
+
+const LastHook: React.FC = () => {
+  return (
+    // .last-hook-container + radial gradient background
+    <section className="flex flex-col items-center justify-center p-6 py-20 md:p-20 bg-[radial-gradient(circle_at_center,rgba(255,77,0,0.05)_0%,transparent_70%)]">
+      
+      {/* .last-hook */}
+      <div className="w-full max-w-4xl flex flex-col items-center justify-center text-center">
+        
+        {/* .last-hook-title */}
+        <h2 className="w-full max-w-3xl mb-5 text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight text-slate-50">
+          Ready to Illuminate Your Learning Journey?
+        </h2>
+        
+        {/* .last-hook-subtitle */}
+        <p className="text-sm md:text-lg text-slate-400 mb-12 font-semibold">
+          AI Assisted. self-improvement. Built for performance
+        </p>
+        
+        <Button variant="primary" size="l" className="w-full sm:w-auto"> Start With Lumina</Button>
+      </div>
+      
+    </section>
+  );
+};
+
+export default LastHook;
+
+===== FILE: app\ui\Logo.tsx =====
+import React from "react";
+import Image from "next/image"
+import LuminaLogo from "../../public/png/LuminaLogo.png"
+
+interface LogoProps {
+  size?: number;
+}
+
+const Logo: React.FC<LogoProps> = () => {
+  return (
+    // .logo-wrapper
+    <div className="flex items-center justify-center w-full h-full m-0 p-0">
+      <Image 
+        width={400}
+        height={100}
+        src={LuminaLogo} 
+        alt="Lumina Logo" 
+        // 1. Used aspect-ratio to match image file
+        // 2. Used object-cover to fill container
+        className="cursor-pointer w-full h-autoobject-contain" 
+        priority
+      />
+    </div>
+  );
+};
+
+export default Logo;
+
+===== FILE: app\ui\LogoutButton.tsx =====
+"use client";
+import { useRouter } from "next/navigation";
+import { createClient } from "../../lib/supabase/client";
+import Button from "./Button";
+import { useState } from "react";
+
+export default function LogoutButton() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const handleLogout = async () => {
+    setLoading(true);
+    setErrorMsg(null);
+    const supabase = createClient();
+    const { error } = await supabase.auth.signOut({ scope: "global" });
+    if (error) {
+      console.error("logout failed :", error.message);
+      setErrorMsg("logout failed. Please try again...");
+      setLoading(false);
+      return;
+    }
+    router.replace("/");
+    router.refresh();
+  };
+  return (
+    <>
+      <Button variant="ghost" onClick={handleLogout} disabled={loading}>
+        {loading ? "logging out..." : "Logout"}
+      </Button>
+      {errorMsg && <p style={{ color: "red" }}>{errorMsg}</p>}
+    </>
+  );
+}
+
+===== FILE: app\ui\MainIdea.tsx =====
+import React from "react";
+
+interface MainIdeaProps {
+  question: string;
+  answer: string;
+}
+const MainIdea: React.FC<MainIdeaProps> = ({ question, answer }) => {
+  return (
+    // .main-idea-wrapper
+    <section className="flex flex-col items-center text-center py-10 md:py-16 px-4 md:px-6 gap-6 md:gap-8 z-[1000]">
+
+      {/* .main-idea-card */}
+      <div className="p-6 md:p-8 max-w-[900px] w-full">
+
+        {/* .main-idea-question */}
+        <h2 className="text-3xl md:text-5xl font-extrabold mb-4 md:mb-5 text-white leading-tight">
+          {question}
+        </h2>
+
+        {/* .main-idea-answer */}
+        <p className="text-sm md:text-lg text-white/80 leading-relaxed">
+          {answer}
+        </p>
+
+        
+      </div>
+    </section>
+  );
+}
+
+export default MainIdea;
+
+===== FILE: app\ui\NavBar.tsx =====
+"use client";
+import React, { useEffect, useState } from "react";
+import Logo from "../ui/Logo";
+import Button from "../ui/Button";
+import Link from "next/link";
+import { House, LibraryBig, Blocks, Menu, X } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+import LogoutButton from "@/app/ui/LogoutButton";
+
+
+const NavBar: React.FC = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    const supabase = createClient();
+    let mounted = true;
+
+    const syncAuthState = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (mounted) setIsAuthenticated(Boolean(user));
+    };
+
+    void syncAuthState();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAuthenticated(Boolean(session?.user));
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
+
+
+  const navLinks = [
+    { name: "Home", href: "/", icon: House },
+    { name: "Courses", href: "/courses", icon: Blocks },
+  ];
+
+  return (
+
+    <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md bg-[rgba(2,6,23,0.6)] border-b border-slate-800 z-[1000]">
+
+      <div className="flex items-center justify-between px-6 md:px-8 py-2">
+        
+        <div className="flex items-center justify-center h-11 w-30 md:h-11 md:w-30">
+            <Logo />
+        </div>
+
+        <div className="hidden md:flex flex-row gap-8 text-slate-400">
+          {navLinks.map((link) => (
+            <Link 
+              key={link.name} 
+              href={link.href} 
+              className="hover:text-slate-100 transition-all duration-200 ease-in flex justify-center items-center gap-1.5 font-medium"
+            >
+              <link.icon size={16} />
+              <h3>{link.name}</h3>
+            </Link>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-3">
+          <div className="hidden sm:flex gap-3">
+            {isAuthenticated ? (
+              <LogoutButton />
+            ) : (
+              <>
+                <Button variant="ghost" href="/login">
+                  Login
+                </Button>
+                <Button variant="secondary" href="/signup">
+                  Sign Up
+                </Button>
+              </>
+            )}
+          </div>
+
+          <button 
+            className="md:hidden text-slate-100 p-2"
+            onClick={() => setIsOpen(!isOpen)}
+            aria-label="Toggle Menu"
+          >
+            {isOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
+      </div>
+
+      <div className={`md:hidden overflow-hidden transition-all border-slate-700  backdrop-blur-md bg-[rgba(2,6,23,0.6)] duration-300 ease-in-out ${isOpen ? "max-h-96 border-b border-slate-800" : "max-h-0"}`}>
+        <div className="backdrop-blur-md bg-[rgba(2,6,23,0.6)] border-b border-slate-700 px-6 py-4 flex flex-col gap-4">
+          {navLinks.map((link) => (
+            <Link 
+              key={link.name} 
+              href={link.href} 
+              className="text-slate-200 hover:text-white transition-all flex items-center gap-3 p-2 rounded-lg hover:bg-slate-800"
+              onClick={() => setIsOpen(false)}
+            >
+              <link.icon size={20} />
+              <h3 className="text-lg font-medium">{link.name}</h3>
+            </Link>
+          ))}
+          <div className="flex flex-col gap-3 pt-4 border-t border-slate-800 sm:hidden">
+            {isAuthenticated ? (
+              <LogoutButton />
+            ) : (
+              <>
+                <Button variant="ghost" className="w-full" href="/login">
+                  Login
+                </Button>
+                <Button variant="secondary" className="w-full" href="/signup">
+                  Sign Up
+                </Button>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    </nav>
+  );
+};
+
+export default NavBar;
+
+===== FILE: app\ui\UserNavbar.tsx =====
+'use client'
+import React, { useState } from "react";
+import Logo from "../ui/Logo";
+import Button from "../ui/Button";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { House, LibraryBig, Blocks, Menu, X } from 'lucide-react';
+
+
+const NavBar: React.FC = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const pathname = usePathname();
+
+
+  const navLinks = [
+    { name: "Home", href: "/", icon: House },
+    { name: "Courses", href: "/courses", icon: Blocks },
+    { name: "Courses", href: "/c", icon: LibraryBig },
+  ];
+
+  return (
+
+    <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md bg-[rgba(2,6,23,0.6)] border-b border-slate-800 z-[1000]">
+
+      <div className="flex items-center justify-between px-6 md:px-8 py-2">
+        
+        <div className="flex items-center justify-center h-11 w-30 md:h-11 md:w-30">
+            <Logo />
+        </div>
+
+        <div className="hidden md:flex flex-row gap-8 text-slate-400">
+          {navLinks.map((link) => (
+            <Link 
+              key={link.name} 
+              href={link.href} 
+              className="hover:text-slate-100 transition-all duration-200 ease-in flex justify-center items-center gap-1.5 font-medium"
+            >
+              <link.icon size={16} />
+              <h3>{link.name}</h3>
+            </Link>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-3">
+          <div className="hidden sm:flex gap-3">
+            <Button variant="ghost" href="/login" >
+              Login
+            </Button>
+            <Button variant="secondary" href="/signup" >
+              Sign Up
+            </Button>
+          </div>
+
+          <button 
+            className="md:hidden text-slate-100 p-2"
+            onClick={() => setIsOpen(!isOpen)}
+            aria-label="Toggle Menu"
+          >
+            {isOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
+      </div>
+
+      <div className={`md:hidden overflow-hidden transition-all border-slate-700  backdrop-blur-md bg-[rgba(2,6,23,0.6)] duration-300 ease-in-out ${isOpen ? "max-h-96 border-b border-slate-800" : "max-h-0"}`}>
+        <div className="backdrop-blur-md bg-[rgba(2,6,23,0.6)] border-b border-slate-700 px-6 py-4 flex flex-col gap-4">
+          {navLinks.map((link) => (
+            <Link 
+              key={link.name} 
+              href={link.href} 
+              className="text-slate-200 hover:text-white transition-all flex items-center gap-3 p-2 rounded-lg hover:bg-slate-800"
+              onClick={() => setIsOpen(false)}
+            >
+              <link.icon size={20} />
+              <h3 className="text-lg font-medium">{link.name}</h3>
+            </Link>
+          ))}
+          <div className="flex flex-col gap-3 pt-4 border-t border-slate-800 sm:hidden">
+              <Button variant="ghost"  className="w-full" href="/login" >Login</Button>
+              <Button variant="secondary"  className="w-full" href="/signup" >Sign Up</Button>            
+          </div>
+        </div>
+      </div>
+    </nav>
+  );
+};
+
+export default NavBar;
+
+===== FILE: app\ui\auth\LoginPageView.tsx =====
+"use client";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+import { useState } from "react";
+import clsx from "clsx";
+import Link from "next/link";
+import { Eye, EyeOff, Lock, Mail } from "lucide-react";
+
+export default function LoginPageView() {
+  const router = useRouter();
+  const supabase = createClient();
+  const [error, setError] = useState("");
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (signInError) {
+      setError("Invalid email or password. Please try again.");
+      setLoading(false);
+      return;
+    }
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    const role = user?.app_metadata?.role;
+
+    if (role === "student") router.replace("/student");
+    else if (role === "teacher" || role === "teacher_pending") {
+      router.replace(`/${user?.id}`);
+    } else if (role === "admin") router.replace("/admin");
+    else router.replace("/");
+
+    setLoading(false);
+  }
+
+  return (
+    <div className="w-full overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/95 shadow-[0_25px_80px_rgba(2,6,23,0.55)]">
+      <div className="grid grid-cols-1 md:grid-cols-[44%_56%]">
+        <div className="relative hidden md:block">
+          <img
+            src="/png/auth.jpg"
+            alt="Authentication visual"
+            className="h-full w-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-950/75 via-slate-950/35 to-orange-500/20" />
+          <div className="absolute top-5 left-5 right-5">
+            <p className="text-sm font-semibold tracking-wide text-orange-300">
+              LUMINA
+            </p>
+            <p className="mt-1 text-lg font-semibold leading-snug text-white">
+              Learn smarter with adaptive guidance.
+            </p>
+          </div>
+        </div>
+
+        <div className="p-6 sm:p-7">
+          <h2 className="text-3xl font-black tracking-tight text-white">
+            Welcome back
+          </h2>
+          <p className="mt-1 text-sm text-slate-300">
+            We are happy to see you again :)
+          </p>
+
+          <form className="mt-6 space-y-4" onSubmit={onSubmit}>
+            <div>
+              <label className="mb-1 block text-sm text-slate-300">Email</label>
+              <div className="relative">
+                <Mail
+                  size={16}
+                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                />
+                <input
+                  type="email"
+                  placeholder="johndoe@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className={clsx(
+                    "w-full rounded-lg border border-slate-700 bg-slate-800 px-10 py-2.5 text-white outline-none",
+                    "focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20",
+                  )}
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-1 block text-sm text-slate-300">
+                Password
+              </label>
+              <div className="relative">
+                <Lock
+                  size={16}
+                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                />
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className={clsx(
+                    "w-full rounded-lg border border-slate-700 bg-slate-800 px-10 py-2.5 pr-10 text-white outline-none",
+                    "focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20",
+                  )}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                  aria-label="Toggle password visibility"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+            </div>
+
+            <div className="text-right">
+              <Link
+                href="/forgot-password"
+                className="text-sm text-orange-400 hover:underline"
+              >
+                Forgot password?
+              </Link>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className={clsx(
+                "w-full cursor-pointer rounded-lg py-2.5 font-semibold text-white transition-all disabled:cursor-not-allowed",
+                loading
+                  ? "cursor-not-allowed bg-slate-700 text-slate-300"
+                  : "bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600",
+              )}
+            >
+              {loading ? "Signing in..." : "Login"}
+            </button>
+          </form>
+
+          <p className="mt-3 text-sm text-slate-300 text-center ">
+            Don&apos;t have an account?{" "}
+            <Link
+              href="/signup"
+              className="font-semibold text-orange-400 hover:underline"
+            >
+              Sign Up
+            </Link>
+          </p>
+          {error ? <p className="text-sm text-red-400">{error}</p> : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+===== FILE: app\ui\auth\SignupPageView.tsx =====
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import clsx from "clsx";
+import { Eye, EyeOff, Lock, Mail, User } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
+
+export default function SignupPageView() {
+  const router = useRouter();
+  const supabase = createClient();
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const[teacher,setTeacher]=useState(false);
+    
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return;
+    }
+
+    setLoading(true);
+
+    const { data, error: signUpError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: fullName,
+        },
+      },
+    });
+
+    if (signUpError) {
+      setError(signUpError.message);
+      setLoading(false);
+      return;
+    }
+
+    if (data.session && !rememberMe) {
+      await supabase.auth.signOut({ scope: "global" });
+    }
+    if (data.session) {
+  const res = await fetch("/auth/finalize-signup", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ teacher }),
+  });
+
+  if (!res.ok) {
+    setError("Account created, but setup failed.");
+    setLoading(false);
+    return;
+  }
+  
+  const payload = (await res.json()) as { nextPath?: string };
+  router.replace(payload.nextPath ?? "/student");
+  router.refresh();
+  setLoading(false);
+  return;
+}
+
+
+    // setSuccess("Account created. Check your email to confirm your signup.");
+    setLoading(false);
+  }
+
+  async function signUpWithGoogle() {
+    setError("");
+    setSuccess("");
+    setGoogleLoading(true);
+    const callbackUrl=new URL("/auth/callback",window.location.origin);
+    if(teacher){
+      callbackUrl.searchParams.set("wants_teacher","1");
+    }
+
+    const { error: googleError } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: callbackUrl.toString(),
+      },
+    });
+
+    if (googleError) {
+      setError(googleError.message);
+      setGoogleLoading(false);
+    }
+  }
+
+  return (
+    <div className="w-full overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/95 shadow-[0_25px_80px_rgba(2,6,23,0.55)]">
+      <div className="grid grid-cols-1 md:grid-cols-[44%_56%]">
+        <div className="relative hidden md:block">
+          <img
+            src="/png/auth.jpg"
+            alt="Authentication visual"
+            className="h-full w-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-950/75 via-slate-950/35 to-orange-500/20" />
+          <div className="absolute top-5 left-5 right-5">
+            <p className="text-sm font-semibold tracking-wide text-orange-300">
+              LUMINA
+            </p>
+            <p className="mt-1 text-lg font-semibold leading-snug text-white">
+              Build your personalized learning journey.
+            </p>
+          </div>
+        </div>
+
+        <div className="p-5 sm:p-6">
+          <h2 className="text-2xl font-black tracking-tight text-white">
+            Create account
+          </h2>
+
+          <form className="mt-4 space-y-3" onSubmit={onSubmit}>
+            <div>
+              <label className="mb-1 block text-xs text-slate-300">Name</label>
+              <div className="relative">
+                <User
+                  size={16}
+                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                />
+                <input
+                  type="text"
+                  placeholder="John Doe"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className={clsx(
+                    "w-full rounded-lg border border-slate-700 bg-slate-800 px-10 py-2 text-sm text-white outline-none",
+                    "focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20",
+                  )}
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-1 block text-xs text-slate-300">Email</label>
+              <div className="relative">
+                <Mail
+                  size={16}
+                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                />
+                <input
+                  type="email"
+                  placeholder="email@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className={clsx(
+                    "w-full rounded-lg border border-slate-700 bg-slate-800 px-10 py-2 text-sm text-white outline-none",
+                    "focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20",
+                  )}
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-1 block text-xs text-slate-300">
+                Password
+              </label>
+              <div className="relative">
+                <Lock
+                  size={16}
+                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                />
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className={clsx(
+                    "w-full rounded-lg border border-slate-700 bg-slate-800 px-10 py-2 pr-10 text-sm text-white outline-none",
+                    "focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20",
+                  )}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                  aria-label="Toggle password visibility"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-1 block text-xs text-slate-300">
+                Confirm password
+              </label>
+              <div className="relative">
+                <Lock
+                  size={16}
+                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                />
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  placeholder="Confirm password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className={clsx(
+                    "w-full rounded-lg border border-slate-700 bg-slate-800 px-10 py-2 pr-10 text-sm text-white outline-none",
+                    "focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20",
+                  )}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword((v) => !v)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                  aria-label="Toggle confirm password visibility"
+                >
+                  {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+            </div>
+
+            <label className="flex items-center gap-2 text-sm text-slate-300">
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="flex items-center gap-2 text-sm text-slate-300"
+              />
+              Remember me
+            </label>
+            <label className="flex items-center gap-2 text-sm text-slate-300">
+              <input
+                type="checkbox"
+                checked={teacher}
+                onChange={(e) => setTeacher(e.target.checked)}
+              />
+               I want to become a teacher
+            </label>
+ 
+
+            <button
+              type="submit"
+              disabled={loading}
+              className={clsx(
+                "w-full cursor-pointer rounded-lg py-2 font-semibold text-white transition-all disabled:cursor-not-allowed",
+                loading
+                  ? "cursor-not-allowed bg-slate-700 text-slate-300"
+                  : "bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600",
+              )}
+            >
+              {loading ? "Creating account..." : "Sign Up"}
+            </button>
+          </form>
+
+          <button
+            type="button"
+            onClick={signUpWithGoogle}
+            disabled={googleLoading}
+            className={clsx(
+              "mt-2 flex w-full items-center justify-center cursor-pointer gap-2 rounded-lg border border-slate-700 bg-slate-800 py-2 text-sm font-semibold text-white transition-all",
+              "hover:border-slate-500 hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-70",
+            )}
+          >
+            <GoogleIcon />
+            {googleLoading ? "Redirecting..." : "Sign up with Google"}
+          </button>
+
+
+          <p className="mt-2 text-sm text-slate-300 text-center">
+            Already have an account?{" "}
+            <Link href="/login" className="font-semibold text-orange-400 hover:underline">
+              Login
+            </Link>
+          </p>
+
+          {error ? <p className="mt-3 text-sm text-red-400">{error}</p> : null}
+          {success ? <p className="mt-3 text-sm text-emerald-400">{success}</p> : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function GoogleIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        fill="#EA4335"
+        d="M12 10.2v3.9h5.4c-.2 1.3-1.5 3.9-5.4 3.9-3.2 0-5.9-2.7-5.9-6s2.7-6 5.9-6c1.8 0 3 .8 3.7 1.5l2.5-2.4C16.6 3.6 14.5 2.7 12 2.7 6.9 2.7 2.8 6.9 2.8 12s4.1 9.3 9.2 9.3c5.3 0 8.8-3.7 8.8-8.9 0-.6-.1-1.1-.2-1.5H12z"
+      />
+      <path
+        fill="#34A853"
+        d="M2.8 7.4l3.2 2.3c.9-1.8 2.7-3 5-3 1.8 0 3 .8 3.7 1.5l2.5-2.4C16.6 3.6 14.5 2.7 12 2.7c-3.6 0-6.7 2-8.3 4.7z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M12 21.3c2.4 0 4.5-.8 6-2.3l-2.8-2.2c-.8.6-1.8 1-3.2 1-2.7 0-4.9-1.8-5.7-4.3l-3.3 2.6c1.6 3.1 4.8 5.2 9 5.2z"
+      />
+      <path
+        fill="#4285F4"
+        d="M20.8 12.4c0-.6-.1-1.1-.2-1.5H12v3.9h5.4c-.3 1.5-1.2 2.6-2.2 3.4l2.8 2.2c1.7-1.6 2.8-4 2.8-8z"
+      />
+    </svg>
+  );
+}
+
+
+===== FILE: app\ui\roadmapcomp\actions.ts =====
+export const NODE_THEMES = {
+    locked: {
+        container: "border-white/5 bg-[#0a0a0f] opacity-40 grayscale cursor-not-allowed shadow-none",
+        iconBox: "border-white/50 bg-white/5",
+        iconColor: "text-white/80",
+        textTitle: "text-white/80",
+        textSub: "text-white/50",
+        handle: "opacity-0"
+    },
+    
+    unlocked: {
+        container: "border-[#3b82f6] bg-[#08080c] shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:shadow-[0_0_35px_rgba(59,130,246,0.55)] cursor-pointer transition-all duration-300",
+        iconBox: "border-blue-500/20 bg-blue-500/10",
+        iconColor: "text-[#3b82f6]",
+        textTitle: "text-white",
+        textSub: "text-blue-400/70",
+        handle: "bg-[#3b82f6] shadow-[0_0_10px_#3b82f6]"
+    },
+
+    completed: {
+        container: "border-[#00f2fe] bg-[#08080c] shadow-[0_0_20px_rgba(0,242,254,0.3)] hover:shadow-[0_0_35px_rgba(0,242,254,0.5)] cursor-pointer",
+        iconBox: "border-cyan-500/20 bg-cyan-500/10",
+        iconColor: "text-[#00f2fe]",
+        textTitle: "text-white",
+        textSub: "text-cyan-500/60",
+        handle: "bg-[#00f2fe] shadow-[0_0_10px_#00f2fe]"
+    }
+};
+
+export type RoadmapStatus = "locked" | "unlocked" | "completed";
+
+export const clampDegree = (degree?: number) =>
+    Math.max(0, Math.min(100, degree ?? 0));
+
+export const getGlowClass = (status: RoadmapStatus, degree?: number) => {
+    if (status !== "completed") return "";
+    const d = clampDegree(degree);
+    if (d <= 50) return "glow-red";
+    if (d <= 60) return "glow-orange";
+    if (d <= 80) return "glow-green";
+    return "glow-purple";
+};
+
+export const getHoverClass = (status: RoadmapStatus, degree?: number) => {
+    if (status !== "completed") return "";
+    const d = clampDegree(degree);
+    if (d <= 50) return "hover:shadow-[0_0_42px_rgba(255,0,85,0.9)] hover:border-[#ff0055]";
+    if (d <= 60) return "hover:shadow-[0_0_42px_rgba(255,119,0,0.8)] hover:border-[#ff7700]";
+    if (d <= 80) return "hover:shadow-[0_0_42px_rgba(0,242,254,0.8)] hover:border-[#00f2fe]";
+    return "hover:shadow-[0_0_46px_rgba(191,0,255,0.9)] hover:border-[#bf00ff]";
+};
+
+export const getIconColorClass = (status: RoadmapStatus, degree?: number) => {
+    if (status !== "completed") return null;
+    const d = clampDegree(degree);
+    if (d <= 50) return "text-[#ff0055]";
+    if (d <= 60) return "text-[#ff7700]";
+    if (d <= 80) return "text-[#00f2fe]";
+    return "text-[#bf00ff]";
+};
+
+===== FILE: app\ui\roadmapcomp\InfoCard.tsx =====
+import { Projector, LucideIcon, GitBranch } from "lucide-react";
+
+interface InfoCardProps {
+  title: string;
+  subtitle: string;
+  icon?: LucideIcon;
+}
+
+function InfoCard({ title, subtitle, icon: Icon = GitBranch }: InfoCardProps) {
+  return (
+    <div
+      className="
+        flex flex-row items-center
+        h-auto md:h-48 w-full
+        border border-orange-200/50 rounded-[32px]
+        p-5 md:p-6
+        bg-gradient-to-br from-orange-200/20 via-transparent to-transparent
+        backdrop-blur-xl
+        overflow-hidden
+        gap-6
+        relative
+        shadow-2xl
+        shadow-orange-300/30
+        group
+      "
+    >
+      <div className="absolute -top-10 -left-10 w-32 h-32 bg-orange-500/20 blur-[60px] rounded-full pointer-events-none" />
+
+      <div className="flex flex-col h-full justify-center flex-1 min-w-0 z-10">
+        <h2 className="font-black italic text-2xl md:text-3xl uppercase tracking-tighter leading-[1.1] line-clamp-2 text-white shadow-orange-500/50 drop-shadow-sm">
+          {title}
+        </h2>
+
+        <div className="h-[1px] w-3/4 bg-gradient-to-r from-orange-400/80 to-transparent my-4 shadow-[0_0_8px_rgba(249,115,22,0.4)]" />
+
+        <p className="font-medium text-white/40 text-[10px] md:text-xs truncate uppercase tracking-widest">
+          {subtitle}
+        </p>
+      </div>
+
+      <div className="flex-shrink-0 z-10">
+        <div
+          className="
+            h-24 w-24 md:h-32 md:w-32
+            rounded-2xl justify-center items-center flex
+            bg-orange-300/10 border border-orange-200/20
+            shadow-[0_0_30px_rgba(249,115,22,0.2)]
+            transition-all duration-500
+          "
+        >
+          <Icon size={48} className="text-orange-500 drop-shadow-[0_0_10px_rgba(249,115,22,0.8)]" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default InfoCard;
+
+===== FILE: app\ui\roadmapcomp\node.tsx =====
+import { Handle, Position, type NodeProps } from "@xyflow/react";
+import { LockIcon, CheckCircle2, CircleDashed, LucideAirVent } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { getNodeStyles, type RoadmapNodeData } from "@/app/ui/roadmapcomp/types";
+
+export default function RoadmapNode({ data }: NodeProps<RoadmapNodeData>) {
+  const { title, subtitle, status, degree = 0, icon: Icon = LucideAirVent } = data;
+  const styles = getNodeStyles(status, degree);
+
+  const router = useRouter();
+  const isLocked = status === "locked";
+  const isClickable = Boolean(data.href) && !isLocked;
+  const baseClassName = `group relative flex flex-col h-36 w-44 md:h-44 md:w-52 bg-[#0F111A]/90 backdrop-blur-xl rounded-3xl p-4 items-center border-2 transition-all duration-500 pointer-events-auto ${styles.container}`;
+  const interactiveClassName = isClickable
+    ? "cursor-pointer hover:-translate-y-1 hover:border-white/30 hover:shadow-[0_16px_36px_rgba(2,6,23,0.55)]"
+    : "cursor-default";
+
+  const handleActivate = () => {
+    if (!isClickable) return;
+    router.push(data.href!);
+  };
+
+  const content = (
+    <>
+      <Handle type="target" position={Position.Left} className="!bg-slate-600 !border-none !w-2 !h-2" />
+      
+      <div className={`h-14 w-14 rounded-2xl justify-center items-center flex border mb-2 transition-all duration-500 ${styles.iconBox}`}>
+        {isLocked ? <LockIcon size={24} /> : <Icon size={28} />}
+      </div>
+
+      <div className="w-full text-center leading-tight">
+        <h3 className="font-black uppercase italic text-sm tracking-tighter text-white truncate">
+          {title}
+        </h3>
+        <div className={`h-[1px] w-full bg-gradient-to-r from-transparent to-transparent my-2 ${styles.divider}`} />
+      </div>
+
+      <div className="w-full px-1">
+        <p className="text-[10px] text-white/40 leading-tight line-clamp-2 text-center">
+          {subtitle || "Explore this module to master your skills."}
+        </p>
+      </div>
+
+      <div className={`mt-auto flex items-center gap-1 text-[9px] font-bold uppercase tracking-widest ${styles.statusText}`}>
+        {status === "completed" && <CheckCircle2 size={10} />}
+        {status === "unlocked" && <CircleDashed size={10} className="animate-spin" />}
+        <span>{status} {status === "completed" && `(${degree}%)`}</span>
+      </div>
+
+      {isClickable && (
+        <div className="mt-2 inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-white/70 group-hover:text-orange-300 transition-colors">
+          Open Module
+          <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
+        </div>
+      )}
+
+      <Handle type="source" position={Position.Right} className="!bg-slate-600 !border-none !w-2 !h-2" />
+    </>
+  );
+
+  return (
+    <div
+      role={isClickable ? "button" : undefined}
+      tabIndex={isClickable ? 0 : -1}
+      aria-label={isClickable ? `Open ${title}` : undefined}
+      onClick={handleActivate}
+      onKeyDown={(event) => {
+        if (!isClickable) return;
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          handleActivate();
+        }
+      }}
+      className={`${baseClassName} ${interactiveClassName} ${isClickable ? "focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400/70" : ""}`}
+    >
+      {content}
+    </div>
+  );
+}
+
+===== FILE: app\ui\roadmapcomp\ProgressBar.tsx =====
+import Button from "../Button";
+
+interface Props {
+  title: string;
+  value?: number;
+}
+
+function ProgressBar({ title, value = 0 }: Props) {
+  return (
+    <div className="h-auto md:h-48 flex flex-col w-full border-2 border-slate-500/60 rounded-[32px] bg-linear-130 from-slate-300/20 to-slate-900/10 p-5 backdrop-blur-xl shadow-2xl shadow-slate-300/20">
+      <div className="flex flex-row w-full justify-between items-center">
+        <h3 className="text-sm md:text-base font-semibold">{title}</h3>
+        <h2 className="font-black italic text-xl md:text-2xl text-orange-300">{value}%</h2>
+      </div>
+      <div className="h-10 md:h-14 w-full flex flex-row items-center">
+        <div className="w-full h-1.5 rounded-full bg-slate-800 mb-3">
+          <div
+            className="w-full h-1.5 rounded-full bg-linear-90 from-orange-600 to-orange-300 mb-3"
+            style={{ width: `${value}%` }}
+          />
+        </div>
+      </div>
+      <div className="mt-1">
+        <Button variant="primary" size="l" className="flex flex-col w-full h-14 items-start">
+          <h3 className="uppercase text-sm">next Progress</h3>
+          <p className="text-[11px] text-slate-950 font-bold">Content he will be in the roadmaop.</p>
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+export default ProgressBar;
+
+===== FILE: app\ui\roadmapcomp\RoadmapFlow.tsx =====
+"use client";
+
+import "@xyflow/react/dist/style.css";
+import { Background, Controls, MiniMap, ReactFlow, type Edge, type Node } from "@xyflow/react";
+import {
+  GitBranch,
+  GitCommit,
+  GitMerge,
+  GitPullRequest,
+  Rocket,
+  ShieldCheck,
+  Wrench
+} from "lucide-react";
+import RoadmapNode from "@/app/ui/roadmapcomp/node";
+import type { RoadmapNodeData } from "@/app/ui/roadmapcomp/types";
+
+const nodes: Node<RoadmapNodeData>[] = [
+  {
+    id: "start",
+    type: "roadmap",
+    position: { x: 0, y: 0 },
+    data: {
+      title: "Git Foundations",
+      subtitle: "CLI basics, repos, and the mental model",
+      status: "completed",
+      degree: 85,
+      icon: GitCommit,
+      href: "/courses"
+    }
+  },
+{
+    id: "branching",
+    type: "roadmap",
+    position: { x: 280, y: -40 },
+    data: {
+      title: "Branching Strategy",
+      subtitle: "Feature branches, rebase vs merge",
+      status: "completed",
+      degree: 65,
+      icon: GitBranch,
+      href: "/courses"
+    }
+  },
+  {
+    id: "prs",
+    type: "roadmap",
+    position: { x: 560, y: 20 },
+    data: {
+      title: "Pull Requests",
+      subtitle: "Review workflow and approvals",
+      status: "unlocked",
+      icon: GitPullRequest,
+      href: "/courses"
+    }
+  },
+  {
+    id: "conflicts",
+    type: "roadmap",
+    position: { x: 840, y: -30 },
+    data: {
+      title: "Merge Conflicts",
+      subtitle: "Resolve conflicts with confidence",
+      status: "locked",
+      icon: GitMerge,
+      href: "/courses"
+    }
+  },
+  {
+    id: "hooks",
+    type: "roadmap",
+    position: { x: 1120, y: 40 },
+    data: {
+      title: "Git Hooks",
+      subtitle: "Linting and pre-commit safety nets",
+      status: "locked",
+      icon: Wrench
+    }
+  },
+  {
+    id: "security",
+    type: "roadmap",
+    position: { x: 1400, y: -10 },
+    data: {
+      title: "Secure Practices",
+      subtitle: "Signed commits and protected branches",
+      status: "locked",
+      icon: ShieldCheck
+    }
+  },
+  {
+    id: "release",
+    type: "roadmap",
+    position: { x: 1680, y: 30 },
+    data: {
+      title: "Release Workflow",
+      subtitle: "Tags, changelogs, and versioning",
+      status: "locked",
+      icon: Rocket
+    }
+  }
+];
+
+const edges: Edge[] = [
+  {
+    id: "e-start-branching",
+    source: "start",
+    target: "branching",
+    type: "smoothstep",
+    animated: true,
+    style: { stroke: "violet", strokeWidth: 2 }
+  },
+  {
+    id: "e-branching-prs",
+    source: "branching",
+    target: "prs",
+    type: "smoothstep",
+    animated: true,
+    style: { stroke: "#ADF802", strokeWidth: 2 }
+  },
+  {
+    id: "e-prs-conflicts",
+    source: "prs",
+    target: "conflicts",
+    type: "smoothstep",
+    style: { stroke: "#64748b", strokeWidth: 2 }
+  },
+  {
+    id: "e-conflicts-hooks",
+    source: "conflicts",
+    target: "hooks",
+    type: "smoothstep",
+    style: { stroke: "#64748b", strokeWidth: 2 }
+  },
+  {
+    id: "e-hooks-security",
+    source: "hooks",
+    target: "security",
+    type: "smoothstep",
+    style: { stroke: "#64748b", strokeWidth: 2 }
+  },
+  {
+    id: "e-security-release",
+    source: "security",
+    target: "release",
+    type: "smoothstep",
+    style: { stroke: "#64748b", strokeWidth: 2 }
+  }
+];
+
+const nodeTypes = {
+  roadmap: RoadmapNode
+};
+
+export default function RoadmapFlow() {
+  return (
+    <div className="w-full max-w-[1400px] border-2 border-slate-400/40 rounded-4xl shadow-2xl shadow-slate-400/40 mb-5">
+      <div className="roadmap-scroll h-[560px] md:h-[720px] w-full overflow-x-auto overflow-y-hidden rounded-[32px] border border-white/20 bg-gradient-to-br from-white/15 via-white/0 to-orange-500/5 backdrop-blur-xl shadow-[0_30px_80px_rgba(0,0,0,0.45)]">
+        <div className="h-full min-w-[1500px] md:min-w-[1900px]">
+          <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            nodeTypes={nodeTypes}
+            fitView
+            minZoom={1}
+            maxZoom={1}
+            zoomOnScroll={false}
+            zoomOnPinch={false}
+            zoomOnDoubleClick={false}
+            panOnScroll={false}
+            panOnDrag
+            nodesDraggable={false}
+            nodesConnectable={false}
+            elementsSelectable={false}
+            proOptions={{ hideAttribution: true }}
+            className="cursor-grab active:cursor-grabbing"
+          >
+            <Background color="#334155" gap={28} size={1} />
+            <MiniMap
+              nodeColor={(node) => {
+                if (node.data?.status === "completed") return "#f97316";
+                if (node.data?.status === "unlocked") return "#22d3ee";
+                return "#475569";
+              }}
+              maskColor="rgba(2, 6, 23, 0.7)"
+              className="!bg-slate-950/60 !border !border-white/10 !rounded-xl"
+            />
+          </ReactFlow>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+===== FILE: app\ui\roadmapcomp\types.ts =====
+import { LucideIcon } from "lucide-react";
+
+export type RoadmapStatus = "completed" | "locked" | "unlocked";
+
+export type RoadmapNodeData = {
+  title: string;
+  subtitle?: string;
+  status: RoadmapStatus;
+  degree?: number;
+  icon?: LucideIcon;
+  href?: string;
+};
+
+export type NodeTheme = {
+  container: string;
+  iconBox: string;
+  statusText: string;
+  divider: string;
+};
+
+export const getNodeStyles = (status: RoadmapStatus, degree: number = 0): NodeTheme => {
+  if (status === "completed") {
+    if (degree >= 80) {
+      return {
+        container: "border-purple-500 shadow-[0_0_20px_rgba(168,85,247,0.4)] opacity-100",
+        iconBox: "text-purple-400 border-purple-500/40 bg-purple-500/10",
+        statusText: "text-purple-400",
+        divider: "via-purple-500"
+      };
+    }
+    if (degree >= 60) {
+      return {
+        container: "border-lime-400 shadow-[0_0_20px_rgba(16,185,129,0.3)] opacity-100",
+        iconBox: "text-lime-400 border-emerald-500/40 bg-emerald-500/10",
+        statusText: "text-lime-400",
+        divider: "via-emerald-500"
+      };
+    }
+    if (degree >= 40) {
+      return {
+        container: "border-orange-500 shadow-[0_0_20px_rgba(249,115,22,0.3)] opacity-100",
+        iconBox: "text-orange-400 border-orange-500/40 bg-orange-500/10",
+        statusText: "text-orange-400",
+        divider: "via-orange-500"
+      };
+    }
+    return {
+      container: "border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.3)] opacity-100",
+      iconBox: "text-red-400 border-red-500/40 bg-red-500/10",
+      statusText: "text-red-400",
+      divider: "via-red-500"
+    };
+  }
+
+  if (status === "unlocked") {
+    return {
+      container: "border-cyan-400 shadow-[0_0_20px_rgba(34,211,238,0.2)] opacity-100",
+      iconBox: "text-cyan-400 border-cyan-400/40 bg-cyan-400/5",
+      statusText: "text-cyan-400",
+      divider: "via-cyan-400"
+    };
+  }
+
+  return {
+    container: "border-slate-700 opacity-50 grayscale-[0.8]",
+    iconBox: "text-slate-500 border-white/5 bg-slate-900/50",
+    statusText: "text-slate-600",
+    divider: "via-slate-700"
+  };
+};
+
+===== FILE: app\[teacher_id]\layout.tsx =====
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import type { ReactNode } from "react";
+import { createClient } from "../../lib/supabase/server";
+import { getRole } from "@/features/utils/auth/getRole";
+
+export default async function TeacherLayout({
+  children,
+  params,
+}: {
+  children: ReactNode;
+  params: Promise<{ teacher_id: string }>;
+}) {
+  const { teacher_id } = await params;
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+
+  if (error) {
+    console.error("Auth error :", error.message);
+    redirect("/");
+  }
+
+  if (!user) {
+    redirect("/");
+  }
+
+  const role = getRole(user);
+  if (role !== "teacher" && role !== "teacher_pending") {
+    redirect("/");
+  }
+
+  const { data: requestRow, error: requestError } = await supabase
+    .from("teacher_requests")
+    .select("status,admin_note")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (requestError) {
+    console.error("Teacher request fetch error:", requestError.message);
+  }
+
+  const isPending = role === "teacher_pending";
+  const isRejected = isPending && requestRow?.status === "rejected";
+  const rejectionReason =
+    requestRow?.admin_note?.trim() || "No explanation was provided by admin.";
+
+  return (
+    <main className="min-h-screen bg-slate-950 pt-24 pb-16 px-4">
+      <div className="mx-auto flex w-full max-w-6xl gap-6">
+        <aside className="h-fit w-full max-w-xs rounded-xl border border-slate-700 bg-slate-900 p-4">
+          <h1 className="mb-4 text-xl font-bold text-white">
+            Teacher Dashboard
+          </h1>
+
+          {isPending ? (
+            <button
+              disabled
+              className="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-3 text-left font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Manage Courses
+            </button>
+          ) : (
+            <Link
+              href={`/${teacher_id}/courses`}
+              className="block w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-3 text-left font-semibold text-white transition hover:bg-slate-700"
+            >
+              Manage Courses
+            </Link>
+          )}
+        </aside>
+
+        <section className="flex-1 space-y-5 rounded-xl border border-slate-700 bg-slate-900 p-6">
+          {isRejected ? (
+            <div className="rounded-lg border border-red-400/40 bg-red-500/10 px-4 py-3 text-red-200">
+              <p className="font-semibold">
+                Your teacher request was rejected.
+              </p>
+              <p className="mt-1 text-sm">
+                Reason: <span className="font-medium">{rejectionReason}</span>
+              </p>
+              <Link
+                href={`/${teacher_id}/apply`}
+                className="mt-2 inline-block text-sm underline"
+              >
+                Submit a new application
+              </Link>
+            </div>
+          ) : isPending ? (
+            <div className="rounded-lg border border-amber-400/40 bg-amber-500/10 px-4 py-3 text-amber-200">
+              Your teacher application is pending admin approval. Actions are
+              disabled until approval.
+            </div>
+          ) : null}
+
+          {children}
+        </section>
+      </div>
+    </main>
+  );
+}
+
+===== FILE: app\[teacher_id]\page.tsx =====
+export default async function teacherPage() {
+  return (
+    <div className="space-y-2">
+      <h2 className="text-2xl font-bold text-white">Welcome, Teacher</h2>
+      <p className="text-slate-300">
+        Use the sidebar to navigate to your teaching tools.
+      </p>
+    </div>
+  );
+}
+
+===== FILE: app\[teacher_id]\apply\page.tsx =====
+"use client";
+
+import { FormEvent, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+
+export default function TeacherApplyPage() {
+  const router = useRouter();
+  const params = useParams<{ teacher_id: string }>();
+  const [fullName, setFullName] = useState("");
+  const [cvUrl, setCvUrl] = useState("");
+  const [motivation, setMotivation] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setSubmitting(true);
+    setError("");
+
+    const response = await fetch("/auth/teacher-request", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        fullName,
+        cvUrl,
+        motivation,
+      }),
+    });
+
+    if (!response.ok) {
+      const payload = (await response.json().catch(() => null)) as {
+        error?: string;
+      } | null;
+      setError(payload?.error ?? "Failed to submit teacher request.");
+      setSubmitting(false);
+      return;
+    }
+
+    const payload = (await response.json()) as { nextPath?: string };
+    setSubmitted(true);
+    setSubmitting(false);
+    router.replace(payload.nextPath ?? `/${params.teacher_id}`);
+    router.refresh();
+  };
+
+  return (
+    <main className="min-h-screen bg-slate-950 px-4 py-24 flex items-center justify-center">
+      <section className="w-full max-w-2xl rounded-2xl border border-slate-800 bg-slate-900/95 p-6 sm:p-8 shadow-[0_25px_80px_rgba(2,6,23,0.55)]">
+        <h1 className="text-2xl font-black tracking-tight text-white">
+          Teacher Application
+        </h1>
+        <p className="mt-2 text-sm text-slate-300">
+          Fill this form to request teacher access. Your account stays student
+          until an admin approves your request.
+        </p>
+
+        <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
+          <div>
+            <label className="mb-1 block text-sm text-slate-300">
+              Full name
+            </label>
+            <input
+              type="text"
+              placeholder="John Doe"
+              value={fullName}
+              onChange={(event) => setFullName(event.target.value)}
+              className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-white outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm text-slate-300">CV URL</label>
+            <input
+              type="url"
+              placeholder="https://..."
+              value={cvUrl}
+              onChange={(event) => setCvUrl(event.target.value)}
+              className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-white outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm text-slate-300">
+              Motivation
+            </label>
+            <textarea
+              rows={5}
+              placeholder="Tell us why you want to become a teacher..."
+              value={motivation}
+              onChange={(event) => setMotivation(event.target.value)}
+              className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-white outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20"
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={submitting || submitted}
+            className="w-full cursor-pointer rounded-lg bg-gradient-to-r from-orange-500 to-amber-500 py-2.5 font-semibold text-white hover:from-orange-600 hover:to-amber-600 disabled:cursor-not-allowed disabled:opacity-70"
+          >
+            {submitting
+              ? "Submitting..."
+              : submitted
+                ? "Submitted"
+                : "Submit Application"}
+          </button>
+        </form>
+
+        {error ? <p className="mt-4 text-sm text-red-400">{error}</p> : null}
+      </section>
+    </main>
+  );
+}
+
+===== FILE: app\[teacher_id]\courses\actions.ts =====
+"use server";
+
+import { createClient } from "@/lib/supabase/server";
+import { revalidatePath } from "next/cache";
+
+export async function addSkill(formData: {
+  skl_title: string;
+  skl_dscrptn: string;
+  skl_duration: number;
+  teacher_id: string;
+}) {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("Skill")
+    .insert(formData)
+    .select()
+    .single();
+
+  if (error) return { error: error.message };
+
+  revalidatePath(`/${formData.teacher_id}/courses`);
+  return { data };
+}
+
+===== FILE: app\[teacher_id]\courses\AddCourseForm.tsx =====
+"use client";
+
+import { useState } from "react";
+import { addSkill } from "./actions";
+
+export default function AddCourseForm({ teacher_id }: { teacher_id: string }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [form, setForm] = useState({
+    title: "",
+    description: "",
+    duration: NaN,
+  });
+
+  const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const result = await addSkill({
+      skl_title: form.title,
+      skl_dscrptn: form.description,
+      skl_duration: form.duration,
+      teacher_id: teacher_id,
+    });
+
+    if (result.error) {
+      console.error(result.error);
+      return;
+    }
+    setIsOpen(false);
+    setForm({ title: "", description: "", duration: 0 });
+  };
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between">
+        <h2 className="text-2xl font-bold text-white">Courses</h2>
+        <button
+          type="button"
+          onClick={() => setIsOpen((prev) => !prev)}
+          className="rounded-lg bg-indigo-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-400"
+        >
+          + Add Course
+        </button>
+      </div>
+
+      {isOpen ? (
+        <form
+          onSubmit={onSubmit}
+          className="space-y-4 rounded-lg border border-slate-700 bg-slate-800 p-4"
+        >
+          <div className="space-y-1">
+            <label
+              htmlFor="title"
+              className="block text-sm font-medium text-slate-200"
+            >
+              Title
+            </label>
+            <input
+              id="title"
+              name="title"
+              value={form.title}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, title: e.target.value }))
+              }
+              type="text"
+              placeholder="Enter course title"
+              className="w-full rounded-md border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-white outline-none ring-indigo-400 focus:ring"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label
+              htmlFor="description"
+              className="block text-sm font-medium text-slate-200"
+            >
+              Description
+            </label>
+            <textarea
+              id="description"
+              name="description"
+              rows={4}
+              value={form.description}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, description: e.target.value }))
+              }
+              placeholder="Enter course description"
+              className="w-full rounded-md border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-white outline-none ring-indigo-400 focus:ring"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label
+              htmlFor="duration"
+              className="block text-sm font-medium text-slate-200"
+            >
+              Duration
+            </label>
+            <input
+              id="duration"
+              name="duration"
+              type="number"
+              value={form.duration}
+              onChange={(e) =>
+                setForm((prev) => ({
+                  ...prev,
+                  duration: Number(e.target.value),
+                }))
+              }
+              placeholder="enter duration in hours"
+              className="w-full rounded-md border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-white outline-none ring-indigo-400 focus:ring"
+            />
+          </div>
+
+          <button
+            type="submit"
+            className="rounded-md bg-emerald-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-400"
+          >
+            Save Course
+          </button>
+        </form>
+      ) : null}
+    </div>
+  );
+}
+
+===== FILE: app\[teacher_id]\courses\page.tsx =====
+import Link from "next/link";
+import AddCourseForm from "./AddCourseForm";
+import { createClient } from "@/lib/supabase/server";
+import { Skill } from "@/lib/database.types";
+export default async function TeacherCoursesPage({
+  params,
+}: {
+  params: Promise<{ teacher_id: string }>;
+}) {
+  const { teacher_id } = await params;
+  const supabase = await createClient();
+
+  const { data } = await supabase
+    .from("Skill")
+    .select("*")
+    .eq("teacher_id", teacher_id);
+  const skills: Skill[] = data ?? [];
+  return (
+    <div className="space-y-6">
+      <AddCourseForm teacher_id={teacher_id} />
+
+      <div className="space-y-2">
+        <p className="text-slate-300">Manage your existing courses here.</p>
+      </div>
+
+      <ul className="space-y-3">
+        {skills.map((skill) => (
+          <li key={skill.skl_id}>
+            <Link
+              href={`/${teacher_id}/courses/${skill.skl_id}`}              className="block rounded-lg border border-slate-700 bg-slate-800 px-4 py-3 transition hover:border-indigo-400 hover:bg-slate-700"
+            >
+              <p className="font-semibold text-white">{skill.skl_title}</p>
+              <p className="text-sm text-slate-300">{skill.skl_dscrptn}</p>
+              <p className="mt-1 text-xs text-slate-400">
+                Duration: {skill.skl_duration}
+              </p>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+// const courses = [
+//   {
+//     "id": "course-101",
+//     "title": "Introduction to Algebra",
+//     "description": "Core algebraic concepts with guided practice.",
+//     "duration": "6 weeks"
+//   },
+//   {
+//     "id": "course-102",
+//     "title": "World History Essentials",
+//     "description": "A timeline-based overview from ancient to modern eras.",
+//     "duration": "8 weeks"
+//   },
+//   {
+//     "id": "course-103",
+//     "title": "Fundamentals of Biology",
+//     "description": "Cell biology, genetics, and ecosystems for beginners.",
+//     "duration": "10 weeks"
+//   }
+// ]
+
+===== FILE: app\[teacher_id]\courses\[course_id]\actions.ts =====
+"use server"
+
+import { createClient } from "@/lib/supabase/server"
+import { revalidatePath } from "next/cache"
+
+export async function addTopic(
+  skillId: string,
+  parentId: string | null,
+  form: {
+    title: string
+    description: string
+    contents: {
+      title: string
+      type: string
+      value: string | null
+    }[]
+  }
+) {
+  const supabase = await createClient()
+
+  const { data: newTopic, error: topicError } = await supabase
+    .from("Topic")
+    .insert({
+      tpc_id: crypto.randomUUID(),
+      tpc_title: form.title,
+      tpc_description: form.description,
+      skill_id: skillId,
+      parent_id: parentId,
+    })
+    .select()
+    .single()
+
+  if (topicError) return { error: topicError.message }
+
+  if (form.contents.length > 0) {
+    const { error: contentsError } = await supabase
+      .from("Content")
+      .insert(
+        form.contents.map((content) => ({
+          cntnt_id: crypto.randomUUID(),
+          cntnt_title: content.title,
+          cntnt_type: content.type,
+          cntnt_value: content.value,
+          tpc_id: newTopic.tpc_id,
+        }))
+      )
+
+    if (contentsError) return { error: contentsError.message }
+  }
+
+  revalidatePath(`/teacher/courses/${skillId}`)  
+  return { data: newTopic }
+}
+
+===== FILE: app\[teacher_id]\courses\[course_id]\AddTopicForm.tsx =====
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import {
+  Topic,
+  Skill,
+  Content,
+  ContentType,
+} from "@/lib/database.types";
+import { addTopic } from "./actions";
+
+type ContentInput = {
+  id: string;
+  title: string;
+  type: ContentType;
+  value: string | null;
+};
+
+type TopicFormState = {
+  title: string;
+  description: string;
+  contents: ContentInput[];
+};
+
+export default function AddTopicForm({
+  skill,
+  parentId,
+  prefillTopic,
+  contents,
+  closeTopicModal,
+}: {
+  skill: Skill;
+  parentId: string | null;
+  prefillTopic: Topic | null;
+  contents: Content[];
+  closeTopicModal: () => void;
+}) {
+  const buildContentInput = (): ContentInput => ({
+    id: crypto.randomUUID(),
+    title: "",
+    type: "video",
+    value: "",
+  });
+
+  const [form, setForm] = useState<TopicFormState>({
+    title: "",
+    description: "",
+    contents: [buildContentInput()],
+  });
+
+  const onClose = () => {
+    closeTopicModal();
+    setForm({
+      title: "",
+      description: "",
+      contents: [buildContentInput()],
+    });
+  };
+
+  const getContentByTpcId = (topicId: string) => {
+    return contents.filter((content) => content.tpc_id === topicId);
+  };
+
+  const prefillForm = (prefillTopic: Topic | null) => {
+    if (prefillTopic != null) {
+      const topicContents: ContentInput[] = getContentByTpcId(
+        prefillTopic.tpc_id
+      ).map((content) => ({
+        id: content.cntnt_id,
+        title: content.cntnt_title,
+        type: content.cntnt_type,
+        value: content.cntnt_value,
+      }));
+      setForm({
+        title: prefillTopic.tpc_title,
+        description: prefillTopic.tpc_description ?? "",
+        contents: topicContents.length > 0 ? topicContents : [buildContentInput()],
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (prefillTopic != null) {
+      prefillForm(prefillTopic);
+    }
+  }, []);
+
+  const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+     event.preventDefault()
+
+  const result = await addTopic(skill.skl_id, parentId, {
+    title: form.title,
+    description: form.description,
+    contents: form.contents,
+  })
+
+  if (result.error) {
+    console.error(result.error)
+    return
+  }
+
+  onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-slate-950/70 p-4">
+      <div className="flex min-h-full items-start justify-center py-6">
+        <div className="w-full my-6 max-w-2xl max-h-[calc(90vh-1rem)] overflow-y-auto no-scrollbar rounded-lg border border-slate-700 bg-slate-900 p-5">
+          <div className="mb-4 flex items-center justify-between">
+            <h4 className="text-lg font-semibold text-white">Add Topic</h4>
+            <button
+              type="button"
+              onClick={onClose}
+              className="text-slate-300 transition hover:text-white"
+            >
+              Close
+            </button>
+          </div>
+
+          <form className="space-y-4" onSubmit={onSubmit}>
+            <div>
+              <label
+                htmlFor="topicTitle"
+                className="mb-1 block text-sm text-slate-200"
+              >
+                Title
+              </label>
+              <input
+                id="topicTitle"
+                value={form.title}
+                onChange={(event) =>
+                  setForm((prev) => ({ ...prev, title: event.target.value }))
+                }
+                className="w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-white"
+                required
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="topicDescription"
+                className="mb-1 block text-sm text-slate-200"
+              >
+                Description
+              </label>
+              <textarea
+                id="topicDescription"
+                value={form.description}
+                onChange={(event) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    description: event.target.value,
+                  }))
+                }
+                className="w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-white"
+                rows={3}
+                required
+              />
+            </div>
+
+            <div className="space-y-3">
+              <p className="text-sm font-medium text-slate-200">
+                Topic Contents
+              </p>
+
+              {form.contents.map((content, index) => (
+                <div
+                  key={content.id}
+                  className="rounded-md border border-slate-700 p-3 space-y-3"
+                >
+                  <div>
+                    <label className="mb-1 block text-xs text-slate-300">
+                      Content Title
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Introduction Video"
+                      value={content.title}
+                      onChange={(event) => {
+                        setForm((prev) => ({
+                          ...prev,
+                          contents: prev.contents.map((item, itemIndex) =>
+                            itemIndex === index
+                              ? { ...item, title: event.target.value }
+                              : item
+                          ),
+                        }));
+                      }}
+                      className="w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-white"
+                      required
+                    />
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {/* Content Type */}
+                    <div>
+                      <label className="mb-1 block text-xs text-slate-300">
+                        Type
+                      </label>
+                      <select
+                        value={content.type}
+                        onChange={(event) => {
+                          const value = event.target.value as ContentType;
+                          setForm((prev) => ({
+                            ...prev,
+                            contents: prev.contents.map((item, itemIndex) =>
+                              itemIndex === index
+                                ? { ...item, type: value, value: "" }
+                                : item
+                            ),
+                          }));
+                        }}
+                        className="w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-white"
+                      >
+                        <option value="video">Video URL</option>
+                        <option value="audio">Audio file</option>
+                        <option value="pdf">PDF file</option>
+                        <option value="doc">Documentation URL</option>
+                      </select>
+                    </div>
+
+                    {/* Content Value */}
+                    <div>
+                      <label className="mb-1 block text-xs text-slate-300">
+                        {content.type === "video" && "Video URL"}
+                        {content.type === "audio" && "Audio file"}
+                        {content.type === "pdf" && "PDF file"}
+                        {content.type === "docs" && "Documentation URL"}
+                      </label>
+
+                      {content.type === "audio" || content.type === "pdf" ? (
+                        <input
+                          type="file"
+                          onChange={(event) => {
+                            const fileName =
+                              event.target.files?.[0]?.name ?? "";
+                            setForm((prev) => ({
+                              ...prev,
+                              contents: prev.contents.map((item, itemIndex) =>
+                                itemIndex === index
+                                  ? { ...item, value: fileName }
+                                  : item
+                              ),
+                            }));
+                          }}
+                          className="w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-white"
+                        />
+                      ) : (
+                        <input
+                          type="url"
+                          placeholder="https://"
+                          value={content.value ?? ""}
+                          onChange={(event) => {
+                            setForm((prev) => ({
+                              ...prev,
+                              contents: prev.contents.map((item, itemIndex) =>
+                                itemIndex === index
+                                  ? { ...item, value: event.target.value }
+                                  : item
+                              ),
+                            }));
+                          }}
+                          className="w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-white"
+                        />
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              <button
+                type="button"
+                onClick={() =>
+                  setForm((prev) => ({
+                    ...prev,
+                    contents: [...prev.contents, buildContentInput()],
+                  }))
+                }
+                className="rounded-md border border-indigo-400 px-3 py-2 text-sm text-indigo-200 transition hover:bg-indigo-500/20"
+              >
+                Add New Content
+              </button>
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={onClose}
+                className="rounded-md border border-slate-500 px-4 py-2 text-sm text-slate-200"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="rounded-md bg-emerald-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-400"
+              >
+                Save Topic
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+===== FILE: app\[teacher_id]\courses\[course_id]\CourseDetailView.tsx =====
+"use client";
+
+import TopicNode from "./TopicNode";
+import AddTopicForm from "./AddTopicForm";
+import { useMemo, useState } from "react";
+import { Skill, Topic, Content } from "@/lib/database.types";
+
+export default function CourseDetailView({
+  skill,
+  topics,
+  contents,
+}: {
+  skill: Skill ;
+  topics: Topic[] ;
+  contents: Content[];
+}) {
+  const [parentId, setParentId] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [prefillTopic, setPrefillTopic] = useState<Topic | null>(null);
+
+  const rootTopics = useMemo(
+    () => topics.filter((topic) => topic.parent_id === null),
+    [topics],
+  );
+
+  const openTopicModal = (topic: Topic | null, editing: boolean) => {
+    if (editing) {
+      setParentId(topic?.parent_id ?? null);
+      setIsModalOpen(true);
+      setPrefillTopic(topic);
+    } else {
+      setParentId(topic?.tpc_id ?? null);
+      setIsModalOpen(true);
+      setPrefillTopic(null);
+    }
+  };
+
+  const closeTopicModal = () => {
+    setIsModalOpen(false);
+    setParentId(null);
+    setPrefillTopic(null);
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="space-y-2">
+        <h2 className="text-2xl font-bold text-white">{skill.skl_title}</h2>
+        <p className="text-slate-300">{skill.skl_dscrptn}</p>
+        <p className="text-sm text-slate-400">Duration: {skill.skl_duration}</p>
+      </div>
+
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-xl font-semibold text-white">Course Topics</h3>
+          <button
+            type="button"
+            onClick={() => openTopicModal(null, false)}
+            className="rounded-md bg-indigo-500 px-3 py-2 text-sm font-semibold text-white transition hover:bg-indigo-400"
+          >
+            Add Topic
+          </button>
+        </div>
+
+        <ul className="space-y-2">
+          {rootTopics.map((topic) => (
+            <TopicNode
+              key={topic.tpc_id}
+              topic={topic}
+              allTopics={topics}
+              level={0}
+              onAddTopic={openTopicModal}
+            />
+          ))}
+        </ul>
+      </div>
+
+      {isModalOpen ? (
+        prefillTopic != null ? (
+          <AddTopicForm
+            skill={skill}
+            parentId={prefillTopic.parent_id}
+            prefillTopic={prefillTopic}
+            contents={contents}
+            closeTopicModal={closeTopicModal}
+          />
+        ) : (
+          <AddTopicForm
+            skill={skill}
+            parentId={parentId}
+            prefillTopic={null}
+            contents={contents}
+            closeTopicModal={closeTopicModal}
+          />
+        )
+      ) : null}
+    </div>
+  );
+}
+
+===== FILE: app\[teacher_id]\courses\[course_id]\page.tsx =====
+import { createClient } from "@/lib/supabase/server";
+import CourseDetailView from "./CourseDetailView";
+import { Skill , Topic ,Content} from "@/lib/database.types"
+export default async function CourseDetailPage({
+  params,
+}: {
+  params: Promise<{ course_id: string }>;
+}) {
+  const { course_id } = await params  ;
+
+  const supabase = await createClient();
+
+  const { data: skill } = await supabase
+    .from("Skill")
+    .select("*")
+    .eq("skl_id", course_id)
+    .single();
+
+  if (!skill) return <p className="text-white">Skill not found</p>
+
+  const { data: topics } = await supabase
+    .from("Topic")
+    .select("*")
+    .eq("skill_id", course_id);
+
+  const { data: contents } = await supabase
+    .from("Content")
+    .select("*")
+    .in("tpc_id", topics?.map((topic) => topic.tpc_id) ?? []);
+
+  return (
+    <CourseDetailView
+      skill={skill}
+      topics={topics ?? []}
+      contents={contents ?? []}
+    />
+  );
+}
+
+//   const course = {
+//     "id": "course-101",
+//     "title": "Introduction to Algebra",
+//     "description": "Core algebraic concepts with guided practice.",
+//     "duration": "6 weeks"
+//   };
+
+//   const topics: Topic[] = [
+//   {
+//     "id": "topic-1",
+//     "courseId": "course-101",
+//     "title": "Variables and Expressions",
+//     "description": "Understand variables, constants, and algebraic expressions.",
+//     "parentId": null
+//   },
+//   {
+//     "id": "topic-2",
+//     "courseId": "course-101",
+//     "title": "Simplifying Expressions",
+//     "description": "Use arithmetic rules to simplify expressions.",
+//     "parentId": "topic-1"
+//   },
+//   {
+//     "id": "topic-3",
+//     "courseId": "course-101",
+//     "title": "Linear Equations",
+//     "description": "Solve one-variable linear equations.",
+//     "parentId": null
+//   },
+//   {
+//     "id": "topic-4",
+//     "courseId": "course-102",
+//     "title": "Ancient Civilizations",
+//     "description": "Explore early civilizations and their innovations.",
+//     "parentId": null
+//   },
+//   {
+//     "id": "topic-5",
+//     "courseId": "course-103",
+//     "title": "Cell Structure",
+//     "description": "Identify and explain core parts of cells.",
+//     "parentId": null
+//   }
+// ]
+// ;
+// const contents : TopicContent[] = [
+//   {
+//     id: "content-1",
+//     topicId: "topic-1",
+//     type: "video_url",
+//     value: "https://youtube.com/watch?v=abc123"
+//   },
+//   {
+//     id: "content-2",
+//     topicId: "topic-1",
+//     type: "doc_url",
+//     value: "https://docs.example.com/variables"
+//   },
+//   {
+//     id: "content-3",
+//     topicId: "topic-2",
+//     type: "pdf_file",
+//     value: "simplifying_expressions.pdf"
+//   },
+//   {
+//     id: "content-4",
+//     topicId: "topic-2",
+//     type: "video_url",
+//     value: "https://youtube.com/watch?v=xyz456"
+//   },
+//   {
+//     id: "content-5",
+//     topicId: "topic-3",
+//     type: "audio_file",
+//     value: "linear_equations_lecture.mp3"
+//   },
+//   {
+//     id: "content-6",
+//     topicId: "topic-3",
+//     type: "doc_url",
+//     value: "https://docs.example.com/linear-equations"
+//   },
+// ];
+
+===== FILE: app\[teacher_id]\courses\[course_id]\TopicNode.tsx =====
+import { Topic } from "@/lib/database.types";
+
+export default function TopicNode({
+  topic,
+  allTopics,
+  level,
+  onAddTopic,
+}: {
+  topic: Topic;
+  allTopics: Topic[];
+  level: number;
+  onAddTopic: (topic: Topic | null, editing: boolean) => void;
+}) {
+  const children = allTopics.filter((item) => item.parent_id === topic.tpc_id);
+
+  return (
+    <li>
+      <div
+        className="space-y-1 rounded-md border border-slate-700 bg-slate-800 p-3"
+        style={{ marginLeft: `${level * 20}px` }}
+      >
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex">
+          <p className="font-semibold text-white">{topic.tpc_title}</p>
+          <button
+            type="button"
+            onClick={() => onAddTopic(topic,true)}
+            className="rounded-md underline px-2 py-1 text-xs text-slate-200 transition hover:bg-slate-700"
+          >
+            edit Topic
+          </button>
+          </div>
+          <button
+            type="button"
+            onClick={() => onAddTopic(topic,false)}
+            className="rounded-md border border-slate-500 px-2 py-1 text-xs text-slate-200 transition hover:bg-slate-700"
+          >
+            Add Topic
+          </button>
+        </div>
+      </div>
+
+      {children.length > 0 ? (
+        <ul className="mt-2 space-y-2">
+          {children.map((child) => (
+            <TopicNode
+              key={child.tpc_id}
+              topic={child}
+              allTopics={allTopics}
+              level={level + 1}
+              onAddTopic={onAddTopic}
+            />
+          ))}
+        </ul>
+      ) : null}
+    </li>
+  );
+}
+
+===== FILE: features\users\actions\reviewTeacherRequests.ts =====
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { createClient } from "@/lib/supabase/server";
+import { getRole } from "@/features/utils/auth/getRole";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
+type ReviewDecision = "approved" | "rejected";
+
+export async function reviewTeacherRequest(formData: FormData) {
+  const requestUserIdValue = formData.get("requestUserId");
+  const decisionValue = formData.get("decision");
+  const adminNoteValue = formData.get("adminNote");
+
+  const requestUserId =
+    typeof requestUserIdValue === "string" ? requestUserIdValue.trim() : "";
+  const adminNote = typeof adminNoteValue === "string" ? adminNoteValue.trim() : "";
+
+  if (!requestUserId) {
+    throw new Error("Missing request user id");
+  }
+
+  if (decisionValue !== "approved" && decisionValue !== "rejected") {
+    throw new Error("Invalid review decision");
+  }
+  const decision: ReviewDecision = decisionValue;
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error("not authorized");
+  }
+
+  const actorRole = getRole(user);
+  if (actorRole !== "admin") {
+    throw new Error("not authorized");
+  }
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!supabaseUrl || !serviceRoleKey) {
+    throw new Error("Missing Supabase configuration");
+  }
+
+  const adminClient = createAdminClient(supabaseUrl, serviceRoleKey);
+
+  const { data: requestRow, error: requestLookupError } = await adminClient
+    .from("teacher_requests")
+    .select("status")
+    .eq("user_id", requestUserId)
+    .single();
+
+  if (requestLookupError) {
+    throw requestLookupError;
+  }
+
+  const currentRequestStatus = requestRow?.status as string | undefined;
+  if (currentRequestStatus !== "pending") {
+    throw new Error("Teacher request is not pending");
+  }
+
+  const { data: targetUserResult, error: targetUserError } =
+    await adminClient.auth.admin.getUserById(requestUserId);
+
+  if (targetUserError || !targetUserResult.user) {
+    throw new Error("Target user not found");
+  }
+
+  const targetUserRole = targetUserResult.user.app_metadata?.role as
+    | string
+    | undefined;
+
+  
+  const nextRole =
+  decision === "approved"
+    ? "teacher"
+    : targetUserRole === "admin"
+      ? "admin"
+      : "teacher_pending";
+
+  const { error: roleError } = await adminClient.auth.admin.updateUserById(
+    requestUserId,
+    {
+      app_metadata: {
+        ...(targetUserResult.user.app_metadata ?? {}),
+        role: nextRole,
+      },
+    },
+  );
+  if (roleError) {
+    throw roleError;
+  }
+
+  const now = new Date().toISOString();
+  const { error: updateRequestError } = await adminClient
+    .from("teacher_requests")
+    .update({
+      status: decision,
+      admin_note: adminNote || null,
+    
+    })
+    .eq("user_id", requestUserId)
+    .eq("status", "pending")
+    .select("user_id")
+    .single();
+
+  if (updateRequestError) {
+    throw updateRequestError;
+  }
+
+  const { error: auditError } = await adminClient.from("AuditLog").insert({
+    actorId: user.id,
+    actorRole: actorRole,
+    action:
+      decision === "approved"
+        ? "APPROVE_TEACHER_REQUEST"
+        : "REJECT_TEACHER_REQUEST",
+    targetId: requestUserId,
+    targetRole: nextRole,
+    createdAt: new Date(),
+  });
+
+  if (auditError) {
+    console.error(
+      "[reviewTeacherRequest] Failed to write audit log:",
+      auditError.message,
+    );
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/teacher");
+}
+
+===== FILE: features\users\actions\syncTables.ts =====
+import type { SupabaseClient } from "@supabase/supabase-js";
+
+type SyncRole = "student" | "teacher";
+
+type SyncInput = {
+  userId: string;
+  email: string | null;
+  fullName: string | null | undefined;
+};
+
+export async function syncRoleTables(
+  adminClient: SupabaseClient,
+  input: SyncInput,
+  role: SyncRole,
+) {
+  const fullName = (input.fullName ?? "").trim() || "Unknown User";
+  const safeEmail = input.email ?? `${input.userId}@missing-email.local`;
+
+  if (role === "student") {
+    const { error: upsertStudentError } = await adminClient
+      .from("Student")
+      .upsert(
+        {
+          std_id: input.userId,
+          std_fullname: fullName,
+          std_email: safeEmail,
+        },
+        { onConflict: "std_id" },
+      );
+
+    if (upsertStudentError) throw upsertStudentError;
+
+    
+    const { error: deleteTeacherError } = await adminClient
+      .from("Teacher")
+      .delete()
+      .eq("tchr_id", input.userId);
+
+    if (deleteTeacherError) throw deleteTeacherError;
+    return;
+  }
+
+  const { error: upsertTeacherError } = await adminClient
+    .from("Teacher")
+    .upsert(
+      {
+        tchr_id: input.userId,
+        tchr_fullname: fullName,
+        tchr_email: safeEmail,
+      },
+      { onConflict: "tchr_id" },
+    );
+
+  if (upsertTeacherError) throw upsertTeacherError;
+
+  const { error: deleteStudentError } = await adminClient
+    .from("Student")
+    .delete()
+    .eq("std_id", input.userId);
+
+  if (deleteStudentError) throw deleteStudentError;
+}
+
+===== FILE: features\users\actions\updateUserRole.ts =====
+"use server";
+import { createClient } from "@/lib/supabase/server";
+import { getRole } from "@/features/utils/auth/getRole";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
+
+export async function updateUserRole(
+  targetUserId: string,
+  newRole: "student" | "teacher" | "admin",
+) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    throw new Error("not authorized");
+  }
+  const role = getRole(user);
+  if (role !== "admin") {
+    throw new Error("not authorized");
+  }
+  const adminClient = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+  const { error } = await adminClient.auth.admin.updateUserById(targetUserId, {
+    app_metadata: { role: newRole },
+  });
+  if (error) {
+    throw error;
+  }
+
+  await supabase.from("AuditLog").insert({
+    actorId: user.id,
+    actorRole: role,
+    action: "PROMOTE_ROLE",
+    targetId: targetUserId,
+    targetRole: newRole,
+    createdAt: new Date(),
+  });
+  return { success: true };
+}
+
+===== FILE: features\utils\auth\getRole.ts =====
+export type Role = "student" | "teacher" | "teacher_pending" | "admin" | null;
+type UserWithRoleMetadata = {
+  app_metadata?: Record<string, unknown> | null;
+};
+
+function isRole(value: unknown): value is Exclude<Role, null> {
+  return (
+    value === "student" ||
+    value === "teacher" ||
+    value === "teacher_pending" ||
+    value === "admin"
+  );
+}
+
+export function getRole(user: UserWithRoleMetadata | null | undefined): Role {
+  const role = user?.app_metadata?.role;
+  return isRole(role) ? role : null;
+}
+
+===== FILE: lib\database.types.ts =====
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
+
+export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.1"
+  }
+  public: {
+    Tables: {
+      AuditLog: {
+        Row: {
+          action: string | null
+          actorId: string | null
+          actorRole: string | null
+          createdAt: string
+          details: Json | null
+          id: string
+          targetId: string | null
+          targetRole: string | null
+        }
+        Insert: {
+          action?: string | null
+          actorId?: string | null
+          actorRole?: string | null
+          createdAt?: string
+          details?: Json | null
+          id?: string
+          targetId?: string | null
+          targetRole?: string | null
+        }
+        Update: {
+          action?: string | null
+          actorId?: string | null
+          actorRole?: string | null
+          createdAt?: string
+          details?: Json | null
+          id?: string
+          targetId?: string | null
+          targetRole?: string | null
+        }
+        Relationships: []
+      }
+      Content: {
+        Row: {
+          cntnt_id: string
+          cntnt_title: string
+          cntnt_type: Database["public"]["Enums"]["cntnt_type"]
+          cntnt_value: string | null
+          tpc_id: string | null
+        }
+        Insert: {
+          cntnt_id: string
+          cntnt_title: string
+          cntnt_type: Database["public"]["Enums"]["cntnt_type"]
+          cntnt_value?: string | null
+          tpc_id?: string | null
+        }
+        Update: {
+          cntnt_id?: string
+          cntnt_title?: string
+          cntnt_type?: Database["public"]["Enums"]["cntnt_type"]
+          cntnt_value?: string | null
+          tpc_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "Content_tpc_id_fkey"
+            columns: ["tpc_id"]
+            isOneToOne: false
+            referencedRelation: "Topic"
+            referencedColumns: ["tpc_id"]
+          },
+        ]
+      }
+      enroll: {
+        Row: {
+          progress: number
+          skill_id: string | null
+          studentId: string
+        }
+        Insert: {
+          progress: number
+          skill_id?: string | null
+          studentId: string
+        }
+        Update: {
+          progress?: number
+          skill_id?: string | null
+          studentId?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "enroll_skill_id_fkey"
+            columns: ["skill_id"]
+            isOneToOne: false
+            referencedRelation: "Skill"
+            referencedColumns: ["skl_id"]
+          },
+          {
+            foreignKeyName: "enroll_studentId_fkey"
+            columns: ["studentId"]
+            isOneToOne: false
+            referencedRelation: "Student"
+            referencedColumns: ["std_id"]
+          },
+        ]
+      }
+      q_response: {
+        Row: {
+          isCorrect: boolean
+          quizId: string
+          response: string
+          rspns_id: string
+        }
+        Insert: {
+          isCorrect: boolean
+          quizId: string
+          response: string
+          rspns_id: string
+        }
+        Update: {
+          isCorrect?: boolean
+          quizId?: string
+          response?: string
+          rspns_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "q_response_quizId_fkey"
+            columns: ["quizId"]
+            isOneToOne: false
+            referencedRelation: "quiz"
+            referencedColumns: ["qst_id"]
+          },
+        ]
+      }
+      quiz: {
+        Row: {
+          difficulty: Database["public"]["Enums"]["difficulty"]
+          qst_id: string
+          question: string
+          tpc_id: string
+        }
+        Insert: {
+          difficulty: Database["public"]["Enums"]["difficulty"]
+          qst_id: string
+          question: string
+          tpc_id: string
+        }
+        Update: {
+          difficulty?: Database["public"]["Enums"]["difficulty"]
+          qst_id?: string
+          question?: string
+          tpc_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_courseId_fkey"
+            columns: ["tpc_id"]
+            isOneToOne: false
+            referencedRelation: "Content"
+            referencedColumns: ["cntnt_id"]
+          },
+          {
+            foreignKeyName: "quiz_tpc_id_fkey"
+            columns: ["tpc_id"]
+            isOneToOne: false
+            referencedRelation: "Topic"
+            referencedColumns: ["tpc_id"]
+          },
+        ]
+      }
+      review: {
+        Row: {
+          comment: string
+          content_id: string
+          rating: number
+          studentId: string
+        }
+        Insert: {
+          comment: string
+          content_id: string
+          rating: number
+          studentId: string
+        }
+        Update: {
+          comment?: string
+          content_id?: string
+          rating?: number
+          studentId?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "Content"
+            referencedColumns: ["cntnt_id"]
+          },
+          {
+            foreignKeyName: "review_studentId_fkey"
+            columns: ["studentId"]
+            isOneToOne: false
+            referencedRelation: "Student"
+            referencedColumns: ["std_id"]
+          },
+        ]
+      }
+      score: {
+        Row: {
+          score: number
+          studentId: string
+          time_taken: number
+          tpc_id: string
+        }
+        Insert: {
+          score: number
+          studentId: string
+          time_taken: number
+          tpc_id: string
+        }
+        Update: {
+          score?: number
+          studentId?: string
+          time_taken?: number
+          tpc_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "score_studentId_fkey"
+            columns: ["studentId"]
+            isOneToOne: false
+            referencedRelation: "Student"
+            referencedColumns: ["std_id"]
+          },
+          {
+            foreignKeyName: "score_tpc_id_fkey"
+            columns: ["tpc_id"]
+            isOneToOne: false
+            referencedRelation: "Topic"
+            referencedColumns: ["tpc_id"]
+          },
+        ]
+      }
+      Skill: {
+        Row: {
+          skl_dscrptn: string
+          skl_duration: number
+          skl_id: string
+          skl_title: string
+          teacher_id: string | null
+        }
+        Insert: {
+          skl_dscrptn: string
+          skl_duration: number
+          skl_id?: string
+          skl_title: string
+          teacher_id?: string | null
+        }
+        Update: {
+          skl_dscrptn?: string
+          skl_duration?: number
+          skl_id?: string
+          skl_title?: string
+          teacher_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "Skill_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "Teacher"
+            referencedColumns: ["tchr_id"]
+          },
+        ]
+      }
+      Student: {
+        Row: {
+          std_email: string
+          std_fullname: string
+          std_id: string
+          std_last_activeDate: string
+          std_level: Database["public"]["Enums"]["level"]
+          std_pfp: string | null
+          std_streak: number
+          user_id: string | null
+        }
+        Insert: {
+          std_email: string
+          std_fullname: string
+          std_id: string
+          std_last_activeDate?: string
+          std_level?: Database["public"]["Enums"]["level"]
+          std_pfp?: string | null
+          std_streak?: number
+          user_id?: string | null
+        }
+        Update: {
+          std_email?: string
+          std_fullname?: string
+          std_id?: string
+          std_last_activeDate?: string
+          std_level?: Database["public"]["Enums"]["level"]
+          std_pfp?: string | null
+          std_streak?: number
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      Teacher: {
+        Row: {
+          tchr_email: string
+          tchr_fullname: string
+          tchr_id: string
+          tchr_pfp: string | null
+          user_id: string | null
+        }
+        Insert: {
+          tchr_email: string
+          tchr_fullname: string
+          tchr_id: string
+          tchr_pfp?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          tchr_email?: string
+          tchr_fullname?: string
+          tchr_id?: string
+          tchr_pfp?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      teacher_requests: {
+        Row: {
+          admin_note: string | null
+          created_at: string | null
+          cv_url: string | null
+          id: string
+          motivation: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          admin_note?: string | null
+          created_at?: string | null
+          cv_url?: string | null
+          id?: string
+          motivation?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          admin_note?: string | null
+          created_at?: string | null
+          cv_url?: string | null
+          id?: string
+          motivation?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      Topic: {
+        Row: {
+          parent_id: string | null
+          skill_id: string | null
+          tpc_description: string | null
+          tpc_id: string
+          tpc_title: string
+        }
+        Insert: {
+          parent_id?: string | null
+          skill_id?: string | null
+          tpc_description?: string | null
+          tpc_id: string
+          tpc_title: string
+        }
+        Update: {
+          parent_id?: string | null
+          skill_id?: string | null
+          tpc_description?: string | null
+          tpc_id?: string
+          tpc_title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "Topic_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "Topic"
+            referencedColumns: ["tpc_id"]
+          },
+          {
+            foreignKeyName: "Topic_skill_id_fkey"
+            columns: ["skill_id"]
+            isOneToOne: false
+            referencedRelation: "Skill"
+            referencedColumns: ["skl_id"]
+          },
+        ]
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      [_ in never]: never
+    }
+    Enums: {
+      cntnt_type: "pdf" | "video" | "mindmap" | "docs" | "audio"
+      difficulty: "easy" | "medium" | "hard" | "pro"
+      level: "beginner" | "intermediate" | "advanced" | "master"
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
+}
+
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {
+      cntnt_type: ["pdf", "video", "mindmap", "docs", "audio"],
+      difficulty: ["easy", "medium", "hard", "pro"],
+      level: ["beginner", "intermediate", "advanced", "master"],
+    },
+  },
+} as const
+// add at the bottom of database.types.ts
+export type Skill = Tables<"Skill">
+export type Topic = Tables<"Topic">
+export type Content = Tables<"Content">
+export type Student = Tables<"Student">
+export type Teacher = Tables<"Teacher">
+export type TeacherRequest = Tables<"teacher_requests">
+export type Enroll = Tables<"enroll">
+export type Quiz = Tables<"quiz">
+export type QResponse = Tables<"q_response">
+export type Review = Tables<"review">
+export type Score = Tables<"score">
+
+// enum types
+export type ContentType = Enums<"cntnt_type">
+export type Difficulty = Enums<"difficulty">
+export type Level = Enums<"level">
+
+===== FILE: lib\supabase\client.ts =====
+import { createBrowserClient } from "@supabase/ssr";
+
+export function createClient(){
+  return createBrowserClient(
+process.env.NEXT_PUBLIC_SUPABASE_URL!,
+process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+
+  );
+}
+
+===== FILE: lib\supabase\server.ts =====
+import { createServerClient } from "@supabase/ssr";
+import {cookies} from 'next/headers';
+
+export async function createClient(){
+    const cookieStore=await cookies();
+    return createServerClient(
+         process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+        cookies:{
+            getAll(){
+                return cookieStore.getAll();
+            },
+            setAll(cookiesToSet){
+                try{
+                    cookiesToSet.forEach(({name,value,options}) =>
+                    cookieStore.set(name,value,options)
+                    );
+                }catch{
+
+                }
+            },
+        },
+    }
+    );
+}
+
+===== FILE: scripts\seed-supabase.ts =====
+import "dotenv/config";
+import { createClient, type User } from "@supabase/supabase-js";
+
+type Role = "student" | "teacher" | "admin";
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!supabaseUrl || !serviceRoleKey) {
+  throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
+}
+
+if (process.env.NODE_ENV === "production") {
+  throw new Error("Seeding is blocked in production");
+}
+
+const admin = createClient(supabaseUrl, serviceRoleKey, {
+  auth: { persistSession: false, autoRefreshToken: false },
+});
+function requireEnv(...names: string[]) {
+  for (const name of names) {
+    const value = process.env[name];
+    if (value && value.trim()) return value;
+  }
+  throw new Error(`Missing env var: ${names.join(" or ")}`);
+}
+
+const seed = {
+    
+  teacherEmail:
+    process.env.SEED_TEACHER_EMAIL ??
+    process.env.E2E_TEACHER_EMAIL ??
+    "teacher@example.com",
+  teacherPassword: requireEnv("SEED_TEACHER_PASSWORD", "E2E_TEACHER_PASSWORD"),
+
+  studentEmail:
+    process.env.SEED_STUDENT_EMAIL ??
+    process.env.E2E_STUDENT_EMAIL ??
+    "student@example.com",
+    studentPassword: requireEnv("SEED_STUDENT_PASSWORD", "E2E_STUDENT_PASSWORD"),
+
+  adminEmail:
+    process.env.SEED_ADMIN_EMAIL ??
+    process.env.E2E_ADMIN_EMAIL ??
+    "admin@example.com",
+      adminPassword: requireEnv("SEED_ADMIN_PASSWORD", "E2E_ADMIN_PASSWORD"),
+
+};
+
+function must<T>(value: T | null | undefined, message: string): T {
+  if (value == null) throw new Error(message);
+  return value;
+}
+
+async function listAllUsers(): Promise<User[]> {
+  const users: User[] = [];
+  let page = 1;
+
+  while (true) {
+    const { data, error } = await admin.auth.admin.listUsers({
+      page,
+      perPage: 1000,
+    });
+    if (error) throw new Error(`[auth.listUsers] ${error.message}`);
+
+    users.push(...(data.users ?? []));
+    if ((data.users ?? []).length < 1000) break;
+    page += 1;
+  }
+
+  return users;
+}
+
+async function upsertAuthUser(
+  email: string,
+  password: string,
+  role: Role,
+  fullName: string,
+) {
+  const users = await listAllUsers();
+  const existing = users.find(
+    (u) => u.email?.toLowerCase() === email.toLowerCase(),
+  );
+
+  if (existing) {
+    const { error } = await admin.auth.admin.updateUserById(existing.id, {
+      password,
+      email_confirm: true,
+      app_metadata: { ...(existing.app_metadata ?? {}), role },
+      user_metadata: { ...(existing.user_metadata ?? {}), full_name: fullName },
+    });
+    if (error) throw new Error(`[auth.updateUserById:${email}] ${error.message}`);
+    return existing.id;
+  }
+
+  const { data, error } = await admin.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+    app_metadata: { role },
+    user_metadata: { full_name: fullName },
+  });
+
+  if (error) throw new Error(`[auth.createUser:${email}] ${error.message}`);
+  return must(data.user?.id, `[auth.createUser:${email}] missing user id`);
+}
+
+async function seedRelationalData() {
+  const teacherId = "teacher-seed-1";
+  const studentId = "student-seed-1";
+  const domainId = "domain-seed-math";
+  const subDomainId = "subdomain-seed-algebra";
+
+  let res = await admin.from("Teacher").upsert(
+    {
+      tchr_id: teacherId,
+      tchr_name: "John",
+      tchr_lastname: "Doe",
+      tchr_email: seed.teacherEmail,
+    
+    },
+    { onConflict: "tchr_email" },
+  );
+  if (res.error) throw new Error(`[Teacher.upsert] ${res.error.message}`);
+
+  res = await admin.from("Student").upsert(
+    {
+      std_id: studentId,
+      std_name: "Jane",
+      std_lastname: "Smith",
+      std_email: seed.studentEmail,
+
+    },
+    { onConflict: "std_email" },
+  );
+  if (res.error) throw new Error(`[Student.upsert] ${res.error.message}`);
+
+  res = await admin.from("Domain").upsert(
+    {
+      dmn_id: domainId,
+      dmn_title: "Mathematics",
+      dmn_dscrptn: "All about numbers and equations",
+      dmn_duration: 60,
+    },
+    { onConflict: "dmn_title" },
+  );
+  if (res.error) throw new Error(`[Domain.upsert] ${res.error.message}`);
+
+  res = await admin.from("subDomain").upsert(
+    {
+      subdom_id: subDomainId,
+      subdom_title: "Algebra",
+      domainId,
+    },
+    { onConflict: "subdom_title" },
+  );
+  if (res.error) throw new Error(`[subDomain.upsert] ${res.error.message}`);
+
+  res = await admin.from("Course").upsert(
+    {
+      crs_id: "course-seed-intro-math",
+      crs_title: "Introduction to Mathematics",
+      crs_type: "pdf",
+      pdf_file: "math101.pdf",
+      teacherId,
+      subdom: subDomainId,
+    },
+    { onConflict: "crs_title" },
+  );
+  if (res.error) throw new Error(`[Course.upsert] ${res.error.message}`);
+}
+
+async function main() {
+  console.log("Seeding Supabase...");
+
+  await upsertAuthUser(
+    seed.teacherEmail,
+    seed.teacherPassword,
+    "teacher",
+    "John Doe",
+  );
+  await upsertAuthUser(
+    seed.studentEmail,
+    seed.studentPassword,
+    "student",
+    "Jane Smith",
+  );
+  await upsertAuthUser(seed.adminEmail, seed.adminPassword, "admin", "Admin User");
+
+  await seedRelationalData();
+
+  console.log("Seed completed.");
+}
+
+main().catch((error) => {
+  console.error("Seed failed:", error);
+  process.exit(1);
+});
+
+===== FILE: scripts\setRoles.ts =====
+import { createClient, User } from "@supabase/supabase-js";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+);
+
+async function setUserRole(email: string, role: "teacher" | "student"|"admin") {
+
+  const { data: listData, error: fetchError } =
+    await supabase.auth.admin.listUsers({
+      page: 1,
+      perPage: 100,
+    });
+
+  if (fetchError) {
+    console.error("Error fetching users:", fetchError);
+    return;
+  }
+
+  const users = listData?.users ?? [];
+
+  const user = users.find((u: User) => u.email === email);
+
+  if (!user) {
+    console.log("User not found");
+    return;
+  }
+
+  const { data: updateUser, error } =
+    await supabase.auth.admin.updateUserById(user.id, {
+      app_metadata: { role },
+    });
+
+  if (error) console.error("Error updating role:", error);
+  else console.log(`${role} role set successfully`, updateUser);
+}
+
+
+//setUserRole("john.doe@example.com", "teacher");
+setUserRole("radia@example.com", "admin");
+
+===== FILE: supabase\.temp\cli-latest =====
+v2.75.0
+
+===== FILE: supabase\.temp\gotrue-version =====
+v2.187.0
+
+===== FILE: supabase\.temp\pooler-url =====
+postgresql://postgres.pjsschovqymnfflwquau@aws-1-eu-west-1.pooler.supabase.com:5432/postgres
+
+===== FILE: supabase\.temp\postgres-version =====
+17.6.1.063
+
+===== FILE: supabase\.temp\project-ref =====
+pjsschovqymnfflwquau
+
+===== FILE: supabase\.temp\rest-version =====
+v14.1
+
+===== FILE: supabase\.temp\storage-migration =====
+fix-optimized-search-function
+
+===== FILE: supabase\.temp\storage-version =====
+v1.37.7
+
+===== FILE: supabase\migrations\20260310165723_remote_schema.sql =====
+
+===== FILE: supabase\migrations\20260226213253_init\migration.sql =====
+-- CreateEnum
+CREATE TYPE "level" AS ENUM ('beginner', 'intermediate', 'advanced', 'master');
+
+-- CreateEnum
+CREATE TYPE "crs_type" AS ENUM ('pdf', 'video', 'mindmap', 'docs', 'article');
+
+-- CreateEnum
+CREATE TYPE "difficulty" AS ENUM ('easy', 'medium', 'hard', 'pro');
+
+-- CreateTable
+CREATE TABLE "Student" (
+    "std_id" TEXT NOT NULL,
+    "std_name" TEXT NOT NULL,
+    "std_lastname" TEXT NOT NULL,
+    "std_email" TEXT NOT NULL,
+    "std_pfp" TEXT,
+    "std_password" TEXT NOT NULL,
+    "std_streak" INTEGER NOT NULL DEFAULT 0,
+    "std_last_activeDate" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "std_level" "level" NOT NULL DEFAULT 'beginner',
+
+    CONSTRAINT "Student_pkey" PRIMARY KEY ("std_id")
+);
+
+-- CreateTable
+CREATE TABLE "Teacher" (
+    "tchr_id" TEXT NOT NULL,
+    "tchr_name" TEXT NOT NULL,
+    "tchr_lastname" TEXT NOT NULL,
+    "tchr_email" TEXT NOT NULL,
+    "tchr_pfp" TEXT,
+    "tchr_password" TEXT NOT NULL,
+
+    CONSTRAINT "Teacher_pkey" PRIMARY KEY ("tchr_id")
+);
+
+-- CreateTable
+CREATE TABLE "Domain" (
+    "dmn_id" TEXT NOT NULL,
+    "dmn_title" TEXT NOT NULL,
+    "dmn_dscrptn" TEXT NOT NULL,
+    "dmn_duration" INTEGER NOT NULL,
+
+    CONSTRAINT "Domain_pkey" PRIMARY KEY ("dmn_id")
+);
+
+-- CreateTable
+CREATE TABLE "subDomain" (
+    "subdom_id" TEXT NOT NULL,
+    "subdom_title" TEXT NOT NULL,
+    "domainId" TEXT NOT NULL,
+    "parentId" TEXT,
+
+    CONSTRAINT "subDomain_pkey" PRIMARY KEY ("subdom_id")
+);
+
+-- CreateTable
+CREATE TABLE "Course" (
+    "crs_id" TEXT NOT NULL,
+    "crs_title" TEXT NOT NULL,
+    "crs_type" "crs_type" NOT NULL,
+    "subdom" TEXT NOT NULL,
+    "teacherId" TEXT NOT NULL,
+
+    CONSTRAINT "Course_pkey" PRIMARY KEY ("crs_id")
+);
+
+-- CreateTable
+CREATE TABLE "quiz" (
+    "qst_id" TEXT NOT NULL,
+    "question" TEXT NOT NULL,
+    "difficulty" "difficulty" NOT NULL,
+    "courseId" TEXT NOT NULL,
+
+    CONSTRAINT "quiz_pkey" PRIMARY KEY ("qst_id")
+);
+
+-- CreateTable
+CREATE TABLE "q_response" (
+    "rspns_id" TEXT NOT NULL,
+    "response" TEXT NOT NULL,
+    "isCorrect" BOOLEAN NOT NULL,
+    "quizId" TEXT NOT NULL,
+
+    CONSTRAINT "q_response_pkey" PRIMARY KEY ("rspns_id")
+);
+
+-- CreateTable
+CREATE TABLE "enroll" (
+    "studentId" TEXT NOT NULL,
+    "domainId" TEXT NOT NULL,
+    "progress" INTEGER NOT NULL,
+
+    CONSTRAINT "enroll_pkey" PRIMARY KEY ("studentId","domainId")
+);
+
+-- CreateTable
+CREATE TABLE "score" (
+    "studentId" TEXT NOT NULL,
+    "subdom" TEXT NOT NULL,
+    "score" DOUBLE PRECISION NOT NULL,
+    "time_taken" INTEGER NOT NULL,
+
+    CONSTRAINT "score_pkey" PRIMARY KEY ("studentId","subdom")
+);
+
+-- CreateTable
+CREATE TABLE "review" (
+    "studentId" TEXT NOT NULL,
+    "courseId" TEXT NOT NULL,
+    "comment" TEXT NOT NULL,
+    "rating" INTEGER NOT NULL,
+
+    CONSTRAINT "review_pkey" PRIMARY KEY ("studentId","courseId")
+);
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Student_std_email_key" ON "Student"("std_email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Teacher_tchr_email_key" ON "Teacher"("tchr_email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Domain_dmn_title_key" ON "Domain"("dmn_title");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "subDomain_subdom_title_key" ON "subDomain"("subdom_title");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Course_crs_title_key" ON "Course"("crs_title");
+
+-- AddForeignKey
+ALTER TABLE "subDomain" ADD CONSTRAINT "subDomain_domainId_fkey" FOREIGN KEY ("domainId") REFERENCES "Domain"("dmn_id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "subDomain" ADD CONSTRAINT "subDomain_parentId_fkey" FOREIGN KEY ("parentId") REFERENCES "subDomain"("subdom_id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Course" ADD CONSTRAINT "Course_subdom_fkey" FOREIGN KEY ("subdom") REFERENCES "subDomain"("subdom_id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Course" ADD CONSTRAINT "Course_teacherId_fkey" FOREIGN KEY ("teacherId") REFERENCES "Teacher"("tchr_id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "quiz" ADD CONSTRAINT "quiz_courseId_fkey" FOREIGN KEY ("courseId") REFERENCES "Course"("crs_id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "q_response" ADD CONSTRAINT "q_response_quizId_fkey" FOREIGN KEY ("quizId") REFERENCES "quiz"("qst_id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "enroll" ADD CONSTRAINT "enroll_studentId_fkey" FOREIGN KEY ("studentId") REFERENCES "Student"("std_id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "enroll" ADD CONSTRAINT "enroll_domainId_fkey" FOREIGN KEY ("domainId") REFERENCES "Domain"("dmn_id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "score" ADD CONSTRAINT "score_studentId_fkey" FOREIGN KEY ("studentId") REFERENCES "Student"("std_id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "score" ADD CONSTRAINT "score_subdom_fkey" FOREIGN KEY ("subdom") REFERENCES "subDomain"("subdom_id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "review" ADD CONSTRAINT "review_studentId_fkey" FOREIGN KEY ("studentId") REFERENCES "Student"("std_id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "review" ADD CONSTRAINT "review_courseId_fkey" FOREIGN KEY ("courseId") REFERENCES "Course"("crs_id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+===== FILE: supabase\migrations\20260227130115_add_optional_course_fields\migration.sql =====
+-- AlterTable
+ALTER TABLE "Course" ADD COLUMN     "article_content" TEXT,
+ADD COLUMN     "pdf_file" TEXT,
+ADD COLUMN     "vd_link" TEXT;
+
+
+===== FILE: supabase\migrations\20260305233000_teacher_requests_auditlog\migration.sql =====
+-- teacher_requests
+create table if not exists public.teacher_requests (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  email text,
+  full_name text,
+  cv_url text,
+  motivation text,
+  status text not null default 'pending'
+    check (status in ('pending', 'approved', 'rejected')),
+  admin_note text,
+  reviewed_by uuid references auth.users(id) on delete set null,
+  reviewed_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists teacher_requests_status_idx
+  on public.teacher_requests(status);
+
+create or replace function public.set_teacher_requests_updated_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
+drop trigger if exists teacher_requests_set_updated_at on public.teacher_requests;
+create trigger teacher_requests_set_updated_at
+before update on public.teacher_requests
+for each row execute function public.set_teacher_requests_updated_at();
+
+-- AuditLog
+create table if not exists public."AuditLog" (
+  id bigint generated always as identity primary key,
+  "actorId" uuid not null references auth.users(id) on delete restrict,
+  "actorRole" text not null,
+  action text not null,
+  "targetId" uuid references auth.users(id) on delete set null,
+  "targetRole" text,
+  "createdAt" timestamptz not null default now()
+);
+
+do $$
+begin
+  if exists (
+    select 1
+    from information_schema.columns
+    where table_schema='public' and table_name='AuditLog' and column_name='created_at'
+  ) and not exists (
+    select 1
+    from information_schema.columns
+    where table_schema='public' and table_name='AuditLog' and column_name='createdAt'
+  ) then
+    execute 'alter table public."AuditLog" rename column created_at to "createdAt"';
+  end if;
+end $$;
+
+create index if not exists "AuditLog_createdAt_idx"
+  on public."AuditLog"("createdAt");
+
+===== FILE: supabase\migrations\20260306001000_drop_legacy_password_columns\migration.sql =====
+alter table public."Teacher" drop column if exists "tchr_password";
+alter table public."Student" drop column if exists "std_password";
+
+===== FILE: tests\e2e\routes.spec.ts =====
+import { test, expect, type Page } from '@playwright/test';
+
+const roles = ['student', 'teacher', 'admin'] as const;
+const routes = ['/student', '/teacher', '/admin'] as const;
+
+type Role = (typeof roles)[number];
+
+const roleHome: Record<Role, string> = {
+  student: '/student',
+  teacher: '/teacher',
+  admin: '/admin',
+};
+
+function credentialsFor(role: Role) {
+  const envMap = {
+    student: {
+      email: process.env.E2E_STUDENT_EMAIL,
+      password: process.env.E2E_STUDENT_PASSWORD,
+    },
+    teacher: {
+      email: process.env.E2E_TEACHER_EMAIL,
+      password: process.env.E2E_TEACHER_PASSWORD,
+    },
+    admin: {
+      email: process.env.E2E_ADMIN_EMAIL,
+      password: process.env.E2E_ADMIN_PASSWORD,
+    },
+  } as const;
+
+  return envMap[role];
+}
+
+async function loginAs(page: Page, role: Role) {
+  const creds = credentialsFor(role);
+
+  test.skip(
+    !creds.email || !creds.password,
+    `Missing E2E credentials for role: ${role}`,
+  );
+
+  await page.goto('/login');
+
+  await page.getByRole('textbox', { name: /johndoe@example.com/i }).fill(creds.email!);
+  await page.locator('input[type="password"]').fill(creds.password!);
+  await page.getByRole('button', { name: /^login$/i }).click();
+
+  await expect
+    .poll(
+      async () => {
+        const path = new URL(page.url()).pathname;
+        if (path === '/student' || path === '/teacher' || path === '/admin') return path;
+
+        const hasError = await page
+          .getByText(/incorrect|invalid/i)
+          .isVisible()
+          .catch(() => false);
+        if (hasError) return 'login-error';
+
+        return 'waiting';
+      },
+      { timeout: 15000, message: `Login did not reach a role route for ${role}` },
+    )
+    .toBe(roleHome[role]);
+}
+
+test.describe('Route access tests', () => {
+  for (const role of roles) {
+    for (const route of routes) {
+      const isOwnRoute =
+        (route === '/student' && role === 'student') ||
+        (route === '/teacher' && role === 'teacher') ||
+        (route === '/admin' && role === 'admin');
+
+      const caseTitle = isOwnRoute
+        ? `[ALLOW] ${role} can access ${route}`
+        : `[DENY] ${role} is denied access to ${route}`;
+
+      test(caseTitle, async ({ page }) => {
+        await loginAs(page, role);
+        await page.goto(route);
+
+        const shouldRedirectToOwnDashboard =
+          (route === '/student' && role !== 'student') ||
+          (route === '/teacher' && role !== 'teacher') ||
+          (route === '/admin' && role !== 'admin');
+
+        if (shouldRedirectToOwnDashboard) {
+          await expect(page).toHaveURL(/\/$/);
+          return;
+        }
+
+        await expect(page).toHaveURL(new RegExp(`${route}$`));
+      });
+    }
+  }
+});
+
+===== FILE: tests\unit\authCallbackRoute.test.ts =====
+import { beforeEach, describe, expect, test, vi } from "vitest";
+import type { NextRequest } from "next/server";
+
+const mocks = vi.hoisted(() => ({
+  createServerClient: vi.fn(),
+  createAdminClient: vi.fn(),
+  exchangeCodeForSession: vi.fn(),
+  getUser: vi.fn(),
+  updateUserById: vi.fn(),
+}));
+
+vi.mock("@/lib/supabase/server", () => ({
+  createClient: mocks.createServerClient,
+}));
+
+vi.mock("@supabase/supabase-js", () => ({
+  createClient: mocks.createAdminClient,
+}));
+
+import { GET } from "@/app/auth/callback/route";
+
+describe("GET /auth/callback", () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+    vi.spyOn(console, "error").mockImplementation(() => {});
+
+    process.env.NEXT_PUBLIC_SUPABASE_URL = "https://example.supabase.co";
+    process.env.SUPABASE_SERVICE_ROLE_KEY = "service-role-key";
+
+    mocks.createServerClient.mockResolvedValue({
+      auth: {
+        exchangeCodeForSession: mocks.exchangeCodeForSession,
+        getUser: mocks.getUser,
+      },
+    });
+
+    mocks.createAdminClient.mockReturnValue({
+      auth: {
+        admin: {
+          updateUserById: mocks.updateUserById,
+        },
+      },
+    });
+
+    mocks.exchangeCodeForSession.mockResolvedValue({ error: null });
+    mocks.updateUserById.mockResolvedValue({ error: null });
+  });
+
+  test("redirects to login when callback has no code", async () => {
+    const response = await GET(
+      new Request("http://localhost:3000/auth/callback") as NextRequest,
+    );
+
+    expect(response.headers.get("location")).toBe(
+      "http://localhost:3000/login?error=missing_oauth_code",
+    );
+    expect(mocks.exchangeCodeForSession).not.toHaveBeenCalled();
+    expect(mocks.getUser).not.toHaveBeenCalled();
+  });
+
+  test("auto-assigns student role for new OAuth user without role", async () => {
+    mocks.getUser.mockResolvedValue({
+      data: {
+        user: {
+          id: "user-1",
+          app_metadata: {},
+        },
+      },
+    });
+
+    const response = await GET(
+      new Request(
+        "http://localhost:3000/auth/callback?code=test-code",
+      ) as NextRequest,
+    );
+
+    expect(mocks.exchangeCodeForSession).toHaveBeenCalledWith("test-code");
+    expect(mocks.createAdminClient).toHaveBeenCalledWith(
+      "https://example.supabase.co",
+      "service-role-key",
+    );
+    expect(mocks.updateUserById).toHaveBeenCalledWith("user-1", {
+      app_metadata: { role: "student" },
+    });
+    expect(response.headers.get("location")).toBe(
+      "http://localhost:3000/student",
+    );
+  });
+
+  test.each([
+    { role: "teacher", destination: "/user-2" },
+    { role: "admin", destination: "/admin" },
+  ])(
+    "redirects existing $role user to $destination",
+    async ({ role, destination }) => {
+      mocks.getUser.mockResolvedValue({
+        data: {
+          user: {
+            id: "user-2",
+            app_metadata: { role },
+          },
+        },
+      });
+
+      const response = await GET(
+        new Request(
+          "http://localhost:3000/auth/callback?code=test-code",
+        ) as NextRequest,
+      );
+
+      expect(mocks.updateUserById).not.toHaveBeenCalled();
+      expect(response.headers.get("location")).toBe(
+        `http://localhost:3000${destination}`,
+      );
+    },
+  );
+});
+
+===== FILE: tests\unit\updateUserRole.test.ts =====
+import { describe, test, expect, vi } from "vitest";
+
+vi.mock("@/lib/supabase/server", () => ({
+  createClient: vi.fn(async () => ({
+    auth: {
+      getUser: vi.fn(async () => ({
+        data: {
+          user: { id: "123", app_metadata: { role: "student" } }, // fake logged user
+        },
+      })),
+    },
+    from: vi.fn(() => ({ insert: vi.fn(async () => ({ error: null })) })),
+  })),
+}));
+
+vi.mock("@supabase/supabase-js", () => ({
+  createClient: vi.fn(() => ({
+    auth: {
+      admin: {
+        updateUserById: vi.fn(async () => ({ error: null })),
+      },
+    },
+  })),
+}));
+
+import { updateUserRole } from "@/features/users/actions/updateUserRole";
+
+describe("updateUserRole", () => {
+  test("non admin cannot promote user", async () => {
+    await expect(updateUserRole("456", "teacher")).rejects.toThrow("not authorized");
+  });
+});
+
+===== FILE: .github\workflows\playwright.yml =====
+name: Playwright Tests
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+jobs:
+  test:
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: lts/*
+    - name: Install dependencies
+      run: npm install -g pnpm && pnpm install
+    - name: Install Playwright Browsers
+      run: pnpm exec playwright install --with-deps
+    - name: Run Playwright tests
+      run: pnpm exec playwright test
+    - uses: actions/upload-artifact@v4
+      if: ${{ !cancelled() }}
+      with:
+        name: playwright-report
+        path: playwright-report/
+        retention-days: 30
+
+===== FILE: package.json =====
+{
+  "name": "lumina",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "seed": "tsx scripts/seed-supabase.ts",
+    "test": "vitest run",
+    "test:unit": "vitest run",
+    "test:e2e": "playwright test"
+  },
+  "dependencies": {
+    "@supabase/ssr": "^0.8.0",
+    "@supabase/supabase-js": "^2.98.0",
+    "@xyflow/react": "^12.10.1",
+    "clsx": "^2.1.1",
+    "dotenv": "^17.3.1",
+    "lucide-react": "^0.575.0",
+    "next": "16.1.6",
+    "react": "19.2.3",
+    "react-dom": "19.2.3"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.1.6",
+    "supabase": "^2.76.17",
+    "tailwindcss": "^4",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.21.0",
+    "typescript": "^5",
+    "vitest": "^4.0.18"
+  }
+}
+
+===== FILE: pnpm-workspace.yaml =====
+ignoredBuiltDependencies:
+  - sharp
+  - unrs-resolver
+
+===== FILE: tsconfig.json =====
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "node",      
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "incremental": true,
+    "types": ["node"],               
+    "plugins": [
+      { "name": "next" }
+    ],
+    "paths": {
+      "@/*": ["./*"]
+    }
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts",
+    "**/*.mts"
+  ],
+  "exclude": ["node_modules"]
+}
+
+===== FILE: tailwind.config.mjs =====
+/** @type {import('tailwindcss').Config} */
+const config = {
+  content: [
+    "./app/**/*.{js,ts,jsx,tsx,mdx}",
+    "./components/**/*.{js,ts,jsx,tsx,mdx}",
+    "./pages/**/*.{js,ts,jsx,tsx,mdx}",
+  ],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+};
+
+export default config;
+
+===== FILE: next.config.ts =====
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+  /* config options here */
+};
+
+export default nextConfig;
+
+===== FILE: playwright.config.ts =====
+import { defineConfig, devices } from '@playwright/test';
+import dotenv from 'dotenv';
+
+dotenv.config({ path: '.env' });
+dotenv.config({ path: '.env.local', override: true });
+
+export default defineConfig({
+  testDir: './tests/e2e',
+  testMatch: '**/*.spec.ts',
+  fullyParallel: true,
+  forbidOnly: !!process.env.CI,
+  retries: process.env.CI ? 2 : 0,
+  workers: process.env.CI ? 1 : undefined,
+  reporter: 'html',
+  use: {
+    baseURL: 'http://127.0.0.1:3000',
+    trace: 'on-first-retry',
+  },
+  projects: [
+    {
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
+    },
+  ],
+  webServer: {
+    command: 'pnpm dev',
+    url: 'http://127.0.0.1:3000',
+    reuseExistingServer: !process.env.CI,
+    timeout: 120000,
+  },
+});
+
+===== FILE: eslint.config.mjs =====
+import { defineConfig, globalIgnores } from "eslint/config";
+import nextVitals from "eslint-config-next/core-web-vitals";
+import nextTs from "eslint-config-next/typescript";
+
+const eslintConfig = defineConfig([
+  ...nextVitals,
+  ...nextTs,
+  // Override default ignores of eslint-config-next.
+  globalIgnores([
+    // Default ignores of eslint-config-next:
+    ".next/**",
+    "out/**",
+    "build/**",
+    "next-env.d.ts",
+  ]),
+]);
+
+export default eslintConfig;
+
+===== FILE: README.md =====
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+
+## Getting Started
+
+First, run the development server:
+
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+
+## Learn More
+
+To learn more about Next.js, take a look at the following resources:
+
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+
+## Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+===== FILE: proxy.ts =====
+import { NextRequest, NextResponse } from "next/server";
+import { createServerClient } from "@supabase/ssr";
+import { getRole } from "@/features/utils/auth/getRole";
+
+export async function proxy(req: NextRequest) {
+  const response = NextResponse.next({ request: req });
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return req.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options),
+          );
+        },
+      },
+    },
+  );
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const role = getRole(user);
+  const dashboardPath =
+    role === "teacher" || role === "teacher_pending"
+      ? "/teacher"
+      : role === "student"
+        ? "/student"
+        : role === "admin"
+          ? "/admin"
+          : "/";
+
+  const isStudentRoute = req.nextUrl.pathname.startsWith("/student");
+  const isHeroPage = req.nextUrl.pathname === "/";
+  const isTeacherRoute = req.nextUrl.pathname.startsWith("/teacher");
+  const isAdminRoute = req.nextUrl.pathname.startsWith("/admin");
+  const isAuthPage =
+    req.nextUrl.pathname === "/login" || req.nextUrl.pathname === "/signup";
+  if (isAuthPage && user) {
+    return NextResponse.redirect(new URL(dashboardPath, req.url));
+  }
+
+const isTeacherApplyRoute = req.nextUrl.pathname === "/teacher/apply";
+
+if (
+  isTeacherRoute &&
+  !isTeacherApplyRoute &&
+  role !== "teacher" &&
+  role !== "teacher_pending"
+) {
+  return NextResponse.redirect(new URL("/", req.url));
+}
+
+if (isTeacherApplyRoute && !user) {
+  return NextResponse.redirect(new URL("/", req.url));
+}
+
+  if (isStudentRoute) {
+    if (!user || role !== "student") {
+      return NextResponse.redirect(new URL("/", req.url));
+    }
+  }
+  if (isHeroPage && user && (role === "teacher" || role === "teacher_pending")) {
+    return NextResponse.redirect(new URL("/teacher", req.url));
+  }
+
+  if (isHeroPage && user && role === "student") {
+    return NextResponse.redirect(new URL("/student", req.url));
+  }
+
+  if (isAdminRoute && role !== "admin") {
+    return NextResponse.redirect(new URL("/", req.url));
+  }
+ 
+  return response;
+}
+
+export const config = {
+  matcher: [
+    "/",
+    "/login",
+    "/signup",
+    "/student/:path*",
+    "/teacher/:path*",
+    "/admin/:path*",
+  ],
+};
+
