@@ -66,7 +66,7 @@ if (isTeacherApplyRoute && !user) {
     }
   }
   if (isHeroPage && user && (role === "teacher" || role === "teacher_pending")) {
-    return NextResponse.redirect(new URL("/teacher", req.url));
+    return NextResponse.redirect(new URL(`${user.id}`, req.url));
   }
 
   if (isHeroPage && user && role === "student") {
