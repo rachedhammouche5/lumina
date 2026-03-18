@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import clsx from "clsx";
 import { Eye, EyeOff, Lock, Mail, User } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import Input from "../Input";
+import Button from "../Button";
 
 export default function SignupPageView() {
   const router = useRouter();
@@ -21,7 +22,8 @@ export default function SignupPageView() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const[teacher,setTeacher]=useState(false);
+  const [teacher, setTeacher] = useState(false);
+  const [mounted, setMounted] = useState(false);
     
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -106,27 +108,33 @@ export default function SignupPageView() {
     }
   }
 
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(frame);
+  }, []);
+
   return (
-    <div className="w-full overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/95 shadow-[0_25px_80px_rgba(2,6,23,0.55)]">
+    <div
+      className={`w-full overflow-hidden rounded-2xl border border-slate-600 bg-linear-to-br from-slate-700 to-slate-900 shadow-2xl shadow-slate-800/70 transition-all duration-300 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"}`}
+    >
       <div className="grid grid-cols-1 md:grid-cols-[44%_56%]">
-        <div className="relative hidden md:block">
+        <div
+          className={`relative hidden md:block transition-all duration-500 ${mounted ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-3"}`}
+        >
           <img
-            src="/png/auth.jpg"
+            src="/orangecyan.jpg"
             alt="Authentication visual"
-            className="h-full w-full object-cover"
+            className="h-full w-full object-cover object-center"
           />
           <div className="absolute inset-0 bg-gradient-to-br from-slate-950/75 via-slate-950/35 to-orange-500/20" />
           <div className="absolute top-5 left-5 right-5">
-            <p className="text-sm font-semibold tracking-wide text-orange-300">
-              LUMINA
-            </p>
-            <p className="mt-1 text-lg font-semibold leading-snug text-white">
-              Build your personalized learning journey.
-            </p>
+            
           </div>
         </div>
 
-        <div className="p-5 sm:p-6">
+        <div
+          className={`p-5 sm:p-6 transition-all duration-500 ${mounted ? "opacity-100 translate-x-0" : "opacity-0 translate-x-3"}`}
+        >
           <h2 className="text-2xl font-black tracking-tight text-white">
             Create account
           </h2>
@@ -134,106 +142,74 @@ export default function SignupPageView() {
           <form className="mt-4 space-y-3" onSubmit={onSubmit}>
             <div>
               <label className="mb-1 block text-xs text-slate-300">Name</label>
-              <div className="relative">
-                <User
-                  size={16}
-                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-                />
-                <input
-                  type="text"
-                  placeholder="John Doe"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  className={clsx(
-                    "w-full rounded-lg border border-slate-700 bg-slate-800 px-10 py-2 text-sm text-white outline-none",
-                    "focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20",
-                  )}
-                  required
-                />
-              </div>
+              <Input
+                type="text"
+                placeholder="John Doe"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                icon={<User size={16} />}
+                required
+              />
             </div>
 
             <div>
               <label className="mb-1 block text-xs text-slate-300">Email</label>
-              <div className="relative">
-                <Mail
-                  size={16}
-                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-                />
-                <input
-                  type="email"
-                  placeholder="email@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className={clsx(
-                    "w-full rounded-lg border border-slate-700 bg-slate-800 px-10 py-2 text-sm text-white outline-none",
-                    "focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20",
-                  )}
-                  required
-                />
-              </div>
+              <Input
+                type="email"
+                placeholder="email@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                icon={<Mail size={16} />}
+                required
+              />
             </div>
 
             <div>
               <label className="mb-1 block text-xs text-slate-300">
                 Password
               </label>
-              <div className="relative">
-                <Lock
-                  size={16}
-                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-                />
-                <input
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className={clsx(
-                    "w-full rounded-lg border border-slate-700 bg-slate-800 px-10 py-2 pr-10 text-sm text-white outline-none",
-                    "focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20",
-                  )}
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
-                  aria-label="Toggle password visibility"
-                >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
+              <Input
+                type={showPassword ? "text" : "password"}
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                icon={<Lock size={16} />}
+                rightElement={
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="text-slate-400 hover:text-white"
+                    aria-label="Toggle password visibility"
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                }
+                required
+              />
             </div>
 
             <div>
               <label className="mb-1 block text-xs text-slate-300">
                 Confirm password
               </label>
-              <div className="relative">
-                <Lock
-                  size={16}
-                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-                />
-                <input
-                  type={showConfirmPassword ? "text" : "password"}
-                  placeholder="Confirm password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className={clsx(
-                    "w-full rounded-lg border border-slate-700 bg-slate-800 px-10 py-2 pr-10 text-sm text-white outline-none",
-                    "focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20",
-                  )}
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword((v) => !v)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
-                  aria-label="Toggle confirm password visibility"
-                >
-                  {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
+              <Input
+                type={showConfirmPassword ? "text" : "password"}
+                placeholder="Confirm password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                icon={<Lock size={16} />}
+                rightElement={
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword((v) => !v)}
+                    className="text-slate-400 hover:text-white"
+                    aria-label="Toggle confirm password visibility"
+                  >
+                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                }
+                required
+              />
             </div>
 
             <label className="flex items-center gap-2 text-sm text-slate-300">
@@ -255,32 +231,25 @@ export default function SignupPageView() {
             </label>
  
 
-            <button
+            <Button
               type="submit"
               disabled={loading}
-              className={clsx(
-                "w-full cursor-pointer rounded-lg py-2 font-semibold text-white transition-all disabled:cursor-not-allowed",
-                loading
-                  ? "cursor-not-allowed bg-slate-700 text-slate-300"
-                  : "bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600",
-              )}
+              className="w-full disabled:cursor-not-allowed disabled:opacity-70"
             >
               {loading ? "Creating account..." : "Sign Up"}
-            </button>
+            </Button>
           </form>
 
-          <button
+          <Button
             type="button"
+            variant="ghost"
             onClick={signUpWithGoogle}
             disabled={googleLoading}
-            className={clsx(
-              "mt-2 flex w-full items-center justify-center cursor-pointer gap-2 rounded-lg border border-slate-700 bg-slate-800 py-2 text-sm font-semibold text-white transition-all",
-              "hover:border-slate-500 hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-70",
-            )}
+            className="mt-2 flex w-full items-center justify-center gap-2 border border-slate-700 bg-slate-800 py-2 text-sm font-semibold text-white hover:border-slate-500 hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-70"
           >
             <GoogleIcon />
             {googleLoading ? "Redirecting..." : "Sign up with Google"}
-          </button>
+          </Button>
 
 
           <p className="mt-2 text-sm text-slate-300 text-center">

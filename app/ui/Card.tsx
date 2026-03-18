@@ -10,8 +10,8 @@ interface CardProps {
 
 const Card: React.FC<CardProps> = ({ title, subtitle, icon: Icon, iconColor = "text-white" }) => {
   return (
-    // ✨ جرب تزيد 'transition-transform' صراحة
-    <div className="flex bg-slate-900 border border-slate-800 rounded-2xl p-6 items-center gap-4 transition-all duration-300 transform hover:-translate-y-1 hover:border-slate-600 hover:shadow-lg hover:shadow-sky-500/10">
+
+    <div className="flex bg-linear-to-br from-slate-800 to-slate-800/10 border border-slate-800 rounded-2xl p-6 items-center gap-4 transition-all duration-300 transform hover:-translate-y-1 hover:border-slate-600 hover:shadow-lg hover:shadow-sky-500/10">
       
       {Icon && (
         <div className="size-12 flex items-center justify-center rounded-lg bg-slate-800 shrink-0">

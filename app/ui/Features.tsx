@@ -1,5 +1,5 @@
 import React from 'react';
-import { Brain, MessageSquare, Code2 } from 'lucide-react'; 
+import { Brain, MessageSquare, Code2, BrainCircuit, Zap, Bot, Route, BarChart3 } from 'lucide-react'; 
 import Card from './Card';
 
 const Features = () => {
@@ -8,24 +8,45 @@ const Features = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         
         <Card 
-          icon={Brain} 
-          title="Adaptive Learning Engine"
-          subtitle="Adjusts content difficulty based on quiz performance."
+          icon={BrainCircuit} 
+          title="Adaptive Learning Engine (ALS)"
+          subtitle="Real-time path adjustment based on your mastery."
           iconColor="text-orange-500"
         />
 
         <Card 
-          icon={MessageSquare} 
-          title="AI Study Assistant"
-          subtitle="Chat-based assistant for explanations and recommendations."
+          icon={Zap} 
+          title="Smart Diagnostic Testing"
+          subtitle="Identify gaps and skip what you already know."
           iconColor="text-blue-500"
         />
 
         <Card 
-          icon={Code2} 
-          title="Developer-Ready Architecture"
-          subtitle="API-based system for integration into platforms."
+          icon={Bot} 
+          title="AI Study Tutor"
+          subtitle="Instant feedback and 24/7 expert guidance."
           iconColor="text-orange-500"
+        />
+
+        <Card 
+          icon={Route} 
+          title="Expert Skill Paths"
+          subtitle="Curated modules built to industry standards."
+          iconColor="text-blue-500"
+        />
+
+        <Card 
+          icon={BarChart3} 
+          title="Performance Insights"
+          subtitle="Visualized tracking of your learning evolution."
+          iconColor="text-orange-500"
+        />
+
+        <Card 
+          icon={Bot} 
+          title="Personalized Learning"
+          subtitle="A system that adapts to your unique student profile."
+          iconColor="text-blue-500"
         />
 
       </div>

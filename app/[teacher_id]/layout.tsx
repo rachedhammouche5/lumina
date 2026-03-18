@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { createClient } from "../../lib/supabase/server";
 import { getRole } from "@/features/utils/auth/getRole";
+import NavBar from "../ui/NavBar";
 
 export default async function TeacherLayout({
   children,
@@ -49,56 +50,59 @@ export default async function TeacherLayout({
     requestRow?.admin_note?.trim() || "No explanation was provided by admin.";
 
   return (
-    <main className="min-h-screen bg-slate-950 pt-24 pb-16 px-4">
-      <div className="mx-auto flex w-full max-w-6xl gap-6">
-        <aside className="h-fit w-full max-w-xs rounded-xl border border-slate-700 bg-slate-900 p-4">
-          <h1 className="mb-4 text-xl font-bold text-white">
-            Teacher Dashboard
-          </h1>
+    <>
+      <NavBar />
+      <main className="min-h-screen bg-slate-950 pt-24 pb-16 px-4">
+        <div className="mx-auto flex w-full max-w-6xl gap-6">
+          <aside className="h-fit w-full max-w-xs rounded-xl border border-slate-700 bg-slate-900 p-4">
+            <h1 className="mb-4 text-xl font-bold text-white">
+              Teacher Dashboard
+            </h1>
 
-          {isPending ? (
-            <button
-              disabled
-              className="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-3 text-left font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              Manage Courses
-            </button>
-          ) : (
-            <Link
-              href={`/${teacher_id}/courses`}
-              className="block w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-3 text-left font-semibold text-white transition hover:bg-slate-700"
-            >
-              Manage Courses
-            </Link>
-          )}
-        </aside>
-
-        <section className="flex-1 space-y-5 rounded-xl border border-slate-700 bg-slate-900 p-6">
-          {isRejected ? (
-            <div className="rounded-lg border border-red-400/40 bg-red-500/10 px-4 py-3 text-red-200">
-              <p className="font-semibold">
-                Your teacher request was rejected.
-              </p>
-              <p className="mt-1 text-sm">
-                Reason: <span className="font-medium">{rejectionReason}</span>
-              </p>
-              <Link
-                href={`/${teacher_id}/apply`}
-                className="mt-2 inline-block text-sm underline"
+            {isPending ? (
+              <button
+                disabled
+                className="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-3 text-left font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
               >
-                Submit a new application
+                Manage Courses
+              </button>
+            ) : (
+              <Link
+                href={`/${teacher_id}/courses`}
+                className="block w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-3 text-left font-semibold text-white transition hover:bg-slate-700"
+              >
+                Manage Courses
               </Link>
-            </div>
-          ) : isPending ? (
-            <div className="rounded-lg border border-amber-400/40 bg-amber-500/10 px-4 py-3 text-amber-200">
-              Your teacher application is pending admin approval. Actions are
-              disabled until approval.
-            </div>
-          ) : null}
+            )}
+          </aside>
 
-          {children}
-        </section>
-      </div>
-    </main>
+          <section className="flex-1 space-y-5 rounded-xl border border-slate-700 bg-slate-900 p-6">
+            {isRejected ? (
+              <div className="rounded-lg border border-red-400/40 bg-red-500/10 px-4 py-3 text-red-200">
+                <p className="font-semibold">
+                  Your teacher request was rejected.
+                </p>
+                <p className="mt-1 text-sm">
+                  Reason: <span className="font-medium">{rejectionReason}</span>
+                </p>
+                <Link
+                  href={`/${teacher_id}/apply`}
+                  className="mt-2 inline-block text-sm underline"
+                >
+                  Submit a new application
+                </Link>
+              </div>
+            ) : isPending ? (
+              <div className="rounded-lg border border-amber-400/40 bg-amber-500/10 px-4 py-3 text-amber-200">
+                Your teacher application is pending admin approval. Actions are
+                disabled until approval.
+              </div>
+            ) : null}
+
+            {children}
+          </section>
+        </div>
+      </main>
+    </>
   );
 }

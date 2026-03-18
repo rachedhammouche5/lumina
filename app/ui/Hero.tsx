@@ -24,34 +24,41 @@ const Hero: React.FC<HeroProps> = ({ src, subtitle }) => {
           <source src={src} type="video/mp4" />
         </video>
         
-        {/* .hero-overlay */}
+
         <div className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-950/70 to-slate-950/50 z-20"></div>
 
-        {/* .hero-content */}
+        
         <div className="relative z-30 w-full h-full flex flex-col md:flex-row items-center justify-between p-6 md:px-20 text-center md:text-left">
           
-          {/* .hero-texts */}
           <div className="flex-1 w-full flex flex-col items-center md:items-start md:order-1 order-2 mt-8 md:mt-0">
-            {/* .titles */}
+            
             <h1 className="text-4xl md:text-7xl font-extrabold leading-[1.1] text-white mb-5">
-              Learn Smarter.<br />
-              Adapt Faster.
+              Master Skills,<br />
+              Not Just Courses
             </h1>
             
-            {/* .titles-highlight */}
             <h1 className="text-xl md:text-2xl font-black tracking-[2px] uppercase bg-gradient-to-br from-[#FF4D00] to-[#FFB800] bg-clip-text text-transparent mb-2.5">
                 AI ASSISTED
             </h1>
-            
-            {/* .subtitle */}
+  
             <p className="text-sm md:text-base max-w-[500px] text-white/80 mb-8 md:mb-[30px]">
               {subtitle}
             </p>
             
             {/* .hero-btns */}
             <div className="flex flex-col sm:flex-row gap-4 sm:gap-5 justify-center md:justify-start items-center w-full sm:w-auto">
-              <Button variant="primary" size="l" className="w-full sm:w-auto"> Start Learning </Button>
-              <Button variant="outline" size="l" className="w-full sm:w-auto"> Explore More</Button>
+              <Button variant="primary" size="l" className="w-full sm:w-auto" href="/signup">
+                {"Get Started >"}
+              </Button>
+              <Button
+                variant="outline"
+                size="l"
+                className="w-full sm:w-auto"
+                href="#about"
+                scroll
+              >
+                Explore More
+              </Button>
             </div>
           </div>
 
