@@ -61,14 +61,14 @@ export default async function TeacherLayout({
               disabled
               className="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-3 text-left font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Manage Courses
+              Manage Skills
             </button>
           ) : (
             <Link
-              href={`/${teacher_id}/courses`}
+              href={`/${teacher_id}/skills`}
               className="block w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-3 text-left font-semibold text-white transition hover:bg-slate-700"
             >
-              Manage Courses
+              Manage Skills
             </Link>
           )}
         </aside>

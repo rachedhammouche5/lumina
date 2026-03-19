@@ -19,6 +19,6 @@ export async function addSkill(formData: {
 
   if (error) return { error: error.message };
 
-  revalidatePath(`/${formData.teacher_id}/courses`);
+  revalidatePath(`/${formData.teacher_id}/skills`);
   return { data };
 }
