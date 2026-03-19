@@ -31,13 +31,13 @@ export default function AddCourseForm({ teacher_id }: { teacher_id: string }) {
   return (
     <div className="space-y-4">
       <div className="flex justify-between">
-        <h2 className="text-2xl font-bold text-white">Courses</h2>
+        <h2 className="text-2xl font-bold text-white">Skills</h2>
         <button
           type="button"
           onClick={() => setIsOpen((prev) => !prev)}
           className="rounded-lg bg-indigo-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-400"
         >
-          + Add Course
+          + Add Skill
         </button>
       </div>
 
@@ -61,7 +61,7 @@ export default function AddCourseForm({ teacher_id }: { teacher_id: string }) {
                 setForm((prev) => ({ ...prev, title: e.target.value }))
               }
               type="text"
-              placeholder="Enter course title"
+              placeholder="Enter skill title"
               className="w-full rounded-md border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-white outline-none ring-indigo-400 focus:ring"
             />
           </div>
@@ -81,7 +81,7 @@ export default function AddCourseForm({ teacher_id }: { teacher_id: string }) {
               onChange={(e) =>
                 setForm((prev) => ({ ...prev, description: e.target.value }))
               }
-              placeholder="Enter course description"
+              placeholder="Enter skill description"
               className="w-full rounded-md border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-white outline-none ring-indigo-400 focus:ring"
             />
           </div>
@@ -113,7 +113,7 @@ export default function AddCourseForm({ teacher_id }: { teacher_id: string }) {
             type="submit"
             className="rounded-md bg-emerald-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-400"
           >
-            Save Course
+            Save skill
           </button>
         </form>
       ) : null}

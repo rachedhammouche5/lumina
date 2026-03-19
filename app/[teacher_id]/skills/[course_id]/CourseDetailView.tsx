@@ -63,7 +63,7 @@ export default function CourseDetailView({
 
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-xl font-semibold text-white">Course Topics</h3>
+          <h3 className="text-xl font-semibold text-white">Topics</h3>
           <button
             type="button"
             onClick={() => openTopicModal(null, false)}

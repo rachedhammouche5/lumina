@@ -23,14 +23,14 @@ export default function TopicNode({
       >
         <div className="flex items-center justify-between gap-3">
           <div className="flex">
-          <p className="font-semibold text-white">{topic.tpc_title}</p>
-          <button
-            type="button"
-            onClick={() => onAddTopic(topic,true)}
-            className="rounded-md underline px-2 py-1 text-xs text-slate-200 transition hover:bg-slate-700"
-          >
-            edit Topic
-          </button>
+            <p className="font-semibold text-white">{topic.tpc_title}</p>
+            <button
+              type="button"
+              onClick={() => onAddTopic(topic, true)}
+              className="rounded-md underline px-2 py-1 text-xs text-slate-200 transition hover:bg-slate-700"
+            >
+              edit Topic
+            </button>
           </div>
           <div className="flex gap-2">
             <button
@@ -42,7 +42,7 @@ export default function TopicNode({
             </button>
             <button
               type="button"
-              onClick={() => onAddTopic(topic,false)}
+              onClick={() => onAddTopic(topic, false)}
               className="rounded-md border border-slate-500 px-2 py-1 text-xs text-slate-200 transition hover:bg-slate-700"
             >
               Add Topic
@@ -60,6 +60,7 @@ export default function TopicNode({
               allTopics={allTopics}
               level={level + 1}
               onAddTopic={onAddTopic}
+              onAddQuiz={onAddQuiz}
             />
           ))}
         </ul>
