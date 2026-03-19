@@ -21,7 +21,7 @@ export default function RoadmapPage() {
       </div>
       <div className="w-full max-w-[1400px]">
         <h3 className="text-xl md:text-2xl font-black italic tracking-tight mb-4">COURSE PATH</h3>
-        <RoadmapFlow />
+        <RoadmapFlow topics={[]} scores={[]} />
       </div>
     </main>
   );

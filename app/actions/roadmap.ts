@@ -1,18 +1,36 @@
 import { createClient } from "@/lib/supabase/server";
+import type { TopicRow, ScoreRow } from "@/app/ui/roadmapcomp/types";
 
 export async function dynamicRoadmapPage(skillId: string, studentId: string) {
-    
-    const supabase = await createClient();
+  const supabase = await createClient();
 
-    const { data: skill } = await supabase.from("Skill").select("*").eq("skill_id", skillId).single();
-    const { data: enrollment } = await supabase.from("enroll").select("*").eq("studentId", studentId).eq("skill_id", skillId).single();
-    const { data: topics } = await supabase.from("Topic").select("*").eq("skill_id", skillId);
-    const { data: scores } = await supabase.from("score").select("*").eq("studentId", studentId);
+  const { data: skill } = await supabase
+    .from("Skill")
+    .select("*")
+    .eq("skill_id", skillId)
+    .single();
 
-    return {
-        skill,
-        enrollment,
-        topics,
-        scores
-    };
+  const { data: enrollment } = await supabase
+    .from("enroll")
+    .select("*")
+    .eq("studentId", studentId)
+    .eq("skill_id", skillId)
+    .single();
+
+  const { data: topics } = await supabase
+    .from("Topic")
+    .select("*")
+    .eq("skill_id", skillId);
+
+  const { data: scores } = await supabase
+    .from("score")
+    .select("*")
+    .eq("studentId", studentId);
+
+  return {
+    skill,
+    enrollment,
+    topics: (topics ?? []) as TopicRow[],
+    scores: (scores ?? []) as ScoreRow[],
+  };
 }
