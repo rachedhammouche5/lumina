@@ -3,13 +3,13 @@ import { LockIcon, CheckCircle2, CircleDashed, LucideAirVent } from "lucide-reac
 import { useRouter } from "next/navigation";
 import { getNodeStyles, type RoadmapNodeData } from "@/app/ui/roadmapcomp/types";
 
-export default function RoadmapNode({ data }: NodeProps<RoadmapNodeData>) {
-  const { title, subtitle, status, degree = 0, icon: Icon = LucideAirVent } = data;
+export default function RoadmapNode({ data }: NodeProps) {
+  const { title, subtitle, status, degree = 0, icon: Icon = LucideAirVent, href } = data as RoadmapNodeData;
   const styles = getNodeStyles(status, degree);
 
   const router = useRouter();
   const isLocked = status === "locked";
-  const isClickable = Boolean(data.href) && !isLocked;
+  const isClickable = Boolean(href) && !isLocked;
   const baseClassName = `group relative flex flex-col h-36 w-44 md:h-44 md:w-52 bg-[#0F111A]/90 backdrop-blur-xl rounded-3xl p-4 items-center border-2 transition-all duration-500 pointer-events-auto ${styles.container}`;
   const interactiveClassName = isClickable
     ? "cursor-pointer hover:-translate-y-1 hover:border-white/30 hover:shadow-[0_16px_36px_rgba(2,6,23,0.55)]"
@@ -17,7 +17,7 @@ export default function RoadmapNode({ data }: NodeProps<RoadmapNodeData>) {
 
   const handleActivate = () => {
     if (!isClickable) return;
-    router.push(data.href!);
+    router.push(href!);
   };
 
   const content = (
@@ -50,7 +50,7 @@ export default function RoadmapNode({ data }: NodeProps<RoadmapNodeData>) {
       {isClickable && (
         <div className="mt-2 inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-white/70 group-hover:text-orange-300 transition-colors">
           Open Module
-          <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
+          <span className="transition-transform duration-300 group-hover:translate-x-1">&rarr;</span>
         </div>
       )}
 
@@ -77,3 +77,7 @@ export default function RoadmapNode({ data }: NodeProps<RoadmapNodeData>) {
     </div>
   );
 }
+
+
+
+

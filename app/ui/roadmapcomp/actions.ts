@@ -1,3 +1,6 @@
+import { Position, type Edge, type Node } from "@xyflow/react";
+import type { RoadmapNodeData, RoadmapStatus, TopicRow, ScoreRow } from "./types";
+
 export const NODE_THEMES = {
     locked: {
         container: "border-white/5 bg-[#0a0a0f] opacity-40 grayscale cursor-not-allowed shadow-none",
@@ -27,8 +30,6 @@ export const NODE_THEMES = {
     }
 };
 
-export type RoadmapStatus = "locked" | "unlocked" | "completed";
-
 export const clampDegree = (degree?: number) =>
     Math.max(0, Math.min(100, degree ?? 0));
 
@@ -57,4 +58,63 @@ export const getIconColorClass = (status: RoadmapStatus, degree?: number) => {
     if (d <= 60) return "text-[#ff7700]";
     if (d <= 80) return "text-[#00f2fe]";
     return "text-[#bf00ff]";
+};
+
+
+
+
+
+export const generateRoadmapElements = (
+  topics: TopicRow[] = [],
+  scores: ScoreRow[] = [],
+): { nodes: Node<RoadmapNodeData>[]; edges: Edge[] } => {
+    const topicMap = new Map(topics.map((t) => [t.tpc_id, t]));
+
+
+    const getLevel = (topic: any): number => {
+        if (!topic.parent_id) return 0;
+        const parent = topicMap.get(topic.parent_id);
+        return parent ? 1 + getLevel(parent) : 0;
+    };
+
+    const nodes: Node<RoadmapNodeData>[] = topics.map((topic) => {
+        const userScore = scores.find((s) => s.tpc_id === topic.tpc_id);
+        const isParentCompleted = topic.parent_id
+            ? scores.some((s) => s.tpc_id === topic.parent_id)
+            : true;
+
+        let currentStatus: RoadmapStatus = "locked";
+        if (userScore) currentStatus = "completed";
+        else if (isParentCompleted) currentStatus = "unlocked";
+
+
+        const siblings = topics.filter((t) => t.parent_id === topic.parent_id);
+        const siblingIndex = siblings.findIndex((t) => t.tpc_id === topic.tpc_id);
+        const xPos = siblings.length > 1 ? (siblingIndex - (siblings.length - 1) / 2) * 250 : 0;
+    
+        const level = getLevel(topic);
+    
+        return {
+            id: topic.tpc_id,
+            type: 'roadmap',
+            position: { x: xPos, y: level * 300 },
+            data: {
+                title: topic.tpc_title,
+                subtitle: topic.tpc_description ?? undefined,
+                status: currentStatus,
+                degree: userScore?.score || 0,
+                id: topic.tpc_id,
+                parentId: topic.parent_id ?? undefined
+            }
+        };
+    });
+
+    const edges: Edge[] = topics.filter((t) => t.parent_id !== null).map((t) => ({
+        id: `e-${t.parent_id}-${t.tpc_id}`,
+        source: t.parent_id as string,
+        target: t.tpc_id,
+        animated: scores.some((s) => s.tpc_id === t.parent_id),
+    }));
+
+    return { nodes, edges };
 };
