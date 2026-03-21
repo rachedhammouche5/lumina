@@ -72,7 +72,6 @@ export async function POST(request: Request) {
     const { error: reqError } = await admin.from("teacher_requests").upsert(
       {
         user_id: user.id,
-        // full_name: user.user_metadata?.full_name ?? null,
         status: "pending",
       },
       { onConflict: "user_id" },
@@ -111,14 +110,14 @@ export async function POST(request: Request) {
       }
     }
 
-    return NextResponse.json({ nextPath: `/${user.id}/apply` });
+    return NextResponse.json({ nextPath: "/teacher/apply" });
   }
 
   const nextPath =
     role === "admin"
       ? "/admin"
       : role === "teacher" || role === "teacher_pending"
-        ? `/${user.id}`
-        : "/student";
+        ? "/teacher"
+        : `/${user.id}`;
   return NextResponse.json({ nextPath });
 }

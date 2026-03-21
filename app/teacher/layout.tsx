@@ -1,18 +1,15 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
-import { createClient } from "../../lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { getRole } from "@/features/utils/auth/getRole";
-import NavBar from "../ui/NavBar";
+import NavBar from "@/app/ui/NavBar";
 
 export default async function TeacherLayout({
   children,
-  params,
 }: {
   children: ReactNode;
-  params: Promise<{ teacher_id: string }>;
 }) {
-  const { teacher_id } = await params;
   const supabase = await createClient();
 
   const {
@@ -52,7 +49,7 @@ export default async function TeacherLayout({
   return (
     <>
       <NavBar />
-      <main className="min-h-screen bg-slate-950 pt-24 pb-16 px-4">
+      <main className="min-h-screen bg-slate-950 px-4 pt-24 pb-16">
         <div className="mx-auto flex w-full max-w-6xl gap-6">
           <aside className="h-fit w-full max-w-xs rounded-xl border border-slate-700 bg-slate-900 p-4">
             <h1 className="mb-4 text-xl font-bold text-white">
@@ -64,14 +61,14 @@ export default async function TeacherLayout({
                 disabled
                 className="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-3 text-left font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
               >
-                Manage Courses
+                Manage Skills
               </button>
             ) : (
               <Link
-                href={`/${teacher_id}/courses`}
+                href="/teacher/skills"
                 className="block w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-3 text-left font-semibold text-white transition hover:bg-slate-700"
               >
-                Manage Courses
+                Manage Skills
               </Link>
             )}
           </aside>
@@ -85,10 +82,7 @@ export default async function TeacherLayout({
                 <p className="mt-1 text-sm">
                   Reason: <span className="font-medium">{rejectionReason}</span>
                 </p>
-                <Link
-                  href={`/${teacher_id}/apply`}
-                  className="mt-2 inline-block text-sm underline"
-                >
+                <Link href="/teacher/apply" className="mt-2 inline-block text-sm underline">
                   Submit a new application
                 </Link>
               </div>

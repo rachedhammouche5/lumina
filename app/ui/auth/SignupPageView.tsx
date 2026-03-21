@@ -75,7 +75,7 @@ export default function SignupPageView() {
   }
   
   const payload = (await res.json()) as { nextPath?: string };
-  router.replace(payload.nextPath ?? "/student");
+  router.replace(payload.nextPath ?? "/");
   router.refresh();
   setLoading(false);
   return;

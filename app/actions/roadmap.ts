@@ -1,18 +1,25 @@
 import { createClient } from "@/lib/supabase/server";
+import type { Tables } from "@/lib/database.types";
 
 export async function dynamicRoadmapPage(skillId: string, studentId: string) {
-    
-    const supabase = await createClient();
+  const supabase = await createClient();
 
-    const { data: skill } = await supabase.from("Skill").select("*").eq("skill_id", skillId).single();
-    const { data: enrollment } = await supabase.from("enroll").select("*").eq("studentId", studentId).eq("skill_id", skillId).single();
-    const { data: topics } = await supabase.from("Topic").select("*").eq("skill_id", skillId);
-    const { data: scores } = await supabase.from("score").select("*").eq("studentId", studentId);
+  const [skillResult, enrollmentResult, topicsResult, scoresResult] = await Promise.all([
+    supabase.from("Skill").select("*").eq("skl_id", skillId).maybeSingle(),
+    supabase
+      .from("enroll")
+      .select("*")
+      .eq("studentId", studentId)
+      .eq("skill_id", skillId)
+      .maybeSingle(),
+    supabase.from("Topic").select("*").eq("skill_id", skillId),
+    supabase.from("score").select("*").eq("studentId", studentId),
+  ]);
 
-    return {
-        skill,
-        enrollment,
-        topics,
-        scores
-    };
+  return {
+    skill: skillResult.data as Tables<"Skill"> | null,
+    enrollment: enrollmentResult.data as Tables<"enroll"> | null,
+    topics: (topicsResult.data ?? []) as Tables<"Topic">[],
+    scores: (scoresResult.data ?? []) as Tables<"score">[],
+  };
 }

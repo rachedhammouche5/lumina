@@ -7,18 +7,20 @@ export async function addSkill(formData: {
   skl_title: string;
   skl_dscrptn: string;
   skl_duration: number;
-  teacher_id: string;
 }) {
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   const { data, error } = await supabase
     .from("Skill")
-    .insert(formData)
+    .insert({ ...formData, teacher_id: user?.id ?? null })
     .select()
     .single();
 
   if (error) return { error: error.message };
 
-  revalidatePath(`/${formData.teacher_id}/skills`);
+  revalidatePath("/teacher/skills");
   return { data };
 }

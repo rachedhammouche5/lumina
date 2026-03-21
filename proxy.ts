@@ -25,68 +25,56 @@ export async function proxy(req: NextRequest) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
   const role = getRole(user);
   const dashboardPath =
     role === "teacher" || role === "teacher_pending"
       ? "/teacher"
       : role === "student"
-        ? "/student"
+        ? `/${user?.id ?? ""}`
         : role === "admin"
           ? "/admin"
           : "/";
 
-  const isStudentRoute = req.nextUrl.pathname.startsWith("/student");
-  const isHeroPage = req.nextUrl.pathname === "/";
-  const isTeacherRoute = req.nextUrl.pathname.startsWith("/teacher");
-  const isAdminRoute = req.nextUrl.pathname.startsWith("/admin");
-  const isAuthPage =
-    req.nextUrl.pathname === "/login" || req.nextUrl.pathname === "/signup";
+  const { pathname } = req.nextUrl;
+  const isHeroPage = pathname === "/";
+  const isTeacherRoute = pathname.startsWith("/teacher");
+  const isAdminRoute = pathname.startsWith("/admin");
+  const isAuthPage = pathname === "/login" || pathname === "/signup";
+  const isTeacherApplyRoute = pathname === "/teacher/apply";
+
   if (isAuthPage && user) {
     return NextResponse.redirect(new URL(dashboardPath, req.url));
   }
 
-const isTeacherApplyRoute = req.nextUrl.pathname === "/teacher/apply";
-
-if (
-  isTeacherRoute &&
-  !isTeacherApplyRoute &&
-  role !== "teacher" &&
-  role !== "teacher_pending"
-) {
-  return NextResponse.redirect(new URL("/", req.url));
-}
-
-if (isTeacherApplyRoute && !user) {
-  return NextResponse.redirect(new URL("/", req.url));
-}
-
-  if (isStudentRoute) {
-    if (!user || role !== "student") {
-      return NextResponse.redirect(new URL("/", req.url));
-    }
+  if (
+    isTeacherRoute &&
+    !isTeacherApplyRoute &&
+    role !== "teacher" &&
+    role !== "teacher_pending"
+  ) {
+    return NextResponse.redirect(new URL("/", req.url));
   }
-  if (isHeroPage && user && (role === "teacher" || role === "teacher_pending")) {
-    return NextResponse.redirect(new URL(`${user.id}`, req.url));
+
+  if (isTeacherApplyRoute && !user) {
+    return NextResponse.redirect(new URL("/", req.url));
   }
 
   if (isHeroPage && user && role === "student") {
-    return NextResponse.redirect(new URL("/student", req.url));
+    return NextResponse.redirect(new URL(`/${user.id}`, req.url));
+  }
+
+  if (isHeroPage && user && (role === "teacher" || role === "teacher_pending")) {
+    return NextResponse.redirect(new URL("/teacher", req.url));
   }
 
   if (isAdminRoute && role !== "admin") {
     return NextResponse.redirect(new URL("/", req.url));
   }
- 
+
   return response;
 }
 
 export const config = {
-  matcher: [
-    "/",
-    "/login",
-    "/signup",
-    "/student/:path*",
-    "/teacher/:path*",
-    "/admin/:path*",
-  ],
+  matcher: ["/", "/login", "/signup", "/teacher/:path*", "/admin/:path*"],
 };

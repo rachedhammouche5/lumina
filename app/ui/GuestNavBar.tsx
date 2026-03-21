@@ -40,7 +40,7 @@ const GuestNavBar: React.FC = () => {
 
   const navLinks = [
     { name: "Home", href: "/", icon: House },
-    { name: "Skill Catalog", href: "/courses", icon: Blocks },
+    { name: "Skill Catalog", href: "/skills", icon: Blocks },
     { name: "About", href: "#about", icon: LibraryBig },
     { name: "AI Tutor", href: "/ai-tutor", icon: Bot },
   ];

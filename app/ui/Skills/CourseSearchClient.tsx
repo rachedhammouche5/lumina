@@ -4,13 +4,18 @@ import { useEffect, useMemo, useState } from "react";
 import CourseCard from "./CourseCard";
 import CourseCardSkeleton from "./CourseCardSkeleton";
 import Button from "../Button";
+
 type Course = {
   id: string;
   title: string;
   description: string;
 };
 
-export default function CourseSearchClient() {
+export default function CourseSearchClient({
+  studentId,
+}: {
+  studentId?: string;
+}) {
   const [query, setQuery] = useState("");
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(false);
@@ -52,35 +57,35 @@ export default function CourseSearchClient() {
       clearTimeout(t);
     };
   }, [debounceQuery]);
+
   return (
     <>
-      <div className="relative w-full max-w-2xl mb-12 group ">
-        <div className="absolute inset-0 bg-orange-500/20 blur-3xl rounded-full opacity-50 group-hover:opacity-70 transition-opacity duration-500" />
-        <div className="relative flex items-center bg-slate-900/50 backdrop-blur-xl border border-white/10 p-2 rounded-3xl shadow-2xl">
-          <div className="flex items-center justify-center w-12 h-12 ml-2 bg-slate-800/50 rounded-2xl">
+      <div className="group relative mb-12 w-full max-w-2xl ">
+        <div className="absolute inset-0 rounded-full bg-orange-500/20 blur-3xl opacity-50 transition-opacity duration-500 group-hover:opacity-70" />
+        <div className="relative flex items-center rounded-3xl border border-white/10 bg-slate-900/50 p-2 shadow-2xl backdrop-blur-xl">
+          <div className="ml-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-800/50">
             <Search className="text-orange-500" size={20} />
           </div>
           <input
             type="text"
             placeholder="Search for skills eg: How to write a clean code ... "
-            className="flex-1 bg-transparent px-4 py-3 text-white placeholder:text-slate-500 outline-none text-lg"
+            className="flex-1 bg-transparent px-4 py-3 text-lg text-white outline-none placeholder:text-slate-500"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
           <Button variant="primary" size="m" className="mr-2">
-            {" "}
-            Explore{" "}
+            Explore
           </Button>
         </div>
       </div>
-      {error ? <p className="text-red-400 mb-6">{error}</p> : null}
-      <div className="relative w-full max-w-4xl mb-12">
-        <div className="absolute left-0 top-0 bottom-0 w-16 bg-gradient from-slate-950 to to-transparent z-10 pointer-events-none" />
+      {error ? <p className="mb-6 text-red-400">{error}</p> : null}
+      <div className="relative mb-12 w-full max-w-4xl">
+        <div className="absolute top-0 bottom-0 left-0 z-10 w-16 bg-gradient from-slate-950 to to-transparent pointer-events-none" />
         <div
-          className="flex overflow-x-auto gap-3 no-scroll-bar pb-4 px-12 mask-fade-edges [scrollbar-width:none] [&::-webkit-scrollbar]:hidden
-                [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]"
+          className="no-scroll-bar flex overflow-x-auto gap-3 px-12 pb-4 [scrollbar-width:none] [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]
+                mask-fade-edges"
         >
-          <button className="whitespace-nowrap px-8 py-2.5 rounded-2xl text-sm font-bold bg-orange-500 text-white shadow-[0_0_20px_rgba(249,115,22,0.3)] transition-all">
+          <button className="whitespace-nowrap rounded-2xl bg-orange-500 px-8 py-2.5 text-sm font-bold text-white shadow-[0_0_20px_rgba(249,115,22,0.3)] transition-all">
             All Paths
           </button>
           {[
@@ -95,15 +100,15 @@ export default function CourseSearchClient() {
           ].map((category) => (
             <button
               key={category}
-              className="whitespace-nowrap px-8 py-2.5 rounded-2xl text-sm font-medium text-slate-400 bg-slate-900/60 border border-white/5 hover:border-orange-500/30 hover:text-white transition-all"
+              className="whitespace-nowrap rounded-2xl border border-white/5 bg-slate-900/60 px-8 py-2.5 text-sm font-medium text-slate-400 transition-all hover:border-orange-500/30 hover:text-white"
             >
               {category}
             </button>
           ))}
         </div>
-        <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-slate-950 to-transparent z-10 pointer-events-none" />
+        <div className="pointer-events-none absolute top-0 right-0 bottom-0 z-10 w-16 bg-gradient-to-l from-slate-950 to-transparent" />
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-7xl mb-10">
+      <div className="mb-10 grid w-full max-w-7xl grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
         {loading
           ? Array.from({ length: 12 }).map((_, i) => (
               <CourseCardSkeleton key={i} />
@@ -113,6 +118,7 @@ export default function CourseSearchClient() {
                 key={course.id}
                 title={course.title}
                 description={course.description}
+                href={studentId ? `/${studentId}/skills/${course.id}` : "/skills/roadmap"}
               />
             ))}
       </div>

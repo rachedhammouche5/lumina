@@ -83,12 +83,12 @@ describe("GET /auth/callback", () => {
       app_metadata: { role: "student" },
     });
     expect(response.headers.get("location")).toBe(
-      "http://localhost:3000/student",
+      "http://localhost:3000/user-1",
     );
   });
 
   test.each([
-    { role: "teacher", destination: "/user-2" },
+    { role: "teacher", destination: "/teacher" },
     { role: "admin", destination: "/admin" },
   ])(
     "redirects existing $role user to $destination",

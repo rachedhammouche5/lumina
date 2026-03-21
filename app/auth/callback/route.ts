@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { syncRoleTables } from "@/features/users/actions/syncTables";
+
 export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
@@ -73,10 +74,7 @@ export async function GET(request: NextRequest) {
     const { error: requestError } = await admin.from("teacher_requests").upsert(
       {
         user_id: user.id,
-        //email: user.email ?? null,
-        // full_name: user.user_metadata?.full_name ?? null,
         status: "pending",
-        //updated_at: new Date().toISOString(),
       },
       { onConflict: "user_id" },
     );
@@ -111,7 +109,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    return NextResponse.redirect(new URL(`/${user.id}/apply`, url.origin));
+    return NextResponse.redirect(new URL("/teacher/apply", url.origin));
   }
 
   if (!role) {
@@ -142,8 +140,8 @@ export async function GET(request: NextRequest) {
     role === "admin"
       ? "/admin"
       : role === "teacher" || role === "teacher_pending"
-        ? `/${user.id}`
-        : "/student";
+        ? "/teacher"
+        : `/${user.id}`;
 
   return NextResponse.redirect(new URL(destination, url.origin));
 }

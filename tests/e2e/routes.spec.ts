@@ -1,15 +1,9 @@
 import { test, expect, type Page } from '@playwright/test';
 
 const roles = ['student', 'teacher', 'admin'] as const;
-const routes = ['/student', '/teacher', '/admin'] as const;
+const routes = ['/teacher', '/admin'] as const;
 
 type Role = (typeof roles)[number];
-
-const roleHome: Record<Role, string> = {
-  student: '/student',
-  teacher: '/teacher',
-  admin: '/admin',
-};
 
 function credentialsFor(role: Role) {
   const envMap = {
@@ -48,7 +42,12 @@ async function loginAs(page: Page, role: Role) {
     .poll(
       async () => {
         const path = new URL(page.url()).pathname;
-        if (path === '/student' || path === '/teacher' || path === '/admin') return path;
+        if (role === 'student' && /^\/[^/]+$/.test(path) && !['/teacher', '/admin', '/login', '/signup'].includes(path)) {
+          return path;
+        }
+        if (role !== 'student' && (path === '/teacher' || path === '/admin')) {
+          return path;
+        }
 
         const hasError = await page
           .getByText(/incorrect|invalid/i)
@@ -59,15 +58,18 @@ async function loginAs(page: Page, role: Role) {
         return 'waiting';
       },
       { timeout: 15000, message: `Login did not reach a role route for ${role}` },
-    )
-    .toBe(roleHome[role]);
+    );
 }
 
 test.describe('Route access tests', () => {
+  test('[ALLOW] student can access their own root route', async ({ page }) => {
+    await loginAs(page, 'student');
+    await expect(page).toHaveURL(/http:\/\/.*\/[^/]+$/);
+  });
+
   for (const role of roles) {
     for (const route of routes) {
       const isOwnRoute =
-        (route === '/student' && role === 'student') ||
         (route === '/teacher' && role === 'teacher') ||
         (route === '/admin' && role === 'admin');
 
@@ -79,12 +81,7 @@ test.describe('Route access tests', () => {
         await loginAs(page, role);
         await page.goto(route);
 
-        const shouldRedirectToOwnDashboard =
-          (route === '/student' && role !== 'student') ||
-          (route === '/teacher' && role !== 'teacher') ||
-          (route === '/admin' && role !== 'admin');
-
-        if (shouldRedirectToOwnDashboard) {
+        if (!isOwnRoute) {
           await expect(page).toHaveURL(/\/$/);
           return;
         }

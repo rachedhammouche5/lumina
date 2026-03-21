@@ -1,6 +1,4 @@
 import React from "react";
-import Button from "./Button";
-
 const About: React.FC = () => {
   return (
     <section
@@ -23,7 +21,7 @@ const About: React.FC = () => {
         <div className="flex-1 w-full md:w-1/2 text-left space-y-6">
           <p className="text-sm md:text-lg leading-relaxed text-slate-400">
             Born at the <span className="text-white font-medium">University of Abdelhamid Mehri Constantine 2</span>,
-            Lumina was built to solve a critical flaw in modern education: the "one-size-fits-all" approach. While
+            Lumina was built to solve a critical flaw in modern education: the &ldquo;one-size-fits-all&rdquo; approach. While
             traditional platforms deliver identical content to everyone, Lumina recognizes that every learner has a
             unique pace and skill level.
           </p>

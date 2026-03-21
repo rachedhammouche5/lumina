@@ -38,7 +38,7 @@ export default function AiTutorPage() {
             <Button href="/signup" variant="primary" className="shadow-orange-500/30">
               Try the AI Tutor
             </Button>
-            <Button href="/courses" variant="outline" className="border-white/20 text-slate-100">
+            <Button href="/skills" variant="outline" className="border-white/20 text-slate-100">
               View Skill Catalog
             </Button>
           </div>
@@ -63,7 +63,7 @@ export default function AiTutorPage() {
                   <MessageCircle size={16} />
                 </div>
                 <div className="max-w-md rounded-2xl bg-slate-800/70 px-4 py-3 text-sm text-slate-200">
-                  I'm stuck on the Strategy pattern. How do I explain it in an interview?
+                  I&apos;m stuck on the Strategy pattern. How do I explain it in an interview?
                 </div>
               </div>
 
@@ -72,8 +72,8 @@ export default function AiTutorPage() {
                   <Bot size={16} />
                 </div>
                 <div className="max-w-md rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 px-4 py-3 text-sm text-slate-100 border border-orange-500/30 shadow-[0_10px_40px_rgba(249,115,22,0.18)]">
-                  Think of Strategy as swapping algorithms without changing the caller. In your roadmap, you're on
-                  "Behavioral Patterns: Step 2." Next, I'll give you a 3-step elevator pitch and a quick UML sketch
+                  Think of Strategy as swapping algorithms without changing the caller. In your roadmap, you&apos;re on
+                  &ldquo;Behavioral Patterns: Step 2.&rdquo; Next, I&apos;ll give you a 3-step elevator pitch and a quick UML sketch
                   so you can answer concisely.
                 </div>
               </div>
@@ -83,7 +83,7 @@ export default function AiTutorPage() {
                   <Bot size={16} />
                 </div>
                 <div className="max-w-md rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 px-4 py-3 text-sm text-slate-100 border border-orange-500/30">
-                  Also noticed you mastered "Factory Method" last week—want a 2-question check to compare?
+                  Also noticed you mastered &ldquo;Factory Method&rdquo; last week—want a 2-question check to compare?
                 </div>
               </div>
             </div>
@@ -111,7 +111,7 @@ export default function AiTutorPage() {
 
         <div className="mt-12 flex flex-col items-center gap-4 text-center">
           <p className="text-slate-300 max-w-2xl">
-            Lumina's AI Tutor reads your student model, cross-references the roadmap node you're on, and responds
+            Lumina&apos;s AI Tutor reads your student model, cross-references the roadmap node you&apos;re on, and responds
             like a mentor who knows your progress—not a generic chatbot.
           </p>
           <Button href="/signup" variant="primary" className="px-7 py-3 shadow-orange-500/30">

@@ -1,7 +1,6 @@
 import { Sparkles } from "lucide-react";
-
-import CourseCard from "../ui/Skills/CourseCard";
 import CourseSearchClient from "../ui/Skills/CourseSearchClient";
+
 export default function GuestDomain() {
   return (
     <div className="min-h-screen bg-slate-950 flex flex-col items-center pt-24 px-6">

@@ -1,11 +1,10 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 export default function TeacherApplyPage() {
   const router = useRouter();
-  const params = useParams<{ teacher_id: string }>();
   const [fullName, setFullName] = useState("");
   const [cvUrl, setCvUrl] = useState("");
   const [motivation, setMotivation] = useState("");
@@ -40,13 +39,13 @@ export default function TeacherApplyPage() {
     const payload = (await response.json()) as { nextPath?: string };
     setSubmitted(true);
     setSubmitting(false);
-    router.replace(payload.nextPath ?? `/${params.teacher_id}`);
+    router.replace(payload.nextPath ?? "/teacher");
     router.refresh();
   };
 
   return (
-    <main className="min-h-screen bg-slate-950 px-4 py-24 flex items-center justify-center">
-      <section className="w-full max-w-2xl rounded-2xl border border-slate-800 bg-slate-900/95 p-6 sm:p-8 shadow-[0_25px_80px_rgba(2,6,23,0.55)]">
+    <main className="flex min-h-screen items-center justify-center bg-slate-950 px-4 py-24">
+      <section className="w-full max-w-2xl rounded-2xl border border-slate-800 bg-slate-900/95 p-6 shadow-[0_25px_80px_rgba(2,6,23,0.55)] sm:p-8">
         <h1 className="text-2xl font-black tracking-tight text-white">
           Teacher Application
         </h1>

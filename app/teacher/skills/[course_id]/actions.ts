@@ -49,7 +49,7 @@ export async function addTopic(
     if (contentsError) return { error: contentsError.message }
   }
 
-  revalidatePath(`/teacher/courses/${skillId}`)   
+  revalidatePath(`/teacher/skills/${skillId}`)
   return { data: newTopic }
 }
 
@@ -110,7 +110,7 @@ export async function addQuizzes(
   }
 
   // Refresh the teacher view
-  revalidatePath(`/teacher/courses`)
+  revalidatePath(`/teacher/skills`)
   
   return { ok: true }
 }

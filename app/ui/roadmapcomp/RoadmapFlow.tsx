@@ -9,12 +9,12 @@ import {
   GitPullRequest,
   Rocket,
   ShieldCheck,
-  Wrench
+  Wrench,
 } from "lucide-react";
 import RoadmapNode from "@/app/ui/roadmapcomp/node";
 import type { RoadmapNodeData } from "@/app/ui/roadmapcomp/types";
 
-const nodes: Node<RoadmapNodeData>[] = [
+const baseNodes = [
   {
     id: "start",
     type: "roadmap",
@@ -25,10 +25,9 @@ const nodes: Node<RoadmapNodeData>[] = [
       status: "completed",
       degree: 85,
       icon: GitCommit,
-      href: "/courses"
-    }
+    },
   },
-{
+  {
     id: "branching",
     type: "roadmap",
     position: { x: 280, y: -40 },
@@ -38,8 +37,7 @@ const nodes: Node<RoadmapNodeData>[] = [
       status: "completed",
       degree: 65,
       icon: GitBranch,
-      href: "/courses"
-    }
+    },
   },
   {
     id: "prs",
@@ -50,8 +48,7 @@ const nodes: Node<RoadmapNodeData>[] = [
       subtitle: "Review workflow and approvals",
       status: "unlocked",
       icon: GitPullRequest,
-      href: "/courses"
-    }
+    },
   },
   {
     id: "conflicts",
@@ -62,8 +59,7 @@ const nodes: Node<RoadmapNodeData>[] = [
       subtitle: "Resolve conflicts with confidence",
       status: "locked",
       icon: GitMerge,
-      href: "/courses"
-    }
+    },
   },
   {
     id: "hooks",
@@ -73,8 +69,8 @@ const nodes: Node<RoadmapNodeData>[] = [
       title: "Git Hooks",
       subtitle: "Linting and pre-commit safety nets",
       status: "locked",
-      icon: Wrench
-    }
+      icon: Wrench,
+    },
   },
   {
     id: "security",
@@ -84,8 +80,8 @@ const nodes: Node<RoadmapNodeData>[] = [
       title: "Secure Practices",
       subtitle: "Signed commits and protected branches",
       status: "locked",
-      icon: ShieldCheck
-    }
+      icon: ShieldCheck,
+    },
   },
   {
     id: "release",
@@ -95,10 +91,10 @@ const nodes: Node<RoadmapNodeData>[] = [
       title: "Release Workflow",
       subtitle: "Tags, changelogs, and versioning",
       status: "locked",
-      icon: Rocket
-    }
-  }
-];
+      icon: Rocket,
+    },
+  },
+] satisfies Node<RoadmapNodeData>[];
 
 const edges: Edge[] = [
   {
@@ -107,7 +103,7 @@ const edges: Edge[] = [
     target: "branching",
     type: "smoothstep",
     animated: true,
-    style: { stroke: "violet", strokeWidth: 2 }
+    style: { stroke: "violet", strokeWidth: 2 },
   },
   {
     id: "e-branching-prs",
@@ -115,46 +111,54 @@ const edges: Edge[] = [
     target: "prs",
     type: "smoothstep",
     animated: true,
-    style: { stroke: "#ADF802", strokeWidth: 2 }
+    style: { stroke: "#ADF802", strokeWidth: 2 },
   },
   {
     id: "e-prs-conflicts",
     source: "prs",
     target: "conflicts",
     type: "smoothstep",
-    style: { stroke: "#64748b", strokeWidth: 2 }
+    style: { stroke: "#64748b", strokeWidth: 2 },
   },
   {
     id: "e-conflicts-hooks",
     source: "conflicts",
     target: "hooks",
     type: "smoothstep",
-    style: { stroke: "#64748b", strokeWidth: 2 }
+    style: { stroke: "#64748b", strokeWidth: 2 },
   },
   {
     id: "e-hooks-security",
     source: "hooks",
     target: "security",
     type: "smoothstep",
-    style: { stroke: "#64748b", strokeWidth: 2 }
+    style: { stroke: "#64748b", strokeWidth: 2 },
   },
   {
     id: "e-security-release",
     source: "security",
     target: "release",
     type: "smoothstep",
-    style: { stroke: "#64748b", strokeWidth: 2 }
-  }
+    style: { stroke: "#64748b", strokeWidth: 2 },
+  },
 ];
 
 const nodeTypes = {
-  roadmap: RoadmapNode
+  roadmap: RoadmapNode,
 };
 
-export default function RoadmapFlow() {
+export default function RoadmapFlow({ backHref = "/skills" }: { backHref?: string }) {
+  const nodes = baseNodes.map((node) => ({
+    ...node,
+    data: {
+      ...node.data,
+      href: backHref,
+    },
+  }));
+
   return (
-    <div className="w-full max-w-[1400px] border-2 border-slate-400/40 rounded-4xl shadow-2xl shadow-slate-400/40 mb-5">
-      <div className="roadmap-scroll h-[560px] md:h-[720px] w-full overflow-x-auto overflow-y-hidden rounded-[32px] border border-white/20 bg-gradient-to-br from-white/15 via-white/0 to-orange-500/5 backdrop-blur-xl shadow-[0_30px_80px_rgba(0,0,0,0.45)]">
+    <div className="mb-5 w-full max-w-[1400px] rounded-4xl border-2 border-slate-400/40 shadow-2xl shadow-slate-400/40">
+      <div className="roadmap-scroll h-[560px] w-full overflow-x-auto overflow-y-hidden rounded-[32px] border border-white/20 bg-gradient-to-br from-white/15 via-white/0 to-orange-500/5 shadow-[0_30px_80px_rgba(0,0,0,0.45)] backdrop-blur-xl md:h-[720px]">
         <div className="h-full min-w-[1500px] md:min-w-[1900px]">
           <ReactFlow
             nodes={nodes}
@@ -184,6 +188,7 @@ export default function RoadmapFlow() {
               maskColor="rgba(2, 6, 23, 0.7)"
               className="!bg-slate-950/60 !border !border-white/10 !rounded-xl"
             />
+            <Controls />
           </ReactFlow>
         </div>
       </div>
