@@ -7,7 +7,7 @@ interface MainIdeaProps {
 const MainIdea: React.FC<MainIdeaProps> = ({ question, answer }) => {
   return (
     // .main-idea-wrapper
-    <section className="flex flex-col items-center text-center py-10 md:py-16 px-4 md:px-6 gap-6 md:gap-8 z-[1000]">
+    <section id="explore" className="flex flex-col items-center text-center py-10 md:py-16 px-4 md:px-6 gap-6 md:gap-8 z-[1000]">
 
       {/* .main-idea-card */}
       <div className="p-6 md:p-8 max-w-[900px] w-full">

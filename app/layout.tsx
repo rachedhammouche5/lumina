@@ -22,7 +22,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={jakarta.className}>
-        <GuestNavBar />
+        <NavBar />
         
         <main className="relative">
           {children}

@@ -6,29 +6,32 @@ import Link from "next/link";
 import { House, LibraryBig, Blocks, Menu, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import LogoutButton from "@/app/ui/LogoutButton";
+import { useParams } from "next/navigation";
 
 
 const NavBar: React.FC = () => {
+  const params = useParams();
+  const userId = params.teacher_id ?? params.student_id ?? null ;
   const [isOpen, setIsOpen] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [role, setRole] = useState<"student"|"teacher"|"guest">("guest");
 
   useEffect(() => {
     const supabase = createClient();
     let mounted = true;
 
-    const syncAuthState = async () => {
+    const syncRole = async () => {
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      if (mounted) setIsAuthenticated(Boolean(user));
+       if (mounted) setRole(user?.app_metadata?.role ?? "guest");
     };
 
-    void syncAuthState();
+    void syncRole();
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      setIsAuthenticated(Boolean(session?.user));
+      void syncRole();
     });
 
     return () => {
@@ -38,10 +41,23 @@ const NavBar: React.FC = () => {
   }, []);
 
 
-  const navLinks = [
-    { name: "Home", href: "/", icon: House },
-    { name: "Courses", href: "/courses", icon: Blocks },
-  ];
+  const navLinks = role === "teacher"
+  ? [
+      { name: "Home", href: `/${userId}`, icon: House },
+      { name: "My Skills", href: `/${userId}/skills`, icon: LibraryBig },
+    ]
+  : role === "student"
+  ? [
+      { name: "Home", href: `/${userId}`, icon: House },
+      { name: "My Learning", href: `/${userId}/dashboard`, icon: LibraryBig },
+      { name: "Explore", href: `/${userId}/skills`, icon: Blocks },
+    ]
+  : [
+      { name: "Home", href: "/", icon: House },
+      { name: "Skill catalog", href: "/courses", icon: Blocks },
+      { name: "About", href: "/#about", icon: Blocks },
+      
+    ];
 
   return (
 
@@ -68,7 +84,7 @@ const NavBar: React.FC = () => {
 
         <div className="flex items-center gap-3">
           <div className="hidden sm:flex gap-3">
-            {isAuthenticated ? (
+            {role!="guest" ? (
               <LogoutButton />
             ) : (
               <>
@@ -106,7 +122,7 @@ const NavBar: React.FC = () => {
             </Link>
           ))}
           <div className="flex flex-col gap-3 pt-4 border-t border-slate-800 sm:hidden">
-            {isAuthenticated ? (
+            { role!="guest" ? (
               <LogoutButton />
             ) : (
               <>

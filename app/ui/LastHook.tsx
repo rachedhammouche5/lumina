@@ -19,7 +19,7 @@ const LastHook: React.FC = () => {
           AI Assisted. self-improvement. Built for performance
         </p>
         
-        <Button variant="primary" size="l" className="w-full sm:w-auto"> Start With Lumina</Button>
+        <Button variant="primary" size="l" href="/signup" className="w-full sm:w-auto"> Start With Lumina</Button>
       </div>
       
     </section>

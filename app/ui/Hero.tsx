@@ -54,7 +54,7 @@ const Hero: React.FC<HeroProps> = ({ src, subtitle }) => {
                 variant="outline"
                 size="l"
                 className="w-full sm:w-auto"
-                href="#about"
+                href="#explore"
                 scroll
               >
                 Explore More
