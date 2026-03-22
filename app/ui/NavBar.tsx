@@ -1,37 +1,77 @@
 "use client";
-import React, { useEffect, useState } from "react";
-import Logo from "../ui/Logo";
-import Button from "../ui/Button";
-import Link from "next/link";
-import { House, LibraryBig, Blocks, Menu, X } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
-import LogoutButton from "@/app/ui/LogoutButton";
-import { useParams } from "next/navigation";
 
+import React, { useEffect, useState } from "react";
+import Link from "next/link";
+import { Blocks, House, LibraryBig, Menu, X } from "lucide-react";
+
+import { createClient } from "@/lib/supabase/client";
+import Button from "@/app/ui/Button";
+import Logo from "@/app/ui/Logo";
+import LogoutButton from "@/app/ui/LogoutButton";
+
+type NavRole = "student" | "teacher" | "teacher_pending" | "guest";
+
+function getNavLinks(role: NavRole, userId: string | null) {
+  if ((role === "teacher" || role === "teacher_pending") && userId) {
+    return [
+      { name: "Home", href: "/teacher", icon: House },
+      { name: "My Skills", href: "/teacher/skills", icon: LibraryBig },
+      { name: "Catalog", href: "/skills", icon: Blocks },
+    ];
+  }
+
+  if (role === "student" && userId) {
+    return [
+      { name: "Home", href: "/student", icon: House },
+      { name: "Explore", href: "/skills", icon: Blocks },
+    ];
+  }
+
+  return [
+    { name: "Home", href: "/", icon: House },
+    { name: "Skill Catalog", href: "/skills", icon: Blocks },
+    { name: "About", href: "/#about", icon: LibraryBig },
+  ];
+}
 
 const NavBar: React.FC = () => {
-  const params = useParams();
-  const userId = params.teacher_id ?? params.student_id ?? null ;
   const [isOpen, setIsOpen] = useState(false);
-  const [role, setRole] = useState<"student"|"teacher"|"guest">("guest");
+  const [role, setRole] = useState<NavRole>("guest");
+  const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
     const supabase = createClient();
     let mounted = true;
 
-    const syncRole = async () => {
+    const syncSession = async () => {
       const {
         data: { user },
       } = await supabase.auth.getUser();
-       if (mounted) setRole(user?.app_metadata?.role ?? "guest");
+
+      if (!mounted) {
+        return;
+      }
+
+      setUserId(user?.id ?? null);
+
+      const nextRole = user?.app_metadata?.role;
+      if (
+        nextRole === "student" ||
+        nextRole === "teacher" ||
+        nextRole === "teacher_pending"
+      ) {
+        setRole(nextRole);
+      } else {
+        setRole("guest");
+      }
     };
 
-    void syncRole();
+    void syncSession();
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      void syncRole();
+    } = supabase.auth.onAuthStateChange(() => {
+      void syncSession();
     });
 
     return () => {
@@ -40,41 +80,22 @@ const NavBar: React.FC = () => {
     };
   }, []);
 
-
-  const navLinks = role === "teacher"
-  ? [
-      { name: "Home", href: `/${userId}`, icon: House },
-      { name: "My Skills", href: `/${userId}/skills`, icon: LibraryBig },
-    ]
-  : role === "student"
-  ? [
-      { name: "Home", href: `/${userId}`, icon: House },
-      { name: "My Learning", href: `/${userId}/dashboard`, icon: LibraryBig },
-      { name: "Explore", href: `/${userId}/skills`, icon: Blocks },
-    ]
-  : [
-      { name: "Home", href: "/", icon: House },
-      { name: "Skill catalog", href: "/courses", icon: Blocks },
-      { name: "About", href: "/#about", icon: Blocks },
-      
-    ];
+  const navLinks = getNavLinks(role, userId);
+  const isGuest = role === "guest";
 
   return (
-
-    <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md bg-[rgba(2,6,23,0.6)] border-b border-slate-800 z-[1000]">
-
-      <div className="flex items-center justify-between px-6 md:px-8 py-2">
-        
-        <div className="flex items-center justify-center h-11 w-30 md:h-11 md:w-30">
-            <Logo />
+    <nav className="fixed top-0 left-0 right-0 z-[1000] border-b border-slate-800 bg-[rgba(2,6,23,0.6)] backdrop-blur-md">
+      <div className="flex items-center justify-between px-6 py-2 md:px-8">
+        <div className="flex h-11 w-30 items-center justify-center md:h-11 md:w-30">
+          <Logo />
         </div>
 
-        <div className="hidden md:flex flex-row gap-8 text-slate-400">
+        <div className="hidden flex-row gap-8 text-slate-400 md:flex">
           {navLinks.map((link) => (
-            <Link 
-              key={link.name} 
-              href={link.href} 
-              className="hover:text-slate-100 transition-all duration-200 ease-in flex justify-center items-center gap-1.5 font-medium"
+            <Link
+              key={link.name}
+              href={link.href}
+              className="flex items-center justify-center gap-1.5 font-medium transition-all duration-200 ease-in hover:text-slate-100"
             >
               <link.icon size={16} />
               <h3>{link.name}</h3>
@@ -83,10 +104,8 @@ const NavBar: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="hidden sm:flex gap-3">
-            {role!="guest" ? (
-              <LogoutButton />
-            ) : (
+          <div className="hidden gap-3 sm:flex">
+            {isGuest ? (
               <>
                 <Button variant="ghost" href="/login">
                   Login
@@ -95,12 +114,14 @@ const NavBar: React.FC = () => {
                   Sign Up
                 </Button>
               </>
+            ) : (
+              <LogoutButton />
             )}
           </div>
 
-          <button 
-            className="md:hidden text-slate-100 p-2"
-            onClick={() => setIsOpen(!isOpen)}
+          <button
+            className="p-2 text-slate-100 md:hidden"
+            onClick={() => setIsOpen((current) => !current)}
             aria-label="Toggle Menu"
           >
             {isOpen ? <X size={24} /> : <Menu size={24} />}
@@ -108,23 +129,25 @@ const NavBar: React.FC = () => {
         </div>
       </div>
 
-      <div className={`md:hidden overflow-hidden transition-all border-slate-700  backdrop-blur-md bg-[rgba(2,6,23,0.6)] duration-300 ease-in-out ${isOpen ? "max-h-96 border-b border-slate-800" : "max-h-0"}`}>
-        <div className="backdrop-blur-md bg-[rgba(2,6,23,0.6)] border-b border-slate-700 px-6 py-4 flex flex-col gap-4">
+      <div
+        className={`overflow-hidden border-slate-700 bg-[rgba(2,6,23,0.6)] backdrop-blur-md transition-all duration-300 ease-in-out md:hidden ${
+          isOpen ? "max-h-96 border-b border-slate-800" : "max-h-0"
+        }`}
+      >
+        <div className="flex flex-col gap-4 border-b border-slate-700 bg-[rgba(2,6,23,0.6)] px-6 py-4 backdrop-blur-md">
           {navLinks.map((link) => (
-            <Link 
-              key={link.name} 
-              href={link.href} 
-              className="text-slate-200 hover:text-white transition-all flex items-center gap-3 p-2 rounded-lg hover:bg-slate-800"
+            <Link
+              key={link.name}
+              href={link.href}
+              className="flex items-center gap-3 rounded-lg p-2 text-slate-200 transition-all hover:bg-slate-800 hover:text-white"
               onClick={() => setIsOpen(false)}
             >
               <link.icon size={20} />
               <h3 className="text-lg font-medium">{link.name}</h3>
             </Link>
           ))}
-          <div className="flex flex-col gap-3 pt-4 border-t border-slate-800 sm:hidden">
-            { role!="guest" ? (
-              <LogoutButton />
-            ) : (
+          <div className="flex flex-col gap-3 border-t border-slate-800 pt-4 sm:hidden">
+            {isGuest ? (
               <>
                 <Button variant="ghost" className="w-full" href="/login">
                   Login
@@ -133,6 +156,8 @@ const NavBar: React.FC = () => {
                   Sign Up
                 </Button>
               </>
+            ) : (
+              <LogoutButton />
             )}
           </div>
         </div>

@@ -1,11 +1,10 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 export default function TeacherApplyPage() {
   const router = useRouter();
-  const params = useParams<{ teacher_id: string }>();
   const [fullName, setFullName] = useState("");
   const [cvUrl, setCvUrl] = useState("");
   const [motivation, setMotivation] = useState("");
@@ -40,7 +39,7 @@ export default function TeacherApplyPage() {
     const payload = (await response.json()) as { nextPath?: string };
     setSubmitted(true);
     setSubmitting(false);
-    router.replace(payload.nextPath ?? `/${params.teacher_id}`);
+    router.replace(payload.nextPath ?? "/teacher");
     router.refresh();
   };
 
@@ -57,9 +56,7 @@ export default function TeacherApplyPage() {
 
         <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
           <div>
-            <label className="mb-1 block text-sm text-slate-300">
-              Full name
-            </label>
+            <label className="mb-1 block text-sm text-slate-300">Full name</label>
             <input
               type="text"
               placeholder="John Doe"

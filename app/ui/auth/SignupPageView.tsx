@@ -24,7 +24,7 @@ export default function SignupPageView() {
   const [success, setSuccess] = useState("");
   const [teacher, setTeacher] = useState(false);
   const [mounted, setMounted] = useState(false);
-    
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
@@ -62,25 +62,24 @@ export default function SignupPageView() {
       await supabase.auth.signOut({ scope: "global" });
     }
     if (data.session) {
-  const res = await fetch("/auth/finalize-signup", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ teacher }),
-  });
+      const res = await fetch("/auth/finalize-signup", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ teacher }),
+      });
 
-  if (!res.ok) {
-    setError("Account created, but setup failed.");
-    setLoading(false);
-    return;
-  }
-  
-  const payload = (await res.json()) as { nextPath?: string };
-  router.replace(payload.nextPath ?? "/student");
-  router.refresh();
-  setLoading(false);
-  return;
-}
+      if (!res.ok) {
+        setError("Account created, but setup failed.");
+        setLoading(false);
+        return;
+      }
 
+      const payload = (await res.json()) as { nextPath?: string };
+      router.replace(payload.nextPath ?? `/${data.user?.id}`);
+      router.refresh();
+      setLoading(false);
+      return;
+    }
 
     // setSuccess("Account created. Check your email to confirm your signup.");
     setLoading(false);
@@ -90,9 +89,9 @@ export default function SignupPageView() {
     setError("");
     setSuccess("");
     setGoogleLoading(true);
-    const callbackUrl=new URL("/auth/callback",window.location.origin);
-    if(teacher){
-      callbackUrl.searchParams.set("wants_teacher","1");
+    const callbackUrl = new URL("/auth/callback", window.location.origin);
+    if (teacher) {
+      callbackUrl.searchParams.set("wants_teacher", "1");
     }
 
     const { error: googleError } = await supabase.auth.signInWithOAuth({
@@ -127,9 +126,7 @@ export default function SignupPageView() {
             className="h-full w-full object-cover object-center"
           />
           <div className="absolute inset-0 bg-gradient-to-br from-slate-950/75 via-slate-950/35 to-orange-500/20" />
-          <div className="absolute top-5 left-5 right-5">
-            
-          </div>
+          <div className="absolute top-5 left-5 right-5"></div>
         </div>
 
         <div
@@ -205,7 +202,11 @@ export default function SignupPageView() {
                     className="text-slate-400 hover:text-white"
                     aria-label="Toggle confirm password visibility"
                   >
-                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    {showConfirmPassword ? (
+                      <EyeOff size={18} />
+                    ) : (
+                      <Eye size={18} />
+                    )}
                   </button>
                 }
                 required
@@ -227,9 +228,8 @@ export default function SignupPageView() {
                 checked={teacher}
                 onChange={(e) => setTeacher(e.target.checked)}
               />
-               I want to become a teacher
+              I want to become a teacher
             </label>
- 
 
             <Button
               type="submit"
@@ -251,16 +251,20 @@ export default function SignupPageView() {
             {googleLoading ? "Redirecting..." : "Sign up with Google"}
           </Button>
 
-
           <p className="mt-2 text-sm text-slate-300 text-center">
             Already have an account?{" "}
-            <Link href="/login" className="font-semibold text-orange-400 hover:underline">
+            <Link
+              href="/login"
+              className="font-semibold text-orange-400 hover:underline"
+            >
               Login
             </Link>
           </p>
 
           {error ? <p className="mt-3 text-sm text-red-400">{error}</p> : null}
-          {success ? <p className="mt-3 text-sm text-emerald-400">{success}</p> : null}
+          {success ? (
+            <p className="mt-3 text-sm text-emerald-400">{success}</p>
+          ) : null}
         </div>
       </div>
     </div>
@@ -289,4 +293,3 @@ function GoogleIcon() {
     </svg>
   );
 }
-

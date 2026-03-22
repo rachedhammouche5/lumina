@@ -38,7 +38,7 @@ export default function AiTutorPage() {
             <Button href="/signup" variant="primary" className="shadow-orange-500/30">
               Try the AI Tutor
             </Button>
-            <Button href="/courses" variant="outline" className="border-white/20 text-slate-100">
+            <Button href="/skills" variant="outline" className="border-white/20 text-slate-100">
               View Skill Catalog
             </Button>
           </div>

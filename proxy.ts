@@ -66,11 +66,11 @@ if (isTeacherApplyRoute && !user) {
     }
   }
   if (isHeroPage && user && (role === "teacher" || role === "teacher_pending")) {
-    return NextResponse.redirect(new URL(`${user.id}`, req.url));
+    return NextResponse.redirect(new URL(`/${user.id}`, req.url));
   }
 
   if (isHeroPage && user && role === "student") {
-    return NextResponse.redirect(new URL("/student", req.url));
+    return NextResponse.redirect(new URL(`/${user.id}`, req.url));
   }
 
   if (isAdminRoute && role !== "admin") {
@@ -85,7 +85,7 @@ export const config = {
     "/",
     "/login",
     "/signup",
-    "/student/:path*",
+    "/:id/:path*",
     "/teacher/:path*",
     "/admin/:path*",
   ],

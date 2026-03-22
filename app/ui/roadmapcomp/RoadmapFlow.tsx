@@ -25,7 +25,7 @@ const nodes: Node<RoadmapNodeData>[] = [
       status: "completed",
       degree: 85,
       icon: GitCommit,
-      href: "/courses"
+      href: "/skills"
     }
   },
 {
@@ -38,7 +38,7 @@ const nodes: Node<RoadmapNodeData>[] = [
       status: "completed",
       degree: 65,
       icon: GitBranch,
-      href: "/courses"
+      href: "/skills"
     }
   },
   {
@@ -50,7 +50,7 @@ const nodes: Node<RoadmapNodeData>[] = [
       subtitle: "Review workflow and approvals",
       status: "unlocked",
       icon: GitPullRequest,
-      href: "/courses"
+      href: "/skills"
     }
   },
   {
@@ -62,7 +62,7 @@ const nodes: Node<RoadmapNodeData>[] = [
       subtitle: "Resolve conflicts with confidence",
       status: "locked",
       icon: GitMerge,
-      href: "/courses"
+      href: "/skills"
     }
   },
   {

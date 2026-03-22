@@ -111,14 +111,14 @@ export async function POST(request: Request) {
       }
     }
 
-    return NextResponse.json({ nextPath: `/${user.id}/apply` });
+    return NextResponse.json({ nextPath: "/teacher/apply" });
   }
 
   const nextPath =
     role === "admin"
       ? "/admin"
       : role === "teacher" || role === "teacher_pending"
-        ? `/${user.id}`
+        ? "/teacher"
         : "/student";
   return NextResponse.json({ nextPath });
 }

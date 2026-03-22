@@ -116,7 +116,7 @@ export default function AddQuizForm({
     }));
 
     // FIXED: Now passing topic.tpc_id to match the new database schema
-    const result = await addQuizzes(topic.tpc_id, skill.teacher_id ?? null, payload);
+    const result = await addQuizzes(topic.tpc_id, payload);
     
     setSubmitting(false);
     if (result?.error) {

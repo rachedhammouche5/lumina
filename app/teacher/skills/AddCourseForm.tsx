@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { addSkill } from "./actions";
 
-export default function AddCourseForm({ teacher_id }: { teacher_id: string }) {
+export default function AddCourseForm() {
   const [isOpen, setIsOpen] = useState(false);
   const [form, setForm] = useState({
     title: "",
@@ -18,7 +18,6 @@ export default function AddCourseForm({ teacher_id }: { teacher_id: string }) {
       skl_title: form.title,
       skl_dscrptn: form.description,
       skl_duration: form.duration,
-      teacher_id: teacher_id,
     });
 
     if (result.error) {

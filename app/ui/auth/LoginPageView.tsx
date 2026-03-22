@@ -43,9 +43,9 @@ export default function LoginPageView() {
 
     if (role === "student") router.replace("/student");
     else if (role === "teacher" || role === "teacher_pending") {
-      router.replace(`/${user?.id}`);
+      router.replace("/teacher");
     } else if (role === "admin") router.replace("/admin");
-    else router.replace("/");
+    else router.replace("/skills");
 
     setLoading(false);
   }

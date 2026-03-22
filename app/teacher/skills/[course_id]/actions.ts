@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
+import { requireApprovedTeacherAccess } from "@/features/utils/auth/requireUserAccess"
 
 export async function addTopic(
   skillId: string,
@@ -16,7 +17,19 @@ export async function addTopic(
     }[]
   }
 ) {
+  const { teacherId } = await requireApprovedTeacherAccess()
   const supabase = await createClient()
+
+  const { data: skill } = await supabase
+    .from("Skill")
+    .select("skl_id")
+    .eq("skl_id", skillId)
+    .eq("teacher_id", teacherId)
+    .maybeSingle()
+
+  if (!skill) {
+    return { error: "Unauthorized skill access" }
+  }
 
   const { data: newTopic, error: topicError } = await supabase
     .from("Topic")
@@ -49,7 +62,7 @@ export async function addTopic(
     if (contentsError) return { error: contentsError.message }
   }
 
-  revalidatePath(`/teacher/courses/${skillId}`)   
+  revalidatePath(`/teacher/skills/${skillId}`)
   return { data: newTopic }
 }
 
@@ -59,17 +72,38 @@ type QuizAnswerInput = {
 }
 
 export async function addQuizzes(
-  topicId: string, 
-  teacherId: string | null,
+  topicId: string,
   questions: {
     question: string
     answers: QuizAnswerInput[]
   }[]
 ) {
+  const { teacherId } = await requireApprovedTeacherAccess()
   const supabase = await createClient()
 
   if (questions.length === 0) {
     return { error: "No questions provided" }
+  }
+
+  const { data: topic } = await supabase
+    .from("Topic")
+    .select("skill_id")
+    .eq("tpc_id", topicId)
+    .maybeSingle()
+
+  if (!topic?.skill_id) {
+    return { error: "Topic not found" }
+  }
+
+  const { data: skill } = await supabase
+    .from("Skill")
+    .select("skl_id")
+    .eq("skl_id", topic.skill_id)
+    .eq("teacher_id", teacherId)
+    .maybeSingle()
+
+  if (!skill) {
+    return { error: "Unauthorized topic access" }
   }
 
   // Build rows using tpc_id as required by the new schema
@@ -110,7 +144,7 @@ export async function addQuizzes(
   }
 
   // Refresh the teacher view
-  revalidatePath(`/teacher/courses`)
+  revalidatePath(`/teacher/skills/${topic.skill_id}`)
   
   return { ok: true }
 }

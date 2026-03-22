@@ -111,7 +111,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    return NextResponse.redirect(new URL(`/${user.id}/apply`, url.origin));
+    return NextResponse.redirect(new URL("/teacher/apply", url.origin));
   }
 
   if (!role) {
@@ -142,7 +142,7 @@ export async function GET(request: NextRequest) {
     role === "admin"
       ? "/admin"
       : role === "teacher" || role === "teacher_pending"
-        ? `/${user.id}`
+        ? "/teacher"
         : "/student";
 
   return NextResponse.redirect(new URL(destination, url.origin));

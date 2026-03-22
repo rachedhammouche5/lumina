@@ -24,6 +24,7 @@ export async function syncRoleTables(
           std_id: input.userId,
           std_fullname: fullName,
           std_email: safeEmail,
+          user_id: input.userId,
         },
         { onConflict: "std_id" },
       );
@@ -47,6 +48,7 @@ export async function syncRoleTables(
         tchr_id: input.userId,
         tchr_fullname: fullName,
         tchr_email: safeEmail,
+        user_id: input.userId,
       },
       { onConflict: "tchr_id" },
     );

@@ -88,7 +88,7 @@ export async function POST(request: Request) {
   }
 
   return NextResponse.json(
-    { ok: true, nextPath: `/${user.id}` },
+    { ok: true, nextPath: "/teacher" },
     { status: 200 },
   );
 }
