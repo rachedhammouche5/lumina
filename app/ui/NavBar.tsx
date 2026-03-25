@@ -43,18 +43,18 @@ const NavBar: React.FC = () => {
 
   const navLinks = role === "teacher"
   ? [
-      { name: "Home", href: `/${userId}`, icon: House },
-      { name: "My Skills", href: `/${userId}/skills`, icon: LibraryBig },
+      { name: "Home", href: "/teacher", icon: House },
+      { name: "My Skills", href: "/teacher/skills", icon: LibraryBig },
     ]
   : role === "student"
   ? [
-      { name: "Home", href: `/${userId}`, icon: House },
-      { name: "My Learning", href: `/${userId}/dashboard`, icon: LibraryBig },
-      { name: "Explore", href: `/${userId}/skills`, icon: Blocks },
+      { name: "Home", href: "/student", icon: House },
+      { name: "My Learning", href: "/student/dashboard", icon: LibraryBig },
+      { name: "Explore", href: "/skills", icon: Blocks },
     ]
   : [
       { name: "Home", href: "/", icon: House },
-      { name: "Skill catalog", href: "/courses", icon: Blocks },
+      { name: "Skill catalog", href: "/skills", icon: Blocks },
       { name: "About", href: "/#about", icon: Blocks },
       
     ];

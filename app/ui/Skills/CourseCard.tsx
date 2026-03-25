@@ -1,12 +1,13 @@
 import Button from "../Button";
 
 interface CourseCardProps {
+  id : string;
   title: string;
   description: string;
   image?: string;
 }
 
-function CourseCard({ title, description, image }: CourseCardProps) {
+function CourseCard({ id, title, description, image }: CourseCardProps) {
   return (
     <div className="group relative bg-slate-900/40 w-full aspect-[3/2] backdrop-blur-md border border-white/5 rounded-[2rem] p-5 overflow-hidden transition-all duration-500 hover:border-orange-500/40 hover:scale-[1.02] flex flex-col">
       <div className="relative w-full h-[60%] rounded-2xl overflow-hidden mb-4 bg-slate-800">
@@ -34,7 +35,7 @@ function CourseCard({ title, description, image }: CourseCardProps) {
         </div>
 
         <div className="mt-3 items-left flex flex-1">
-          <Button variant="outline" className=" text-xs py-2">
+          <Button variant="outline" className=" text-xs py-2" href={`/skills/${id}`}>
             Let&apos;s Start
           </Button>
         </div>

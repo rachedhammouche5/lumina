@@ -7,12 +7,9 @@ import NavBar from "../ui/NavBar";
 
 export default async function TeacherLayout({
   children,
-  params,
 }: {
   children: ReactNode;
-  params: Promise<{ teacher_id: string }>;
 }) {
-  const { teacher_id } = await params;
   const supabase = await createClient();
 
   const {
@@ -68,7 +65,7 @@ export default async function TeacherLayout({
               </button>
             ) : (
               <Link
-                href={`/${teacher_id}/courses`}
+                href={"/teacher/skills"}
                 className="block w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-3 text-left font-semibold text-white transition hover:bg-slate-700"
               >
                 Manage Courses
@@ -86,7 +83,7 @@ export default async function TeacherLayout({
                   Reason: <span className="font-medium">{rejectionReason}</span>
                 </p>
                 <Link
-                  href={`/${teacher_id}/apply`}
+                  href={"/teacher/apply"}
                   className="mt-2 inline-block text-sm underline"
                 >
                   Submit a new application

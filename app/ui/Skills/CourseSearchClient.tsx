@@ -27,7 +27,7 @@ export default function CourseSearchClient() {
       setError("");
       try {
         const res = await fetch(
-          `/api/courses?q=${encodeURIComponent(debounceQuery)}`,
+          `/api/skills?q=${encodeURIComponent(debounceQuery)}`,
           {
             signal: controller.signal,
           },
@@ -110,7 +110,8 @@ export default function CourseSearchClient() {
             ))
           : courses.map((course) => (
               <CourseCard
-                key={course.id}
+              key={course.id}
+                id={course.id}
                 title={course.title}
                 description={course.description}
               />
