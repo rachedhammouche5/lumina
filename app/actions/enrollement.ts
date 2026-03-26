@@ -19,7 +19,7 @@ export async function Enrollment(skillId: string): Promise<{ error: string } | {
 
   const { error } = await supabase
     .from("enroll")
-    .insert({ studentId: student.std_id, skill_id: skillId, progress: 0 }); 
+    .insert({ student_id: student.std_id, skill_id: skillId, progress: 0 }); 
 
   if (error) return { error: error.message };
 
