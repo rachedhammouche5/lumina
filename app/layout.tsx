@@ -3,8 +3,6 @@ import { Plus_Jakarta_Sans } from 'next/font/google'
 import "./globals.css";
 import Footer from "./ui/Footer";
 import NavBar from "./ui/NavBar";
-import GuestNavBar from "./ui/GuestNavBar";
-
 const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
