@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AlertTriangle, Camera, Eye, EyeOff, Lock, Mail, Shield, Trash2, User } from "lucide-react";
 import Button from "@/app/ui/Button";
@@ -45,7 +45,7 @@ export default function ProfileClient({
   const [avatarPreview, setAvatarPreview] = useState<string | null>(avatarUrl);
   const [photoStatus, setPhotoStatus] = useState<{ type: "error" | "success"; message: string } | null>(null);
   const [photoLoading, setPhotoLoading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const fileInputId = useId();
 
   useEffect(() => {
     setAvatarPreview(avatarUrl);
@@ -112,11 +112,6 @@ export default function ProfileClient({
   };
 
   const canEditPhoto = role === "student" || role === "teacher" || role === "teacher_pending";
-
-  const openFilePicker = () => {
-    if (photoLoading) return;
-    fileInputRef.current?.click();
-  };
 
   const readFileAsDataUrl = (file: File) =>
     new Promise<string>((resolve, reject) => {
@@ -242,16 +237,16 @@ export default function ProfileClient({
             </div>
             {canEditPhoto ? (
               <div className="flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  onClick={openFilePicker}
-                  disabled={photoLoading}
+                <label
+                  htmlFor={fileInputId}
                   aria-label={avatarPreview ? "Change profile photo" : "Add profile photo"}
                   title={avatarPreview ? "Change profile photo" : "Add profile photo"}
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-slate-950/80 text-white/80 hover:text-white hover:border-white/20 disabled:cursor-not-allowed disabled:opacity-60"
+                  className={`flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-slate-950/80 text-white/80 hover:text-white hover:border-white/20 ${
+                    photoLoading ? "pointer-events-none opacity-60" : ""
+                  }`}
                 >
                   <Camera size={16} />
-                </button>
+                </label>
                 {avatarPreview ? (
                   <button
                     type="button"
@@ -265,7 +260,7 @@ export default function ProfileClient({
                   </button>
                 ) : null}
                 <input
-                  ref={fileInputRef}
+                  id={fileInputId}
                   type="file"
                   accept="image/*"
                   className="sr-only"

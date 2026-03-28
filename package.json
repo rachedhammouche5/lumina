@@ -8,6 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "promote:admin": "tsx scripts/promote-admin.ts",
     "seed": "tsx scripts/seed-supabase.ts",
     "test": "vitest run",
     "test:unit": "vitest run",

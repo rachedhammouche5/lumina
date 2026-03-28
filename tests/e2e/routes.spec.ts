@@ -70,15 +70,12 @@ test.describe('Route access tests', () => {
         (route === '/student' && role === 'student') ||
         (route === '/teacher' && role === 'teacher') ||
         (route === '/admin' && role === 'admin');
-
       const caseTitle = isOwnRoute
         ? `[ALLOW] ${role} can access ${route}`
         : `[DENY] ${role} is denied access to ${route}`;
-
       test(caseTitle, async ({ page }) => {
         await loginAs(page, role);
         await page.goto(route);
-
         const shouldRedirectToOwnDashboard =
           (route === '/student' && role !== 'student') ||
           (route === '/teacher' && role !== 'teacher') ||
@@ -88,7 +85,6 @@ test.describe('Route access tests', () => {
           await expect(page).toHaveURL(/\/$/);
           return;
         }
-
         await expect(page).toHaveURL(new RegExp(`${route}$`));
       });
     }

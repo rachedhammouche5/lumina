@@ -79,7 +79,8 @@ export default async function ProfilePage() {
     <main className="min-h-screen bg-slate-950 pt-24 pb-20 px-4 sm:px-6 text-white">
       <div className="w-full max-w-5xl mx-auto space-y-8">
         <header className="space-y-2">
-            <h1 className="text-xl uppercase tracking-[0.3em] text-white/50">Profile</h1>
+            <h1 className="text-xl
+             uppercase tracking-[0.3em] text-white/50">Profile</h1>
           <p className="text-white/70">Manage your profile details and security settings.</p>
         </header>
 
