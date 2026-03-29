@@ -60,7 +60,7 @@ const NavBar: React.FC = () => {
 
   return (
 
-    <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md bg-[rgba(2,6,23,0.6)] border-b border-slate-800 z-[1000]">
+    <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md bg-[rgba(2,6,23,0.6)] border-b border-slate-800">
 
       <div className="flex items-center justify-between px-6 md:px-8 py-2">
         
