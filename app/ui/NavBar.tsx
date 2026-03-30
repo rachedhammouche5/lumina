@@ -3,17 +3,14 @@ import React, { useEffect, useState } from "react";
 import Logo from "../ui/Logo";
 import Button from "../ui/Button";
 import Link from "next/link";
-import { House, LibraryBig, Blocks, Menu, X } from "lucide-react";
+import { House, LibraryBig, Blocks, Menu, User, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import LogoutButton from "@/app/ui/LogoutButton";
-import { useParams } from "next/navigation";
 
 
 const NavBar: React.FC = () => {
-  const params = useParams();
-  const userId = params.teacher_id ?? params.student_id ?? null ;
   const [isOpen, setIsOpen] = useState(false);
-  const [role, setRole] = useState<"student"|"teacher"|"guest">("guest");
+  const [role, setRole] = useState<"student" | "teacher" | "guest">("guest");
 
   useEffect(() => {
     const supabase = createClient();
@@ -45,12 +42,14 @@ const NavBar: React.FC = () => {
   ? [
       { name: "Home", href: "/teacher", icon: House },
       { name: "My Skills", href: "/teacher/skills", icon: LibraryBig },
+      { name: "Profile", href: "/profile", icon: User },
     ]
   : role === "student"
   ? [
       { name: "Home", href: "/student", icon: House },
       { name: "My Learning", href: "/student/dashboard", icon: LibraryBig },
       { name: "Explore", href: "/skills", icon: Blocks },
+      { name: "Profile", href: "/profile", icon: User },
     ]
   : [
       { name: "Home", href: "/", icon: House },

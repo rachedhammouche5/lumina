@@ -408,7 +408,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      cntnt_type: "pdf" | "video" | "mindmap" | "docs" | "audio"
+      cntnt_type: "pdf" | "video" | "docs" | "audio"
       difficulty: "easy" | "medium" | "hard" | "pro"
       level: "beginner" | "intermediate" | "advanced" | "master"
     }
