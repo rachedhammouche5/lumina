@@ -544,7 +544,7 @@ export const Constants = {
     },
   },
 } as const
-// add at the bottom of database.types.ts
+// add at the bottom of database.types.ts 
 export type Skill = Tables<"Skill">
 export type Topic = Tables<"Topic">
 export type Content = Tables<"Content">
