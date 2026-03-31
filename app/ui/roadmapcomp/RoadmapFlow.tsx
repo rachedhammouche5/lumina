@@ -15,12 +15,14 @@ export default function RoadmapFlow({
   topics = [],
   scores = [],
   root,
+  isEnrolled = true,
 }: {
   topics?: TopicRow[];
   scores?: ScoreRow[];
   root?: { id: string; title: string; subtitle?: string };
+  isEnrolled?: boolean;
 }) {
-  const { nodes, edges, width, height } = generateRoadmapElements(topics, scores, root);
+  const { nodes, edges, width, height } = generateRoadmapElements(topics, scores, root, isEnrolled);
 
   return (
     <div className="w-full overflow-hidden border-2 border-slate-400/40 rounded-4xl shadow-2xl shadow-slate-400/40 mb-5 bg-linear-to-br from-slate-900 to-transparent">

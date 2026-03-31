@@ -66,6 +66,11 @@ export default async function TopicLearningPage({
   const audioContents = topicContents.filter((c) => c.cntnt_type === "audio");
   const pdfContents   = topicContents.filter((c) => c.cntnt_type === "pdf");
   const docsContents  = topicContents.filter((c) => c.cntnt_type === "docs");
+  const rawDescription =
+    topic.tpc_description ??
+    "This topic brings together lesson media, downloadable material, and official references in one place.";
+  const safeDescription =
+    rawDescription.length > 220 ? `${rawDescription.slice(0, 220)}...` : rawDescription;
 
   return (
     <main className="min-h-screen bg-slate-950 px-4 pb-16 pt-24 text-white sm:px-6">
@@ -91,8 +96,7 @@ export default async function TopicLearningPage({
                 {topic.tpc_title}
               </h1>
               <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300 md:text-base">
-                {topic.tpc_description ??
-                  "This topic brings together lesson media, downloadable material, and official references in one place."}
+                {safeDescription}
               </p>
             </div>
             

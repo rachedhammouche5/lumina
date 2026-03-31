@@ -71,6 +71,7 @@ export const generateRoadmapElements = (
   topics: TopicRow[] = [],
   scores: ScoreRow[] = [],
   root?: { id: string; title: string; subtitle?: string },
+  isEnrolled = true,
 ): { nodes: Node<RoadmapNodeData>[]; edges: Edge[]; width: number; height: number } => {
     const topicMap = new Map(topics.map((t) => [t.tpc_id, t]));
     const childrenMap = new Map<string, TopicRow[]>();
@@ -121,20 +122,20 @@ export const generateRoadmapElements = (
     const nodes: Node<RoadmapNodeData>[] = [];
 
     if (root) {
-        nodes.push({
-            id: root.id,
-            type: 'roadmap',
-            position: positions.get(root.id) ?? { x: 0, y: 0 },
-            data: {
-                title: root.title,
-                subtitle: root.subtitle,
-                // Root stays locked until every topic is completed, then becomes completed.
-                status: allTopicsCompleted ? "completed" : "locked",
-                degree: allTopicsCompleted ? 100 : 0,
-                id: root.id,
-            }
-        });
-    }
+    nodes.push({
+      id: root.id,
+      type: 'roadmap',
+      position: positions.get(root.id) ?? { x: 0, y: 0 },
+      data: {
+        title: root.title,
+        subtitle: root.subtitle,
+        // Root stays locked until every topic is completed, then becomes completed.
+        status: !isEnrolled ? "locked" : allTopicsCompleted ? "completed" : "locked",
+        degree: allTopicsCompleted ? 100 : 0,
+        id: root.id,
+      }
+    });
+  }
 
     topics.forEach((topic) => {
         const userScore = scores.find((s) => s.tpc_id === topic.tpc_id);
@@ -142,7 +143,9 @@ export const generateRoadmapElements = (
         const areChildrenCompleted = children.length > 0 && children.every((c) => completedIds.has(c.tpc_id));
 
         let currentStatus: RoadmapStatus = "locked";
-        if (userScore) {
+        if (!isEnrolled) {
+            currentStatus = "locked";
+        } else if (userScore) {
             currentStatus = "completed";
         } else if (children.length === 0) {
             currentStatus = "unlocked";
