@@ -160,7 +160,9 @@ export const generateRoadmapElements = (
                 status: currentStatus,
                 degree: userScore?.score || 0,
                 id: topic.tpc_id,
-                parentId: topic.parent_id ?? undefined
+                parentId: topic.parent_id ?? undefined,
+                learnHref: `/skills/${topic.skill_id}/${topic.tpc_id}`,
+                quizHref: `/skills/${topic.skill_id}/${topic.tpc_id}/quiz`,
             }
         });
     });

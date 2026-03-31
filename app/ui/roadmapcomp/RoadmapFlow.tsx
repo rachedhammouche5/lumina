@@ -23,8 +23,11 @@ export default function RoadmapFlow({
   const { nodes, edges, width, height } = generateRoadmapElements(topics, scores, root);
 
   return (
-    <div className="w-full border-2 border-slate-400/40 rounded-4xl shadow-2xl shadow-slate-400/40 mb-5 bg-linear-to-br from-slate-900 to-transparent">
-      <div style={{ width: `${width}px`, height: `${height}px`, margin: "0 auto" }}>
+    <div className="w-full overflow-hidden border-2 border-slate-400/40 rounded-4xl shadow-2xl shadow-slate-400/40 mb-5 bg-linear-to-br from-slate-900 to-transparent">
+      <div
+        className="relative mx-auto max-w-full overflow-hidden"
+        style={{ width: `${width}px`, height: `${height}px` }}
+      >
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -35,8 +38,8 @@ export default function RoadmapFlow({
           zoomOnScroll={false}
           zoomOnPinch={false}
           zoomOnDoubleClick={false}
-          panOnScroll={false}
-          panOnDrag={false}
+          panOnScroll={true}
+          panOnDrag={true}
           nodesDraggable={false}
           nodesConnectable={false}
           elementsSelectable={false}

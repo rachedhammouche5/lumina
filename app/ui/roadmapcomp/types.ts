@@ -10,7 +10,8 @@ export type RoadmapNodeData = {
   status: RoadmapStatus;
   degree?: number;
   icon?: LucideIcon;
-  href?: string;
+  learnHref?: string;
+  quizHref?: string;
 };
 
 // Minimal Supabase row shapes we rely on for the roadmap
