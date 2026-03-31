@@ -104,6 +104,7 @@ export default function AddCourseForm({ teacher_id }: { teacher_id: string }) {
                   duration: Number(e.target.value),
                 }))
               }
+              required
               placeholder="enter duration in hours"
               className="w-full rounded-md border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-white outline-none ring-indigo-400 focus:ring"
             />

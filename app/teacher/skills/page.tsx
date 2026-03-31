@@ -26,7 +26,7 @@ export default async function TeacherCoursesPage({}: {}) {
 
   return (
     <div className="space-y-6">
-      <AddCourseForm teacher_id={user.id} />
+      <AddCourseForm teacher_id={teacher?.tchr_id} />
 
       <div className="space-y-2">
         <p className="text-slate-300">Manage your existing Skills here.</p>
