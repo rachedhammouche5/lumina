@@ -9,8 +9,10 @@ interface CourseCardProps {
 
 function CourseCard({ id, title, description, image }: CourseCardProps) {
   return (
-    <div className="group relative bg-slate-900/40 w-full aspect-[3/2] backdrop-blur-md border border-white/5 rounded-[2rem] p-5 overflow-hidden transition-all duration-500 hover:border-orange-500/40 hover:scale-[1.02] flex flex-col">
-      <div className="relative w-full h-[60%] rounded-2xl overflow-hidden mb-4 bg-slate-800">
+    <div className="group relative bg-slate-900/40 w-full backdrop-blur-md border border-white/5 rounded-[2rem] p-5 overflow-hidden transition-all duration-500 hover:border-orange-500/40 hover:scale-[1.02] flex flex-col">
+      
+      {/* ← changed: aspect-[2/1] instead of h-[60%] aspect-[3/2] on parent */}
+      <div className="relative w-full aspect-[2/1] rounded-2xl overflow-hidden mb-4 bg-slate-800">
         {image ? (
           <img
             src={image}
@@ -20,7 +22,6 @@ function CourseCard({ id, title, description, image }: CourseCardProps) {
         ) : (
           <div className="h-full w-full bg-slate-800" />
         )}
-
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950 to-transparent" />
       </div>
 
@@ -33,15 +34,14 @@ function CourseCard({ id, title, description, image }: CourseCardProps) {
             {description}
           </p>
         </div>
-
         <div className="mt-3 items-left flex flex-1">
-          <Button variant="outline" className=" text-xs py-2" href={`/skills/${id}`}>
+          <Button variant="outline" className="text-xs py-2" href={`/skills/${id}`}>
             Let&apos;s Start
           </Button>
         </div>
       </div>
     </div>
-  );
+  )
 }
 
 export default CourseCard;
