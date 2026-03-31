@@ -408,7 +408,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      cntnt_type: "pdf" | "video" | "mindmap" | "docs" | "audio"
+      cntnt_type: "pdf" | "video" | "docs" | "audio"
       difficulty: "easy" | "medium" | "hard" | "pro"
       level: "beginner" | "intermediate" | "advanced" | "master"
     }
@@ -544,7 +544,7 @@ export const Constants = {
     },
   },
 } as const
-// add at the bottom of database.types.ts
+// add at the bottom of database.types.ts 
 export type Skill = Tables<"Skill">
 export type Topic = Tables<"Topic">
 export type Content = Tables<"Content">

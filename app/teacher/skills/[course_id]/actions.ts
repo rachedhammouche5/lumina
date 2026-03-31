@@ -2,6 +2,34 @@
 
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
+import { writeFile, mkdir } from "fs/promises"
+import path from "path"
+import { ContentType } from "@/lib/database.types"
+
+type TopicContentInput = {
+  id?: string
+  title: string
+  type: ContentType
+  value: string | null
+}
+
+export async function uploadContentFile(formData: FormData) {
+  const file = formData.get("file") as File
+  const type = formData.get("type") as string
+
+  if (!file || !file.name) return { error: "No file provided" }
+
+  const bytes = await file.arrayBuffer()
+  const buffer = Buffer.from(bytes)
+
+  const folder = path.join(process.cwd(), "public", "uploads", type)
+  await mkdir(folder, { recursive: true }) 
+
+  const filename = `${Date.now()}-${file.name}`
+  await writeFile(path.join(folder, filename), buffer)
+
+  return { url: `/uploads/${type}/${filename}` }
+}
 
 export async function addTopic(
   skillId: string,
@@ -9,11 +37,7 @@ export async function addTopic(
   form: {
     title: string
     description: string
-    contents: {
-      title: string
-      type: string
-      value: string | null
-    }[]
+    contents: TopicContentInput[]
   }
 ) {
   const supabase = await createClient()
@@ -37,10 +61,9 @@ export async function addTopic(
       .from("Content")
       .insert(
         form.contents.map((content) => ({
-          cntnt_id: crypto.randomUUID(),
+          cntnt_id: content.id ?? crypto.randomUUID(),
           cntnt_title: content.title,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          cntnt_type: content.type as any, // Cast to any or your Enum type
+          cntnt_type: content.type,
           cntnt_value: content.value,
           tpc_id: newTopic.tpc_id,
         }))
@@ -49,8 +72,64 @@ export async function addTopic(
     if (contentsError) return { error: contentsError.message }
   }
 
-  revalidatePath(`/teacher/courses/${skillId}`)   
+  revalidatePath(`/teacher/skills/${skillId}`)
   return { data: newTopic }
+}
+
+export async function updateTopic(
+  skillId: string,
+  topicId: string,
+  parentId: string | null,
+  form: {
+    hasTopicChanges: boolean
+    title: string
+    description: string
+    contents: TopicContentInput[]
+  }
+) {
+  const supabase = await createClient()
+  let updatedTopic = null
+
+  if (form.hasTopicChanges) {
+    const { data, error: topicError } = await supabase
+      .from("Topic")
+      .update({
+        tpc_title: form.title,
+        tpc_description: form.description,
+        parent_id: parentId,
+      })
+      .eq("tpc_id", topicId)
+      .select()
+      .single()
+
+    if (topicError) return { error: topicError.message }
+
+    updatedTopic = data
+  }
+
+  if (form.contents.length > 0) {
+    const { error: contentsError } = await supabase
+      .from("Content")
+      .upsert(
+        form.contents.map((content) => ({
+          cntnt_id: content.id ?? crypto.randomUUID(),
+          cntnt_title: content.title,
+          cntnt_type: content.type,
+          cntnt_value: content.value,
+          tpc_id: topicId,
+        }))
+      )
+
+    if (contentsError) return { error: contentsError.message }
+  }
+
+revalidatePath(`/teacher/skills/${skillId}`)
+
+if (!form.hasTopicChanges && form.contents.length === 0) {
+  return { data: { tpc_id: topicId }, skipped: true }
+}
+
+return { data: updatedTopic ?? { tpc_id: topicId } }
 }
 
 type QuizAnswerInput = {
