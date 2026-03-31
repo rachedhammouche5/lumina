@@ -66,21 +66,19 @@ export default async function TopicLearningPage({
   const audioContents = topicContents.filter((c) => c.cntnt_type === "audio");
   const pdfContents   = topicContents.filter((c) => c.cntnt_type === "pdf");
   const docsContents  = topicContents.filter((c) => c.cntnt_type === "docs");
-  const rawDescription =
+  
+  const description =
     topic.tpc_description ??
     "This topic brings together lesson media, downloadable material, and official references in one place.";
-  const safeDescription =
-    rawDescription.length > 220 ? `${rawDescription.slice(0, 220)}...` : rawDescription;
 
   return (
     <main className="min-h-screen bg-slate-950 px-4 pb-16 pt-24 text-white sm:px-6">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-8">
-
-        {/* ── Hero ── */}
+        
         <section className="relative overflow-hidden rounded-[32px] border border-slate-500 bg-gradient-to-br from-slate-700 to-transparent p-6 shadow-slate-500/40 shadow-[0_20px_60px]">
-          
-          <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-            <div className="max-w-3xl">
+          <div className="flex flex-col lg:flex-row gap-10 items-start justify-between">
+            
+            <div className="flex-1 min-w-0">
               <Button
                 variant="outline"
                 href={`/skills/${skill_id}`}
@@ -89,56 +87,61 @@ export default async function TopicLearningPage({
                 <ArrowLeft size={16} />
                 Back to roadmap
               </Button>
+              
               <p className="mt-5 text-xs font-semibold uppercase tracking-[0.32em] text-orange-300/90">
                 Learning Content
               </p>
+              
               <h1 className="mt-3 text-3xl font-black tracking-tight text-white md:text-5xl">
                 {topic.tpc_title}
               </h1>
-              <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300 md:text-base">
-                {safeDescription}
-              </p>
-            </div>
-            
 
-            <div className="flex flex-col">
-              <div className="flex flex-row justify-end mb-5">
+              <div className="mt-4 max-w-xl lg:max-w-2xl">
+                <p
+                  className="text-sm leading-relaxed text-slate-300 md:text-base line-clamp-3 transition-colors duration-300 hover:text-white"
+                  title={description}
+                >
+                  {description}
+                </p>
+              </div>
+            </div>
+
+            <div className="w-full lg:w-[360px] flex flex-col gap-5 shrink-0">
+              <div className="flex lg:justify-end">
                 <Button
                   variant="primary"
                   size="m"
-                  className="w-full"
+                  className="w-full lg:w-44"
                   href={`/skills/${skill_id}/${topic_id}/quiz`}
                 >
                   QUIZ ME
                 </Button>
               </div>
-              <div className="grid gap-3 sm:grid-cols-3 lg:w-[360px]">
+              
+              <div className="grid gap-3 grid-cols-1 sm:grid-cols-3">
                 <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-sm">
-                  <p className="text-xs uppercase tracking-[0.24em] text-white/45">Skill</p>
-                  <p className="mt-2 text-sm font-semibold text-white">{skill.skl_title}</p>
-                </div>
-                <div className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm">
-                  <p className="text-xs uppercase tracking-[0.24em] text-white/45">Resources</p>
-                  <p className="mt-2 text-2xl font-black text-white">{topicContents.length}</p>
+                  <p className="text-[10px] uppercase tracking-[0.24em] text-white/45">Skill</p>
+                  <p className="mt-1 text-xs font-semibold text-white truncate">{skill.skl_title}</p>
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-sm">
-                  <p className="text-xs uppercase tracking-[0.24em] text-white/45">Primary Mode</p>
-                  <p className="mt-2 text-sm font-semibold text-white">
+                  <p className="text-[10px] uppercase tracking-[0.24em] text-white/45">Resources</p>
+                  <p className="mt-1 text-xl font-black text-white">{topicContents.length}</p>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-sm">
+                  <p className="text-[10px] uppercase tracking-[0.24em] text-white/45">Mode</p>
+                  <p className="mt-1 text-xs font-semibold text-white truncate">
                     {videoContents.length ? "Video" : audioContents.length ? "Audio" : "Mixed"}
                   </p>
                 </div>
               </div>
             </div>
+
           </div>
         </section>
 
-        {/* ── Main grid ── */}
         <section className="grid gap-6 lg:grid-cols-[minmax(0,1.5fr)_360px]">
           <div className="space-y-6">
-
             <VideoSection contents={videoContents} />
-
-            {/* Content sections */}
             <AudioSection contents={audioContents} />
 
             {(pdfContents.length > 0 || docsContents.length > 0) && (
@@ -161,7 +164,6 @@ export default async function TopicLearningPage({
             )}
           </div>
 
-          {/* ── Sidebar ── */}
           <aside className="space-y-4">
             <div className="rounded-[28px] border border-white/10 bg-slate-900/70 p-5 shadow-[0_20px_60px_rgba(0,0,0,0.28)]">
               <p className="text-xs font-semibold uppercase tracking-[0.28em] text-orange-300/80">

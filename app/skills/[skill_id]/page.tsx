@@ -3,6 +3,7 @@ import RoadmapFlow from "@/app/ui/roadmapcomp/RoadmapFlow";
 import { createClient } from "@/lib/supabase/server";
 import type { TopicRow, ScoreRow } from "@/app/ui/roadmapcomp/types";
 import EnrollSection from "@/app/ui/roadmapcomp/EnrollSection";
+import { calculateRoadmapProgress } from "@/app/actions/roadmap";
 
 export default async function RoadmapPage({
   params,
@@ -37,7 +38,7 @@ export default async function RoadmapPage({
       const { data: enrollment } = await supabase
         .from("enroll")
         .select("skill_id")
-        .eq("studentId", student.std_id)
+        .eq("student_id", student.std_id)
         .eq("skill_id", skill_id)
         .maybeSingle();
 
@@ -59,9 +60,7 @@ export default async function RoadmapPage({
   const scores = (scoresData ?? []) as ScoreRow[];
 
   const totalTopics = initialIsEnrolled ? topics.length : 0;
-  const passedTopics = initialIsEnrolled ? scores.filter((s) => s.score >= 50).length : 0;
-  const progressValue =
-    initialIsEnrolled && totalTopics > 0 ? (passedTopics / totalTopics) * 100 : 0;
+  const progressValue = initialIsEnrolled && totalTopics > 0 ? calculateRoadmapProgress(topics, scores) : 0;
 
   return (
     <main className="min-h-screen min-w-screen bg-slate-950 text-white flex flex-col items-center pt-16 md:pt-20 px-4 sm:px-6 relative overflow-hidden font-sans gap-3">
@@ -69,6 +68,7 @@ export default async function RoadmapPage({
         skill={skill}
         isLoggedIn={!!user}
         initialIsEnrolled={initialIsEnrolled}
+        progressValue={progressValue}
       />
       <div className="w-full max-w-[1400px]">
         <h3 className="text-xl md:text-2xl font-black italic tracking-tight mb-4">

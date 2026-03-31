@@ -10,12 +10,15 @@ export default function EnrollSection({
   skill,
   isLoggedIn,
   initialIsEnrolled,
+  progressValue,
 }: {
   skill: any;
   isLoggedIn: boolean;
   initialIsEnrolled: boolean;
+  progressValue: number;
 }) {
   const [isEnrolled, setIsEnrolled] = useState(initialIsEnrolled);
+  const [progress, setProgress] = useState(progressValue);
 
   return (
     <div className="w-full max-w-[1400px] px-4">
@@ -35,7 +38,7 @@ export default function EnrollSection({
         </div>
         {isEnrolled && (
           <div className="flex-1 md:max-w-[360px]">
-            <ProgressBar title="Your Progress" value={40} />
+            <ProgressBar title="Your Progress" value={progress} />
           </div>
         )}
       </div>
