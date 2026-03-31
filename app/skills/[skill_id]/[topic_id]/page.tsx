@@ -74,7 +74,7 @@ export default async function TopicLearningPage({
         {/* ── Hero ── */}
         <section className="relative overflow-hidden rounded-[32px] border border-slate-500 bg-gradient-to-br from-slate-700 to-transparent p-6 shadow-slate-500/40 shadow-[0_20px_60px]">
           
-          <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div className="max-w-3xl">
               <Button
                 variant="outline"
@@ -108,17 +108,17 @@ export default async function TopicLearningPage({
                   QUIZ ME
                 </Button>
               </div>
-              <div className="grid gap-3 sm:grid-cols-3 lg:w-[360px]">
+              <div className="grid gap-3 sm:grid-cols-3 lg:w-[360px] ">
                 <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-sm">
-                  <p className="text-xs uppercase tracking-[0.24em] text-white/45">Skill</p>
+                  <p className="text-xs uppercase text-white/45">Skill</p>
                   <p className="mt-2 text-sm font-semibold text-white">{skill.skl_title}</p>
                 </div>
-                <div className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm">
-                  <p className="text-xs uppercase tracking-[0.24em] text-white/45">Resources</p>
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-sm">
+                  <p className="text-xs uppercase text-white/45">Resources</p>
                   <p className="mt-2 text-2xl font-black text-white">{topicContents.length}</p>
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-sm">
-                  <p className="text-xs uppercase tracking-[0.24em] text-white/45">Primary Mode</p>
+                  <p className="text-xs uppercase text-white/45">Primary Mode</p>
                   <p className="mt-2 text-sm font-semibold text-white">
                     {videoContents.length ? "Video" : audioContents.length ? "Audio" : "Mixed"}
                   </p>

@@ -3,6 +3,7 @@ import RoadmapFlow from "@/app/ui/roadmapcomp/RoadmapFlow";
 import { createClient } from "@/lib/supabase/server";
 import type { TopicRow, ScoreRow } from "@/app/ui/roadmapcomp/types";
 import EnrollSection from "@/app/ui/roadmapcomp/EnrollSection";
+import { Enrollment } from "@/app/actions/enrollement";
 
 export default async function RoadmapPage({
   params,
@@ -37,14 +38,14 @@ export default async function RoadmapPage({
       const { data: enrollment } = await supabase
         .from("enroll")
         .select("skill_id")
-        .eq("studentId", student.std_id)
+        .eq("student_id", student.std_id)
         .eq("skill_id", skill_id)
         .maybeSingle();
 
       initialIsEnrolled = !!enrollment;
+      console.log(enrollment);
     }
   }
-
   const { data: topicsData } = await supabase
     .from("Topic")
     .select("*")
