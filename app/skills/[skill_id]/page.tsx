@@ -74,15 +74,7 @@ export default async function RoadmapPage({
         <h3 className="text-xl md:text-2xl font-black italic tracking-tight mb-4">
           COURSE PATH
         </h3>
-        <RoadmapFlow
-          topics={topics}
-          scores={scores}
-          root={{
-            id: skill?.skl_id ?? "skill-root",
-            title: skill?.skl_title ?? "Skill",
-            subtitle: skill?.skl_dscrptn ?? undefined,
-          }}
-        />
+        <RoadmapFlow topics={topics} scores={scores} />
       </div>
     </main>
   );
