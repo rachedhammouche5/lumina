@@ -2,7 +2,7 @@
 "use client";
 
 import "@xyflow/react/dist/style.css";
-import { Background, ReactFlow, type NodeTypes } from "@xyflow/react";
+import { Background, Controls, ReactFlow, type NodeTypes } from "@xyflow/react";
 import RoadmapNode from "@/app/ui/roadmapcomp/node";
 import { generateRoadmapElements } from "./actions";
 import type { ScoreRow, TopicRow } from "./types";
@@ -24,6 +24,13 @@ export default function RoadmapFlow({
 }) {
   const { nodes, edges, width, height } = generateRoadmapElements(topics, scores, root, isEnrolled);
 
+  // Keep the viewport constrained so users can't pan into endless negative space.
+  const padding = 120;
+  const translateExtent: [[number, number], [number, number]] = [
+    [-padding, -padding],
+    [width + padding, height + padding],
+  ];
+
   return (
     <div className="w-full overflow-hidden border-2 border-slate-400/40 rounded-4xl shadow-2xl shadow-slate-400/40 mb-5 bg-linear-to-br from-slate-900 to-transparent">
       <div
@@ -34,14 +41,17 @@ export default function RoadmapFlow({
           nodes={nodes}
           edges={edges}
           nodeTypes={nodeTypes}
-          fitView={false}
-          minZoom={1}
-          maxZoom={1}
-          zoomOnScroll={false}
-          zoomOnPinch={false}
+          fitView
+          fitViewOptions={{ padding: 0.2, includeHiddenNodes: true }}
+          minZoom={0.6}
+          maxZoom={1.8}
+          zoomOnScroll
+          zoomOnPinch
           zoomOnDoubleClick={false}
-          panOnScroll={true}
-          panOnDrag={true}
+          zoomActivationKeyCode="Control"
+          panOnScroll
+          panOnDrag
+          translateExtent={translateExtent}
           nodesDraggable={false}
           nodesConnectable={false}
           elementsSelectable={false}
@@ -49,6 +59,7 @@ export default function RoadmapFlow({
           proOptions={{ hideAttribution: true }}
         >
           <Background color="gray" gap={28} size={1} />
+          <Controls position="bottom-right" showFitView />
         </ReactFlow>
       </div>
     </div>
