@@ -31,11 +31,14 @@ export default function RoadmapFlow({
     [width + padding, height + padding],
   ];
 
+  // Clamp the visible canvas height so the roadmap block stays compact.
+  const clampedHeight = Math.min(height, 500);
+
   return (
     <div className="w-full overflow-hidden border-2 border-slate-400/40 rounded-4xl shadow-2xl shadow-slate-400/40 mb-5 bg-linear-to-br from-slate-900 to-transparent">
       <div
         className="relative mx-auto max-w-full overflow-hidden"
-        style={{ width: `${width}px`, height: `${height}px` }}
+        style={{ width: `${width}px`, height: `${clampedHeight}px` }}
       >
         <ReactFlow
           nodes={nodes}
@@ -59,7 +62,7 @@ export default function RoadmapFlow({
           proOptions={{ hideAttribution: true }}
         >
           <Background color="gray" gap={28} size={1} />
-          <Controls position="bottom-right" showFitView />
+          <Controls position="bottom-right" showFitView className="roadmap-controls" />
         </ReactFlow>
       </div>
     </div>

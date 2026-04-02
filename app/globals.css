@@ -53,6 +53,33 @@ body {
 .roadmap-scroll::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(90deg, rgba(251, 146, 60, 0.95), rgba(252, 211, 77, 0.95));
 }
+
+/* ReactFlow controls theming for dark background */
+.roadmap-controls {
+  background: rgba(15, 23, 42, 0.85);
+  border-radius: 12px;
+  padding: 6px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+}
+
+.roadmap-controls .react-flow__controls-button {
+  background: rgba(255, 255, 255, 0.08);
+  color: #e2e8f0;
+  border: 1px solid rgba(226, 232, 240, 0.25);
+  width: 32px;
+  height: 32px;
+}
+
+.roadmap-controls .react-flow__controls-button:hover {
+  background: rgba(248, 113, 113, 0.18);
+  color: #f8fafc;
+  border-color: rgba(248, 113, 113, 0.8);
+}
+
+.roadmap-controls .react-flow__controls-button + .react-flow__controls-button {
+  margin-top: 6px;
+}
+
 .no-scrollbar {
   scrollbar-width: none;
   -ms-overflow-style: none;
