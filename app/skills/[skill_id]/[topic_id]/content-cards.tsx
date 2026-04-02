@@ -1,10 +1,17 @@
 "use client";
 
-import { ExternalLink, PlayCircle } from "lucide-react";
 import type { Content } from "@/lib/database.types";
 import Youtube, { type YouTubeEvent } from "react-youtube";
-import { useRef, useState } from "react";
-import { Play, Pause, Volume2, VolumeX } from "lucide-react";
+import { useRef, useState, useEffect } from "react";
+import {
+  Play,
+  Pause,
+  Volume2,
+  VolumeX,
+  ExternalLink,
+  PlayCircle,
+  FileText,
+} from "lucide-react";
 
 function isUrl(value: string | null) {
   return typeof value === "string" && /^https?:\/\//i.test(value);
@@ -12,7 +19,11 @@ function isUrl(value: string | null) {
 
 function getContentHref(content: Content) {
   if (!content.cntnt_value) return null;
-  return isUrl(content.cntnt_value) ? content.cntnt_value : null;
+  if (isUrl(content.cntnt_value) || content.cntnt_value.startsWith("/")) {
+    return content.cntnt_value;
+  } else {
+    return null;
+  }
 }
 
 interface YouTubeResult {
@@ -108,7 +119,6 @@ export function AudioPlayer({ src, title }: { src: string; title: string }) {
   const [muted, setMuted] = useState(false);
   const [progress, setProgress] = useState(0);
   const [current, setCurrent] = useState(0);
-  console.log(audioRef);
   function togglePlay() {
     const audio = audioRef.current;
     if (!audio) return;
@@ -199,32 +209,66 @@ export function AudioPlayer({ src, title }: { src: string; title: string }) {
 
 export function PdfCard({ content }: { content: Content }) {
   const href = getContentHref(content);
-
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [open]);
   return (
-    <div className="rounded-2xl border border-emerald-400/20 bg-emerald-500/5 p-4">
-      <h3 className="font-semibold text-white">{content.cntnt_title}</h3>
-      <p className="mt-2 text-sm text-slate-400">
-        {content.cntnt_value ?? "A PDF file can be attached here later."}
-      </p>
-      {href ? (
-        <a
-          href={href}
-          target="_blank"
-          rel="noreferrer"
-          className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-emerald-300 transition hover:text-emerald-200"
-        >
-          Open PDF
-          <ExternalLink size={15} />
-        </a>
-      ) : (
-        <p className="mt-4 text-xs uppercase tracking-[0.22em] text-slate-500">
-          Waiting for hosted file URL
-        </p>
+    <>
+      {/* Card */}
+      <button
+        onClick={() => href && setOpen(true)}
+        className="flex w-full items-center gap-3 rounded-2xl border border-emerald-400/20 bg-emerald-500/5 px-4 py-3 text-left transition hover:bg-emerald-500/10 hover:border-emerald-400/40"
+      >
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-300">
+          <FileText size={18} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold text-white truncate">
+            {content.cntnt_title}
+          </p>
+          <p className="text-xs text-slate-400 mt-0.5">
+            {href ? "Click to view PDF" : "No file attached"}
+          </p>
+        </div>
+        {href && (
+          <ExternalLink size={15} className="shrink-0 text-emerald-300/60" />
+        )}
+      </button>
+
+      {/* Full viewport modal */}
+      {open && href && (
+        <div className="fixed inset-0 z-51 flex flex-col bg-black">
+          {/* Toolbar */}
+          <div className="flex items-center justify-between border-b border-white/10 bg-slate-900 px-4 py-3">
+            <p className="font-semibold text-white">{content.cntnt_title}</p>
+            <button
+              onClick={() => setOpen(false)}
+              className="rounded-lg px-3 py-1.5 text-sm text-slate-400 transition hover:bg-white/10 hover:text-white"
+            >
+              ✕ Close
+            </button>
+          </div>
+
+          {/* PDF viewer */}
+          <iframe
+            src={href}
+            className="flex-1 w-full"
+            style={{ colorScheme: "dark" }}
+            title={content.cntnt_title}
+          />
+        </div>
       )}
-    </div>
+    </>
   );
 }
-
 // ─── Docs Card ─────────────────────────────────────────────────────────────────
 
 export function DocsCard({ content }: { content: Content }) {

@@ -121,7 +121,7 @@ export default async function TopicLearningPage({
               <div className="grid gap-3 grid-cols-1 sm:grid-cols-3">
                 <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-sm">
                   <p className="text-[10px] uppercase tracking-[0.24em] text-white/45">Skill</p>
-                  <p className="mt-1 text-xs font-semibold text-white truncate">{skill.skl_title}</p>
+                  <p className="mt-1 text-xs font-semibold text-white ">{skill.skl_title}</p>
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-sm">
                   <p className="text-[10px] uppercase tracking-[0.24em] text-white/45">Resources</p>
