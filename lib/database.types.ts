@@ -248,6 +248,7 @@ export type Database = {
           skl_duration: number
           skl_id: string
           skl_title: string
+          skl_picture: string | null
           teacher_id: string | null
         }
         Insert: {
