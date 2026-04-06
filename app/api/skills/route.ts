@@ -9,7 +9,7 @@ export async function GET(request: Request) {
 
   let query=supabase
   .from("Skill")
-  .select("skl_id,skl_title,skl_dscrptn,skl_duration")
+  .select("skl_id,skl_title,skl_dscrptn,skl_duration,skl_picture")
   .order("skl_title",{ascending:true});
   if(q){
     query=query.or(
@@ -28,6 +28,7 @@ export async function GET(request: Request) {
     id:row.skl_id,
     title:row.skl_title,
     description:row.skl_dscrptn ?? "no description",
+    image: row.skl_picture ?? null,
   })) ?? [];
   return NextResponse.json({data:mapped});
 }

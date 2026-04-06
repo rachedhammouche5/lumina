@@ -33,7 +33,7 @@ function InfoCard({ title, subtitle, icon: Icon = GitBranch }: InfoCardProps) {
 
         <div className="h-[1px] w-3/4 bg-gradient-to-r from-orange-400/80 to-transparent my-4 shadow-[0_0_8px_rgba(249,115,22,0.4)]" />
 
-        <p className="font-medium text-white/40 text-[10px] md:text-xs truncate uppercase tracking-widest">
+        <p className="font-medium text-white/70 text-[11px] md:text-sm leading-relaxed tracking-tight line-clamp-3 break-words">
           {subtitle}
         </p>
       </div>

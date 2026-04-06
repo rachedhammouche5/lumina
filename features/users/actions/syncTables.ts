@@ -22,6 +22,7 @@ export async function syncRoleTables(
       .upsert(
         {
           std_id: input.userId,
+          user_id: input.userId,
           std_fullname: fullName,
           std_email: safeEmail,
         },
@@ -45,6 +46,7 @@ export async function syncRoleTables(
     .upsert(
       {
         tchr_id: input.userId,
+        user_id: input.userId,
         tchr_fullname: fullName,
         tchr_email: safeEmail,
       },

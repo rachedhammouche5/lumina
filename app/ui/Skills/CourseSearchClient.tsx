@@ -8,6 +8,7 @@ type Course = {
   id: string;
   title: string;
   description: string;
+  image?: string | null;
 };
 
 export default function CourseSearchClient() {
@@ -114,6 +115,7 @@ export default function CourseSearchClient() {
                 id={course.id}
                 title={course.title}
                 description={course.description}
+                image={course.image ?? undefined}
               />
             ))}
       </div>

@@ -3,12 +3,29 @@ import { LucideIcon } from "lucide-react";
 export type RoadmapStatus = "completed" | "locked" | "unlocked";
 
 export type RoadmapNodeData = {
+  id: string;
   title: string;
   subtitle?: string;
+  parentId?: string;
   status: RoadmapStatus;
   degree?: number;
   icon?: LucideIcon;
-  href?: string;
+  learnHref?: string;
+  quizHref?: string;
+};
+
+// Minimal Supabase row shapes we rely on for the roadmap
+export type TopicRow = {
+  tpc_id: string;
+  tpc_title: string;
+  tpc_description: string | null;
+  parent_id: string | null;
+  skill_id: string | null;
+};
+
+export type ScoreRow = {
+  tpc_id: string;
+  score: number;
 };
 
 export type NodeTheme = {
