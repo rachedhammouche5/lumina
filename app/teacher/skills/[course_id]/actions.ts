@@ -138,38 +138,35 @@ type QuizAnswerInput = {
 }
 
 export async function addQuizzes(
-  topicId: string, 
+  topicId: string,
   teacherId: string | null,
   questions: {
-    question: string
-    answers: QuizAnswerInput[]
+    question: string;
+    difficulty: "easy" | "medium" | "hard" | "pro";
+    answers: QuizAnswerInput[];
   }[]
 ) {
-  const supabase = await createClient()
+  const supabase = await createClient();
 
-  if (questions.length === 0) {
-    return { error: "No questions provided" }
-  }
+  if (questions.length === 0) return { error: "No questions provided" };
 
-  // Build rows using tpc_id as required by the new schema
   const quizRows = questions.map((question) => ({
     qst_id: crypto.randomUUID(),
     question: question.question.trim(),
-    tpc_id: topicId, 
-    difficulty: "easy" as const,
-  }))
+    tpc_id: topicId,
+    difficulty: question.difficulty,  // ← from payload now
+  }));
 
   const { data: insertedQuizzes, error: quizError } = await supabase
     .from("quiz")
     .insert(quizRows)
-    .select("qst_id")
+    .select("qst_id");
 
   if (quizError) {
-    console.error("Quiz Insert Error:", quizError)
-    return { error: quizError.message }
+    console.error("Quiz Insert Error:", quizError);
+    return { error: quizError.message };
   }
 
-  // FlatMap responses linked to the new quiz IDs
   const responses = insertedQuizzes.flatMap((quiz, index) =>
     questions[index].answers.map((answer) => ({
       rspns_id: crypto.randomUUID(),
@@ -177,19 +174,46 @@ export async function addQuizzes(
       response: answer.text.trim(),
       isCorrect: Boolean(answer.correct),
     }))
-  )
+  );
 
   const { error: responseError } = await supabase
     .from("q_response")
-    .insert(responses)
+    .insert(responses);
 
   if (responseError) {
-    console.error("Response Insert Error:", responseError)
-    return { error: responseError.message }
+    console.error("Response Insert Error:", responseError);
+    return { error: responseError.message };
   }
 
-  // Refresh the teacher view
-  revalidatePath(`/teacher/courses`)
-  
-  return { ok: true }
+  revalidatePath(`/teacher/courses`);
+  return { ok: true };
+}
+export async function deleteContent(contentId: string, skillId: string) {
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("Content")
+    .delete()
+    .eq("cntnt_id", contentId);
+
+  if (error) return { error: error.message };
+
+  revalidatePath(`/teacher/skills/${skillId}`);
+  return { success: true };
+}
+export async function deleteTopic(topicId: string, skillId: string) {
+  const supabase = await createClient();
+
+  // Delete contents first (if no CASCADE on FK)
+  await supabase.from("Content").delete().eq("tpc_id", topicId);
+
+  const { error } = await supabase
+    .from("Topic")
+    .delete()
+    .eq("tpc_id", topicId);
+
+  if (error) return { error: error.message };
+
+  revalidatePath(`/teacher/skills/${skillId}`);
+  return { success: true };
 }

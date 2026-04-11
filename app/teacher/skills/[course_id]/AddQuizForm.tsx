@@ -5,9 +5,11 @@ import { Skill, Topic } from "@/lib/database.types";
 import { addQuizzes } from "./actions";
 
 type AnswerInput = { id: string; text: string; correct: boolean };
+
 type QuestionInput = {
   id: string;
   question: string;
+  difficulty: "easy" | "medium" | "hard" | "pro";
   topicId: string;
   answers: AnswerInput[];
 };
@@ -18,9 +20,11 @@ const buildAnswer = (markCorrect = false): AnswerInput => ({
   correct: markCorrect,
 });
 
+// Update the builder
 const buildQuestion = (topicId: string): QuestionInput => ({
   id: crypto.randomUUID(),
   question: "",
+  difficulty: "easy", // ← default
   topicId,
   answers: [
     buildAnswer(true),
@@ -29,7 +33,6 @@ const buildQuestion = (topicId: string): QuestionInput => ({
     buildAnswer(false),
   ],
 });
-
 export default function AddQuizForm({
   skill,
   topic,
@@ -109,15 +112,17 @@ export default function AddQuizForm({
     setSubmitting(true);
     const payload = questions.map((q) => ({
       question: q.question,
-      answers: q.answers.map((a) => ({
-        text: a.text,
-        correct: a.correct,
-      })),
+      difficulty: q.difficulty, // ← add this
+      answers: q.answers.map((a) => ({ text: a.text, correct: a.correct })),
     }));
 
     // FIXED: Now passing topic.tpc_id to match the new database schema
-    const result = await addQuizzes(topic.tpc_id, skill.teacher_id ?? null, payload);
-    
+    const result = await addQuizzes(
+      topic.tpc_id,
+      skill.teacher_id ?? null,
+      payload,
+    );
+
     setSubmitting(false);
     if (result?.error) {
       setError(result.error);
@@ -131,7 +136,9 @@ export default function AddQuizForm({
       <div className="flex min-h-full items-start justify-center py-6">
         <div className="w-full my-6 max-w-3xl max-h-[calc(90vh-1rem)] overflow-y-auto no-scrollbar rounded-lg border border-slate-700 bg-slate-900 p-5">
           <div className="mb-4 flex items-center justify-between">
-            <h4 className="text-lg font-semibold text-white">Add Quiz to {topic.tpc_title}</h4>
+            <h4 className="text-lg font-semibold text-white">
+              Add Quiz to {topic.tpc_title}
+            </h4>
             <button
               type="button"
               onClick={onClose}
@@ -152,24 +159,54 @@ export default function AddQuizForm({
                     Question {qIndex + 1}
                   </p>
                 </div>
-                <div className="sm:col-span-2">
-                  <label className="mb-1 block text-xs text-slate-300">
-                    Question Text
-                  </label>
-                  <input
-                    value={question.question}
-                    onChange={(e) =>
-                      setQuestions((prev) =>
-                        prev.map((q) =>
-                          q.id === question.id
-                            ? { ...q, question: e.target.value }
-                            : q,
-                        ),
-                      )
-                    }
-                    className="w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-white"
-                    required
-                  />
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-1 block text-xs text-slate-300">
+                      Question Text
+                    </label>
+                    <input
+                      value={question.question}
+                      onChange={(e) =>
+                        setQuestions((prev) =>
+                          prev.map((q) =>
+                            q.id === question.id
+                              ? { ...q, question: e.target.value }
+                              : q,
+                          ),
+                        )
+                      }
+                      className="w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-white"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs text-slate-300">
+                      Difficulty
+                    </label>
+
+                    <select
+                      value={question.difficulty}
+                      onChange={(e) =>
+                        setQuestions((prev) =>
+                          prev.map((q) =>
+                            q.id === question.id
+                              ? {
+                                  ...q,
+                                  difficulty: e.target
+                                    .value as QuestionInput["difficulty"],
+                                }
+                              : q,
+                          ),
+                        )
+                      }
+                      className="w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-white"
+                    >
+                      <option value="easy">Easy</option>
+                      <option value="medium">Medium</option>
+                      <option value="hard">Hard</option>
+                      <option value="pro">Pro</option>
+                    </select>
+                  </div>
                 </div>
 
                 <div className="space-y-2">
@@ -195,7 +232,11 @@ export default function AddQuizForm({
                         placeholder={`Answer ${aIndex + 1}`}
                         value={answer.text}
                         onChange={(e) =>
-                          updateAnswerText(question.id, answer.id, e.target.value)
+                          updateAnswerText(
+                            question.id,
+                            answer.id,
+                            e.target.value,
+                          )
                         }
                         className="flex-1 rounded-md border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-white"
                         required
