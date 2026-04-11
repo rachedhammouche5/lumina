@@ -11,12 +11,10 @@ export const metadata: Metadata = {
   description: "Adaptive Learning WebApp",
 };
 
-export default function RootLayout({
+export default function AdminLayout({
   children,
-  auth,
 }: Readonly<{
   children: React.ReactNode;
-  auth:React.ReactNode;
 }>) {
   return (
     <html lang="en">
@@ -27,7 +25,6 @@ export default function RootLayout({
           {children}
           
         </main>
-        {auth}
        
       </body>
     </html>
