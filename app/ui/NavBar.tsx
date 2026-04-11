@@ -3,9 +3,9 @@ import React, { useEffect, useState } from "react";
 import Logo from "../ui/Logo";
 import Button from "../ui/Button";
 import Link from "next/link";
-import { House, LibraryBig, Blocks, Menu, User, X } from "lucide-react";
+import { House, LibraryBig, Blocks, Menu, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import LogoutButton from "@/app/ui/LogoutButton";
+import ProfileMenu from "./ProfileMenu";
 
 
 const NavBar: React.FC = () => {
@@ -27,7 +27,7 @@ const NavBar: React.FC = () => {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(() => {
       void syncRole();
     });
 
@@ -42,14 +42,12 @@ const NavBar: React.FC = () => {
   ? [
       { name: "Home", href: "/teacher", icon: House },
       { name: "My Skills", href: "/teacher/skills", icon: LibraryBig },
-      { name: "Profile", href: "/profile", icon: User },
     ]
   : role === "student"
   ? [
       { name: "Home", href: "/student", icon: House },
       { name: "My Learning", href: "/student/dashboard", icon: LibraryBig },
       { name: "Explore", href: "/skills", icon: Blocks },
-      { name: "Profile", href: "/profile", icon: User },
     ]
   : [
       { name: "Home", href: "/", icon: House },
@@ -83,8 +81,8 @@ const NavBar: React.FC = () => {
 
         <div className="flex items-center gap-3">
           <div className="hidden sm:flex gap-3">
-            {role!="guest" ? (
-              <LogoutButton />
+            {role !== "guest" ? (
+              <ProfileMenu />
             ) : (
               <>
                 <Button variant="ghost" href="/login">
@@ -122,7 +120,7 @@ const NavBar: React.FC = () => {
           ))}
           <div className="flex flex-col gap-3 pt-4 border-t border-slate-800 sm:hidden">
             { role!="guest" ? (
-              <LogoutButton />
+              <ProfileMenu mobile />
             ) : (
               <>
                 <Button variant="ghost" className="w-full" href="/login">
