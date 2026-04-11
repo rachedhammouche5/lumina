@@ -11,8 +11,8 @@ export default function CourseDetailView({
   topics,
   contents,
 }: {
-  skill: Skill ;
-  topics: Topic[] ;
+  skill: Skill;
+  topics: Topic[];
   contents: Content[];
 }) {
   const [parentId, setParentId] = useState<string | null>(null);
@@ -79,6 +79,7 @@ export default function CourseDetailView({
               key={topic.tpc_id}
               topic={topic}
               allTopics={topics}
+              skillId={skill.skl_id} 
               level={0}
               onAddTopic={openTopicModal}
               onAddQuiz={openQuizModal}

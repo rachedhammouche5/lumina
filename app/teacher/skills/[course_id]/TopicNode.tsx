@@ -1,19 +1,35 @@
+"use client";
+
+import { useState } from "react";
 import { Topic } from "@/lib/database.types";
+import { deleteTopic } from "./actions";
+import { Trash2 } from "lucide-react";
 
 export default function TopicNode({
   topic,
   allTopics,
+  skillId,
   level,
   onAddTopic,
   onAddQuiz,
 }: {
   topic: Topic;
   allTopics: Topic[];
+  skillId: string;
   level: number;
   onAddTopic: (topic: Topic | null, editing: boolean) => void;
   onAddQuiz: (topic: Topic) => void;
 }) {
   const children = allTopics.filter((item) => item.parent_id === topic.tpc_id);
+  const [confirm, setConfirm] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  async function handleDelete() {
+    if (!confirm) { setConfirm(true); return; }
+    setLoading(true);
+    await deleteTopic(topic.tpc_id, skillId);
+    setLoading(false);
+  }
 
   return (
     <li>
@@ -32,7 +48,7 @@ export default function TopicNode({
               edit Topic
             </button>
           </div>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => onAddQuiz(topic)}
@@ -47,6 +63,36 @@ export default function TopicNode({
             >
               Add Topic
             </button>
+
+            {/* Delete with inline confirm */}
+            {confirm ? (
+              <div className="flex items-center gap-1">
+                <span className="text-xs text-slate-400">Delete?</span>
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  disabled={loading}
+                  className="rounded px-2 py-0.5 text-xs font-medium bg-red-600 text-white hover:bg-red-500 disabled:opacity-50 transition"
+                >
+                  {loading ? "…" : "Yes"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setConfirm(false)}
+                  className="rounded px-2 py-0.5 text-xs font-medium bg-slate-600 text-white hover:bg-slate-500 transition"
+                >
+                  No
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={handleDelete}
+                className="p-1 text-xs text-red-400 transition hover:bg-red-900/40"
+              >
+                <Trash2 size={20}/>
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -58,6 +104,7 @@ export default function TopicNode({
               key={child.tpc_id}
               topic={child}
               allTopics={allTopics}
+              skillId={skillId}
               level={level + 1}
               onAddTopic={onAddTopic}
               onAddQuiz={onAddQuiz}
