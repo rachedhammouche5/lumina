@@ -4,6 +4,10 @@ import { createClient } from "@/lib/supabase/server";
 import type { TopicRow, ScoreRow } from "@/app/ui/roadmapcomp/types";
 import EnrollSection from "@/app/ui/roadmapcomp/EnrollSection";
 import { calculateRoadmapProgress } from "@/app/actions/roadmap";
+import CommentsSection from "@/app/ui/comments/CommentsSection";
+import { getSkillReviews } from "@/lib/reviews";  
+import { getRole } from "@/features/utils/auth/getRole";
+import Rating from "@/app/ui/comments/Rating";
 
 export default async function RoadmapPage({
   params,
@@ -15,6 +19,7 @@ export default async function RoadmapPage({
     data: { user },
   } = await supabase.auth.getUser();
   const { skill_id } = await params;
+  const role = getRole(user);
 
   const { data: skill } = await supabase
     .from("Skill")
@@ -24,17 +29,47 @@ export default async function RoadmapPage({
 
   let initialIsEnrolled = false;
   let studentId: string | null = null;
+  const resolvedSkillId = skill?.skl_id ?? skill_id;
+  const reviews = await getSkillReviews(resolvedSkillId);
+  let currentUser:
+    | {
+        id: string;
+        name: string;
+        pfp: string | null;
+        initials: string;
+      }
+    | null = null;
 
   if (user) {
     const { data: student, error: studentError } = await supabase
       .from("Student")
-      .select("std_id")
+      .select("std_id, std_fullname, std_pfp")
       .eq("user_id", user.id)
       .single();
 
     if (!studentError && student) {
       studentId = student.std_id;
-
+      currentUser = {
+        id: student.std_id,
+        name:
+          student.std_fullname ||
+          (typeof user.user_metadata?.full_name === "string" && user.user_metadata.full_name.trim()) ||
+          (typeof user.user_metadata?.name === "string" && user.user_metadata.name.trim()) ||
+          (typeof user.email === "string" && user.email.split("@")[0]) ||
+          "Student",
+        pfp: student.std_pfp ?? null,
+        initials: (student.std_fullname ||
+          (typeof user.user_metadata?.full_name === "string" && user.user_metadata.full_name.trim()) ||
+          (typeof user.user_metadata?.name === "string" && user.user_metadata.name.trim()) ||
+          (typeof user.email === "string" && user.email.split("@")[0]) ||
+          "Student")
+          .split(" ")
+          .filter(Boolean)
+          .map((part: string) => part[0])
+          .join("")
+          .slice(0, 2)
+          .toUpperCase(),
+      };
       const { data: enrollment } = await supabase
         .from("enroll")
         .select("skill_id")
@@ -44,6 +79,50 @@ export default async function RoadmapPage({
 
       initialIsEnrolled = !!enrollment;
     }
+  }
+
+  if (user && (role === "teacher" || role === "teacher_pending")) {
+    const { data: teacher, error: teacherError } = await supabase
+      .from("Teacher")
+      .select("tchr_id, tchr_fullname, tchr_pfp")
+      .eq("tchr_id", user.id)
+      .single();
+
+    if (!teacherError && teacher) {
+      currentUser = {
+        id: teacher.tchr_id,
+        name: teacher.tchr_fullname,
+        pfp: teacher.tchr_pfp ?? null,
+        initials: teacher.tchr_fullname
+          .split(" ")
+          .filter(Boolean)
+          .map((part: string) => part[0])
+          .join("")
+          .slice(0, 2)
+          .toUpperCase(),
+      };
+    }
+  }
+
+  if (!currentUser && user) {
+    const fallbackName =
+      (typeof user.user_metadata?.full_name === "string" && user.user_metadata.full_name.trim()) ||
+      (typeof user.user_metadata?.name === "string" && user.user_metadata.name.trim()) ||
+      (typeof user.email === "string" && user.email.split("@")[0]) ||
+      "User";
+
+    currentUser = {
+      id: user.id,
+      name: fallbackName,
+      pfp: null,
+      initials: fallbackName
+        .split(" ")
+        .filter(Boolean)
+        .map((part: string) => part[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase(),
+    };
   }
 
   const { data: topicsData } = await supabase
@@ -75,6 +154,22 @@ export default async function RoadmapPage({
           COURSE PATH
         </h3>
         <RoadmapFlow topics={topics} scores={scores} isEnrolled={initialIsEnrolled} />
+        <div className="mt-15">
+          <h3 className="text-xl md:text-2xl font-black italic tracking-tight mb-4 uppercase">
+          Rating & Reviews
+        </h3>
+          <div className="flex flex-col md:flex-row w-full gap-4">
+          <div className="mr-8">
+            <Rating comments={reviews} />
+          </div>
+
+          <CommentsSection 
+          initialComments={reviews}
+          skillId={resolvedSkillId}
+          currentUser={currentUser}
+        />
+        </div>
+        </div>
       </div>
     </main>
   );
