@@ -31,7 +31,7 @@ export default function StreakCelebration() {
 
   useEffect(() => {
     if (!payload) return;
-    const timer = setTimeout(() => setPayload(null), 1600);
+    const timer = setTimeout(() => setPayload(null), 5000);
     return () => clearTimeout(timer);
   }, [animationKey, payload]);
 
@@ -46,22 +46,24 @@ export default function StreakCelebration() {
 
   return (
     <div className="pointer-events-none fixed inset-0 z-[999] flex items-center justify-center">
-      <div className="streak-backdrop absolute inset-0 bg-slate-950/60 backdrop-blur-[8px]" />
-      <div className="streak-ring absolute h-72 w-72 rounded-full border border-orange-400/40" />
-      <div className="streak-pop relative flex items-center gap-6 rounded-[32px] border border-orange-300/30 bg-slate-950/85 px-8 py-6 shadow-[0_25px_90px_rgba(0,0,0,0.65)]">
+      <div className="streak-backdrop absolute inset-0 bg-slate-950/60 backdrop-blur-[10px]" />
+      <div className="streak-ring absolute h-[420px] w-[420px] rounded-full border border-orange-400/40" />
+      <div className="streak-pop relative flex flex-col items-center gap-6">
         <div className="relative">
-          <div className="absolute -inset-6 rounded-full bg-orange-500/25 blur-2xl" />
-          <div className="streak-flame relative flex h-20 w-20 items-center justify-center rounded-[28px] bg-orange-500/15 text-orange-200">
-            <Flame size={48} />
+          <div className="absolute -inset-10 rounded-full bg-orange-500/30 blur-3xl" />
+          <div className="streak-flame relative flex h-40 w-40 items-center justify-center text-orange-200">
+            <Flame size={90} />
           </div>
+          <div className="streak-sparks absolute -left-10 -top-6 h-20 w-20" />
+          <div className="streak-sparks absolute -right-12 -bottom-8 h-24 w-24 delay-150" />
         </div>
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-orange-200/70">
+        <div className="streak-text text-center">
+          <p className="text-xs font-semibold uppercase tracking-[0.4em] text-orange-200/70">
             Streak Updated
           </p>
-          <p className="mt-2 text-2xl font-black text-white">
+          <p className="mt-2 text-3xl font-black text-white">
             {payload.previous} &rarr; {payload.current}{" "}
-            <span className="text-base font-semibold text-slate-300">
+            <span className="text-base font-semibold text-slate-200">
               {payload.current === 1 ? "day" : "days"}
             </span>
           </p>
@@ -79,11 +81,11 @@ export default function StreakCelebration() {
             transform: translateY(16px) scale(0.8);
             opacity: 0;
           }
-          20% {
+          18% {
             transform: translateY(0) scale(1.08);
             opacity: 1;
           }
-          80% {
+          82% {
             transform: translateY(-4px) scale(1);
             opacity: 1;
           }
@@ -96,10 +98,10 @@ export default function StreakCelebration() {
           0% {
             opacity: 0;
           }
-          15% {
+          12% {
             opacity: 1;
           }
-          85% {
+          88% {
             opacity: 1;
           }
           100% {
@@ -112,7 +114,7 @@ export default function StreakCelebration() {
             opacity: 0.6;
           }
           100% {
-            transform: scale(1.5);
+            transform: scale(1.65);
             opacity: 0;
           }
         }
@@ -120,29 +122,78 @@ export default function StreakCelebration() {
           0% {
             transform: translateY(0) scale(1) rotate(-2deg);
           }
-          30% {
-            transform: translateY(-6px) scale(1.08) rotate(3deg);
+          25% {
+            transform: translateY(-12px) scale(1.08) rotate(2deg);
           }
-          60% {
-            transform: translateY(-3px) scale(1.04) rotate(-3deg);
+          55% {
+            transform: translateY(-6px) scale(1.04) rotate(-2deg);
           }
           100% {
-            transform: translateY(0) scale(1) rotate(2deg);
+            transform: translateY(0) scale(1) rotate(1deg);
+          }
+        }
+        @keyframes flameWaver {
+          0% {
+            transform: translateX(0) scaleY(1);
+          }
+          50% {
+            transform: translateX(-4px) scaleY(1.06);
+          }
+          100% {
+            transform: translateX(0) scaleY(1);
+          }
+        }
+        @keyframes flamePulse {
+          0% {
+            filter: blur(0.4px) brightness(1);
+          }
+          50% {
+            filter: blur(0.6px) brightness(1.08);
+          }
+          100% {
+            filter: blur(0.4px) brightness(1);
+          }
+        }
+        @keyframes sparksFloat {
+          0% {
+            opacity: 0;
+            transform: translateY(0) scale(0.6);
+          }
+          30% {
+            opacity: 1;
+          }
+          100% {
+            opacity: 0;
+            transform: translateY(-40px) scale(1.1);
           }
         }
         .streak-pop {
-          animation: streakPop 1.4s ease forwards;
+          animation: streakPop 4.8s ease forwards;
         }
         .streak-ring {
-          animation: streakRing 1.4s ease-out forwards;
+          animation: streakRing 4.6s ease-out forwards;
         }
         .streak-flame {
-          animation: flameFlicker 0.9s ease-in-out infinite;
-          filter: drop-shadow(0 0 16px rgba(249, 115, 22, 0.65))
-            drop-shadow(0 0 30px rgba(251, 146, 60, 0.45));
+          animation: flameFlicker 1s ease-in-out infinite;
+          filter: drop-shadow(0 0 18px rgba(249, 115, 22, 0.7))
+            drop-shadow(0 0 40px rgba(251, 146, 60, 0.55));
         }
         .streak-backdrop {
-          animation: streakBackdrop 1.4s ease forwards;
+          animation: streakBackdrop 4.8s ease forwards;
+        }
+        .streak-text {
+          text-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
+        }
+        .streak-sparks {
+          background: radial-gradient(circle, rgba(251, 146, 60, 0.9), transparent 55%),
+            radial-gradient(circle, rgba(253, 186, 116, 0.7), transparent 60%);
+          filter: blur(0.5px);
+          animation: sparksFloat 2.2s ease-out infinite;
+        }
+        .streak-flame {
+          animation: flameWaver 1.1s ease-in-out infinite, flamePulse 1.7s ease-in-out infinite;
+          filter: drop-shadow(0 0 24px rgba(251, 146, 60, 0.6))
+            drop-shadow(0 0 60px rgba(249, 115, 22, 0.55));
         }
       `}</style>
     </div>
