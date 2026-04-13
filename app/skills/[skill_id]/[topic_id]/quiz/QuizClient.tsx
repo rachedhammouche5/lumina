@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { saveQuizScore, generateHint } from "./actions";
+import { saveQuizScore, generateHint, updateStreak } from "./actions";
 import {
   buildPool, removeFromPool, pickQuestion,
   nextDifficulty, calcPoints, calcSessionStats,
@@ -15,6 +15,8 @@ import QuestionCard from "./quizComponents/QuestionCard";
 import FeedbackBar from "./quizComponents/FeedBackBar";
 import ResultsScreen from "./quizComponents/ResultScreen";
 import SessionProgress from "./quizComponents/SessionProgress";
+import { completeSkill } from "@/app/features/skill/completeSkill";
+import { triggerStreakCelebration } from "@/app/features/streak/StreakCelebration";
 
 type Props = {
   questions: QuizWithResponses[];
@@ -79,6 +81,14 @@ export default function QuizClient({ questions, topicTitle, topicId, skillId }: 
     setSaving(true);
     const { totalPoints, totalTime } = calcSessionStats(finalAnswers);
     await saveQuizScore(topicId, skillId, totalPoints, totalTime);
+    const streakResult = await updateStreak();
+    if (streakResult) {
+      triggerStreakCelebration({
+        previous: streakResult.previous,
+        current: streakResult.current,
+      });
+    }
+    await completeSkill(topicId, skillId);
     setSaving(false);
     setPhase("results");
   }

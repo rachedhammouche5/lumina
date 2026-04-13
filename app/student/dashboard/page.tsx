@@ -1,45 +1,20 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getRole } from "@/features/utils/auth/getRole";
-import Button from "@/app/ui/Button";
-import { Award, Flame, Target, TrendingUp, TrendingDown } from "lucide-react";
-import { BookCheck } from "lucide-react"; // add to imports
+import { Award, Flame, BookCheck, TrendingUp, TrendingDown, ArrowRight } from "lucide-react";
+import Link from "next/link";
 import ProgressChart from "./_components/ProgressChart";
-const progressData = [
-  { week: "Week 1", score: 58 },
-  { week: "Week 2", score: 63 },
-  { week: "Week 3", score: 70 },
-  { week: "Week 4", score: 76 },
-];
+
 const weakPoints = [
-  { skill: "Python for Data Science", topic: "Pandas GroupBy", score: 48 },
-  { skill: "Modern Backend Systems", topic: "JWT Refresh Flow", score: 52 },
-  { skill: "Debugging Techniques", topic: "Race Conditions", score: 45 },
+  { skill: "Python for Data Science", topic: "Pandas GroupBy", score: 48, href: "/courses/python-data-science/pandas-groupby" },
+  { skill: "Modern Backend Systems", topic: "JWT Refresh Flow", score: 52, href: "/courses/backend-systems/jwt-refresh" },
+  { skill: "Debugging Techniques", topic: "Race Conditions", score: 45, href: "/courses/debugging/race-conditions" },
 ] as const;
 
 const strongPoints = [
   { skill: "Python for Data Science", topic: "Data Cleaning", score: 91 },
   { skill: "SQL for Developers", topic: "Joins & Aggregation", score: 88 },
   { skill: "Product Thinking Basics", topic: "User Stories", score: 94 },
-] as const;
-
-const skillTopicScores = [
-  {
-    skill: "Python for Data Science",
-    topics: [
-      { name: "NumPy Basics", score: 86 },
-      { name: "Pandas GroupBy", score: 48 },
-      { name: "Visualization", score: 74 },
-    ],
-  },
-  {
-    skill: "Modern Backend Systems",
-    topics: [
-      { name: "API Design", score: 81 },
-      { name: "JWT Refresh Flow", score: 52 },
-      { name: "Caching", score: 69 },
-    ],
-  },
 ] as const;
 
 export default async function StudentDashboardPage() {
@@ -50,14 +25,25 @@ export default async function StudentDashboardPage() {
     error,
   } = await supabase.auth.getUser();
 
-  if (error || !user) {
-    redirect("/");
-  }
+  if (error || !user) redirect("/");
 
   const role = getRole(user);
-  if (role !== "student") {
-    redirect("/");
-  }
+  if (role !== "student") redirect("/");
+
+  const { data: student } = await supabase
+  .from("Student")
+  .select("std_streak,std_id,std_last_activeDate")
+  .eq("user_id", user.id)
+  .single();
+
+  const { count: completedSkills } = await supabase
+  .from("enroll")
+  .select("*", { count: "exact", head: true })
+  .eq("student_id", student?.std_id)
+  .eq("progress", 100);
+
+const streak = student?.std_streak ?? 0;
+const skills = completedSkills ?? 0;
 
   const studentName =
     (typeof user.user_metadata?.full_name === "string" && user.user_metadata.full_name.trim()) ||
@@ -66,92 +52,157 @@ export default async function StudentDashboardPage() {
     "Student";
 
   return (
-    <main className="min-h-screen bg-slate-950 pt-24 pb-20 px-4 sm:px-6 text-white">
-      <div className="w-full max-w-6xl mx-auto space-y-8">
-        <header className="space-y-2">
-          <h1 className="text-3xl md:text-4xl font-black tracking-tight">My Learning Dashboard</h1>
-          <p className="text-white/70">Track streaks, badges, weak points, strong points, and topic-level skill scores for {studentName}.</p>
+    <main className="min-h-screen bg-slate-950 pt-24 pb-20 px-4 sm:px-6">
+      <div className="w-full max-w-5xl mx-auto space-y-7">
+
+        {/* Header */}
+        <header className="space-y-1">
+          <p className="text-xs font-semibold tracking-widest text-slate-500 uppercase">Dashboard</p>
+          <h1 className="text-2xl font-bold text-white">My Learning</h1>
+          <p className="text-sm text-slate-400">
+            Welcome back,{" "}
+            <span className="font-semibold text-orange-400">{studentName}</span>
+          </p>
         </header>
 
-        <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <article className="rounded-2xl border border-orange-300/25 bg-gradient-to-br from-orange-400/20 to-slate-900/80 p-5">
-            <div className="flex items-center justify-between">
-              <h2 className="text-sm uppercase tracking-widest text-white/60">Current Streak</h2>
-              <Flame className="text-orange-300" size={18} />
+        {/* Stat cards */}
+        <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+
+          <article className="relative overflow-hidden rounded-2xl bg-slate-900 border border-slate-800 p-5 flex items-start gap-4">
+            <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 via-transparent to-transparent pointer-events-none" />
+            <div className="absolute -top-6 -right-6 w-20 h-20 bg-orange-500/8 rounded-full pointer-events-none" />
+            <div className="shrink-0 w-10 h-10 rounded-xl bg-orange-500/15 border border-orange-500/25 flex items-center justify-center">
+              <Flame size={18} className="text-orange-400" />
             </div>
-            <p className="mt-3 text-3xl font-black">12 days</p>
-            <p className="text-sm text-white/70 mt-1">Keep learning today to maintain it.</p>
+            <div className="relative">
+              <p className="text-xs font-medium text-slate-500 mb-0.5">Current streak</p>
+              <p className="text-2xl font-bold text-white">
+                    {streak} {streak === 1 ? "day" : "days"}
+              </p>
+              <p className="text-xs text-slate-500 mt-0.5">
+                {streak === 0 ? "Study today to start your streak!" : "Keep learning today"}
+              </p>
+              {/* <p className="text-xs text-slate-500 mt-0.5">Keep learning today</p> */}
+            </div>
           </article>
 
-          <article className="rounded-2xl border border-blue-300/25 bg-gradient-to-br from-blue-500/20 to-slate-900/80 p-5">
-            <div className="flex items-center justify-between">
-              <h2 className="text-sm uppercase tracking-widest text-white/60">Badges Earned</h2>
-              <Award className="text-blue-300" size={18} />
+          <article className="relative overflow-hidden rounded-2xl bg-slate-900 border border-slate-800 p-5 flex items-start gap-4">
+            <div className="absolute inset-0 bg-gradient-to-br from-sky-500/10 via-transparent to-transparent pointer-events-none" />
+            <div className="absolute -top-6 -right-6 w-20 h-20 bg-sky-500/8 rounded-full pointer-events-none" />
+            <div className="shrink-0 w-10 h-10 rounded-xl bg-sky-500/15 border border-sky-500/25 flex items-center justify-center">
+              <Award size={18} className="text-sky-400" />
             </div>
-            <p className="mt-3 text-3xl font-black">8 badges</p>
-            <p className="text-sm text-white/70 mt-1">Latest: Consistent Learner.</p>
+            <div className="relative">
+              <p className="text-xs font-medium text-slate-500 mb-0.5">Badges earned</p>
+              <p className="text-2xl font-bold text-white">8 badges</p>
+              <p className="text-xs text-slate-500 mt-0.5">Latest: Consistent Learner</p>
+            </div>
           </article>
 
-
-          <article className="rounded-2xl border border-violet-300/25 bg-gradient-to-br from-violet-500/20 to-slate-900/80 p-5">
-            <div className="flex items-center justify-between">
-              <h2 className="text-sm uppercase tracking-widest text-white/60">Courses Completed</h2>
-              <BookCheck className="text-violet-300" size={18} />
+          <article className="relative overflow-hidden rounded-2xl bg-slate-900 border border-slate-800 p-5 flex items-start gap-4">
+            <div className="absolute inset-0 bg-gradient-to-br from-violet-500/10 via-transparent to-transparent pointer-events-none" />
+            <div className="absolute -top-6 -right-6 w-20 h-20 bg-violet-500/8 rounded-full pointer-events-none" />
+            <div className="shrink-0 w-10 h-10 rounded-xl bg-violet-500/15 border border-violet-500/25 flex items-center justify-center">
+              <BookCheck size={18} className="text-violet-400" />
             </div>
-            <p className="mt-3 text-3xl font-black">5 courses</p>
-            <p className="text-sm text-white/70 mt-1">+2 this month.</p>
+            <div className="relative">
+              <p className="text-xs font-medium text-slate-500 mb-0.5">Skills completed</p>
+              <p className="text-2xl font-bold text-white">
+                {skills} {completedSkills === 1 ? "skill" : "skills"}
+              </p>
+              <p className="text-xs text-slate-500 mt-0.5">
+                {completedSkills === 0 ? "Complete your first skill!" : "+2 this month"}
+              </p>  
+            <p className="text-xs text-emerald-400 font-semibold mt-0.5">+2 this month</p>
+            </div>
           </article>
         </section>
-        <section className="rounded-3xl border border-white/10 bg-slate-900/50 p-6">
-  <div className="mb-4">
-    <h2 className="text-xl font-black">Progress Over Time</h2>
-    <p className="text-sm text-white/60 mt-1">Average topic score per week</p>
-  </div>
-  <ProgressChart />
-</section>
-        
 
-        <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <article className="rounded-3xl border border-rose-300/20 bg-slate-900/50 p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <TrendingDown className="text-rose-300" size={18} />
-              <h2 className="text-xl font-black">Weak Points by Topic</h2>
+        {/* Weak & Strong points */}
+        <section className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+
+          <article className="rounded-2xl bg-slate-900 border border-slate-800 p-6">
+            <div className="flex items-center gap-2.5 mb-5">
+              <div className="w-7 h-7 rounded-lg bg-rose-500/15 border border-rose-500/20 flex items-center justify-center">
+                <TrendingDown size={13} className="text-rose-400" />
+              </div>
+              <h2 className="text-sm font-semibold text-slate-200">Weak points</h2>
             </div>
-            <div className="space-y-3">
-              {weakPoints.map((item) => (
-                <div key={`${item.skill}-${item.topic}`} className="rounded-xl border border-white/10 bg-slate-950/60 p-4 flex items-start justify-between gap-4">
-                  <div>
-                    <p className="font-semibold">{item.topic}</p>
-                    <p className="text-xs text-white/60 mt-1">{item.skill}</p>
+            <div className="space-y-5">
+              {weakPoints.map((item, i) => (
+                <div key={item.topic}>
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <p className="text-sm font-semibold text-white">{item.topic}</p>
+                      <p className="text-xs text-slate-500 mt-0.5">{item.skill}</p>
+                    </div>
+                    <span className="text-sm font-bold text-rose-400 tabular-nums">{item.score}%</span>
                   </div>
-                  <span className="text-rose-300 font-black">{item.score}%</span>
+                  <div className="h-1.5 w-full rounded-full bg-slate-800">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-rose-600 to-rose-400"
+                      style={{ width: `${item.score}%` }}
+                    />
+                  </div>
+                  <Link
+                    href={item.href}
+                    className="inline-flex items-center gap-1 mt-2.5 text-xs font-semibold text-sky-400 hover:text-sky-300 transition-colors group"
+                  >
+                    Study this topic
+                    <ArrowRight size={11} className="group-hover:translate-x-0.5 transition-transform" />
+                  </Link>
+                  {i < weakPoints.length - 1 && (
+                    <div className="mt-5 border-t border-slate-800" />
+                  )}
                 </div>
               ))}
             </div>
           </article>
 
-          <article className="rounded-3xl border border-emerald-300/20 bg-slate-900/50 p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <TrendingUp className="text-emerald-300" size={18} />
-              <h2 className="text-xl font-black">Strong Points by Topic</h2>
+          <article className="rounded-2xl bg-slate-900 border border-slate-800 p-6">
+            <div className="flex items-center gap-2.5 mb-5">
+              <div className="w-7 h-7 rounded-lg bg-emerald-500/15 border border-emerald-500/20 flex items-center justify-center">
+                <TrendingUp size={13} className="text-emerald-400" />
+              </div>
+              <h2 className="text-sm font-semibold text-slate-200">Strong points</h2>
             </div>
-            <div className="space-y-3">
-              {strongPoints.map((item) => (
-                <div key={`${item.skill}-${item.topic}`} className="rounded-xl border border-white/10 bg-slate-950/60 p-4 flex items-start justify-between gap-4">
-                  <div>
-                    <p className="font-semibold">{item.topic}</p>
-                    <p className="text-xs text-white/60 mt-1">{item.skill}</p>
+            <div className="space-y-5">
+              {strongPoints.map((item, i) => (
+                <div key={item.topic}>
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <p className="text-sm font-semibold text-white">{item.topic}</p>
+                      <p className="text-xs text-slate-500 mt-0.5">{item.skill}</p>
+                    </div>
+                    <span className="text-sm font-bold text-emerald-400 tabular-nums">{item.score}%</span>
                   </div>
-                  <span className="text-emerald-300 font-black">{item.score}%</span>
+                  <div className="h-1.5 w-full rounded-full bg-slate-800">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-emerald-600 to-emerald-400"
+                      style={{ width: `${item.score}%` }}
+                    />
+                  </div>
+                  {i < strongPoints.length - 1 && (
+                    <div className="mt-5 border-t border-slate-800" />
+                  )}
                 </div>
               ))}
-              
             </div>
           </article>
         </section>
-       
 
-        
+        {/* Progress chart */}
+        <section className="relative overflow-hidden rounded-2xl bg-slate-900 border border-slate-800 p-6">
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-transparent to-transparent pointer-events-none" />
+          <div className="relative">
+            <div className="mb-5">
+              <h2 className="text-sm font-semibold text-slate-200">Progress over time</h2>
+              <p className="text-xs text-slate-500 mt-0.5">Average topic score per week</p>
+            </div>
+            <ProgressChart />
+          </div>
+        </section>
+
       </div>
     </main>
   );
