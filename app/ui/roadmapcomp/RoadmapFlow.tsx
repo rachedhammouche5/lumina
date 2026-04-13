@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import "@xyflow/react/dist/style.css";
 import { Background, Controls, ReactFlow, type NodeTypes } from "@xyflow/react";
 import RoadmapNode from "@/app/ui/roadmapcomp/node";
 import { generateRoadmapElements } from "./actions";
