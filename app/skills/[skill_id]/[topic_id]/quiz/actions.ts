@@ -2,6 +2,8 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { updateStreak as updateStreakForUser } from "@/app/features/streak/updateStreak";
+import type { StreakUpdateResult } from "@/app/features/streak/types";
 
 export async function saveQuizScore(
   topicId: string,
@@ -41,4 +43,12 @@ export async function saveQuizScore(
 export async function generateHint(question: string): Promise<{ hint: string } | { error: string }> {
   void question;
   return { hint: "Think carefully about the core concept this question is testing. Consider eliminating the options that are clearly unrelated first." };
+}
+
+
+export async function updateStreak(): Promise<StreakUpdateResult | null> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+  return updateStreakForUser(user.id);
 }

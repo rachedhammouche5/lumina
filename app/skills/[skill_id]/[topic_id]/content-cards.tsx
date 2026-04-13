@@ -2,7 +2,9 @@
 
 import type { Content } from "@/lib/database.types";
 import Youtube, { type YouTubeEvent } from "react-youtube";
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
+import { updateStreakForCurrentUser } from "@/app/features/streak/actions";
+import { triggerStreakCelebration } from "@/app/features/streak/StreakCelebration";
 import {
   Play,
   Pause,
@@ -75,9 +77,30 @@ function getVideoId(href: string | null): YouTubeResult {
   }
 }
 
+function useStreakCompletion() {
+  const inFlight = useRef(false);
+
+  return useCallback(async () => {
+    if (inFlight.current) return;
+    inFlight.current = true;
+    try {
+      const result = await updateStreakForCurrentUser();
+      if (result) {
+        triggerStreakCelebration({
+          previous: result.previous,
+          current: result.current,
+        });
+      }
+    } finally {
+      inFlight.current = false;
+    }
+  }, []);
+}
+
 export function VideoCard({ content }: { content: Content }) {
   const href = getContentHref(content);
   const result = getVideoId(href);
+  const handleStreak = useStreakCompletion();
 
   const opts = {
     width: "100%",
@@ -99,6 +122,9 @@ export function VideoCard({ content }: { content: Content }) {
             opts={opts}
             className="absolute inset-0 h-full w-full"
             iframeClassName="h-full w-full"
+            onEnd={() => {
+              void handleStreak();
+            }}
           />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center">
@@ -119,6 +145,7 @@ export function AudioPlayer({ src, title }: { src: string; title: string }) {
   const [muted, setMuted] = useState(false);
   const [progress, setProgress] = useState(0);
   const [current, setCurrent] = useState(0);
+  const handleStreak = useStreakCompletion();
   function togglePlay() {
     const audio = audioRef.current;
     if (!audio) return;
@@ -161,7 +188,10 @@ export function AudioPlayer({ src, title }: { src: string; title: string }) {
         ref={audioRef}
         src={src}
         onTimeUpdate={onTimeUpdate}
-        onEnded={() => setPlaying(false)}
+        onEnded={() => {
+          setPlaying(false);
+          void handleStreak();
+        }}
       />
 
       <p className="mb-3 text-sm font-semibold text-white">{title}</p>
@@ -210,6 +240,7 @@ export function AudioPlayer({ src, title }: { src: string; title: string }) {
 export function PdfCard({ content }: { content: Content }) {
   const href = getContentHref(content);
   const [open, setOpen] = useState(false);
+  const handleStreak = useStreakCompletion();
   useEffect(() => {
     if (open) {
       document.body.style.overflow = "hidden";
@@ -250,7 +281,10 @@ export function PdfCard({ content }: { content: Content }) {
           <div className="flex items-center justify-between border-b border-white/10 bg-slate-900 px-4 py-3">
             <p className="font-semibold text-white">{content.cntnt_title}</p>
             <button
-              onClick={() => setOpen(false)}
+              onClick={() => {
+                setOpen(false);
+                void handleStreak();
+              }}
               className="rounded-lg px-3 py-1.5 text-sm text-slate-400 transition hover:bg-white/10 hover:text-white"
             >
               ✕ Close

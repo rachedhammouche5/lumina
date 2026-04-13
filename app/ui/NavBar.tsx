@@ -3,14 +3,14 @@ import React, { useEffect, useState } from "react";
 import Logo from "../ui/Logo";
 import Button from "../ui/Button";
 import Link from "next/link";
-import { House, LibraryBig, Blocks, Menu, X } from "lucide-react";
+import { House, LibraryBig, Blocks, Menu, User, X, FileText } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import ProfileMenu from "./ProfileMenu";
 
 
 const NavBar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [role, setRole] = useState<"student" | "teacher" | "guest">("guest");
+  const [role, setRole] = useState<"student" | "teacher" | "guest" | "admin">("guest");
 
   useEffect(() => {
     const supabase = createClient();
@@ -48,6 +48,12 @@ const NavBar: React.FC = () => {
       { name: "Home", href: "/student", icon: House },
       { name: "My Learning", href: "/student/dashboard", icon: LibraryBig },
       { name: "Explore", href: "/skills", icon: Blocks },
+    ]
+  : role === "admin"
+  ? [
+      { name: "Home", href: "/admin", icon: House },
+      { name: "Teacher requests", href: "/admin/requests", icon: FileText },
+      { name: "User Management", href: "/admin/users", icon: User },
     ]
   : [
       { name: "Home", href: "/", icon: House },

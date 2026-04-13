@@ -12,6 +12,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { Content, ContentType } from "@/lib/database.types";
 import { AudioSection, PdfSection, DocsSection, VideoSection } from "./content-sections";
 import Button from "@/app/ui/Button";
+import StreakCelebration from "@/app/features/streak/StreakCelebration";
 
 const contentTypeMeta: Record<
   ContentType,
@@ -70,9 +71,9 @@ export default async function TopicLearningPage({
   const description =
     topic.tpc_description ??
     "This topic brings together lesson media, downloadable material, and official references in one place.";
-
   return (
     <main className="min-h-screen bg-slate-950 px-4 pb-16 pt-24 text-white sm:px-6">
+      <StreakCelebration />
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-8">
         
         <section className="relative overflow-hidden rounded-[32px] border border-slate-500 bg-gradient-to-br from-slate-700 to-transparent p-6 shadow-slate-500/40 shadow-[0_20px_60px]">

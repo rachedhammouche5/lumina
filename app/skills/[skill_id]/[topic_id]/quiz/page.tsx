@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import QuizClient from "./QuizClient";
+import StreakCelebration from "@/app/features/streak/StreakCelebration";
 
 export default async function QuizPage({
   params,
@@ -66,6 +67,7 @@ export default async function QuizPage({
 
   return (
     <main className="min-h-screen bg-slate-950 px-4 pb-16 pt-24 text-white sm:px-6">
+      <StreakCelebration />
       <QuizClient
         questions={normalized}
         topicTitle={topic.tpc_title}
