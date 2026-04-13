@@ -6,8 +6,6 @@ export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
   const wantsTeacher = url.searchParams.get("wants_teacher") === "1";
-  const intent = url.searchParams.get("intent");
-  const isLoginFlow = intent === "login";
   if (!code) {
     console.error("[auth/callback] Missing OAuth code in callback URL.");
     return NextResponse.redirect(
@@ -52,37 +50,6 @@ export async function GET(request: NextRequest) {
     }
     return createAdminClient(supabaseUrl, serviceRoleKey);
   };
-
-  if (isLoginFlow) {
-    const admin = getAdminClient();
-    if (!admin) {
-      return NextResponse.redirect(new URL("/login?error=config", url.origin));
-    }
-
-    let hasProfile = Boolean(role);
-    if (!hasProfile) {
-      const [studentResult, teacherResult] = await Promise.all([
-        admin.from("Student").select("std_id").eq("std_id", user.id).maybeSingle(),
-        admin.from("Teacher").select("tchr_id").eq("tchr_id", user.id).maybeSingle(),
-      ]);
-
-      if (studentResult.error || teacherResult.error) {
-        console.error(
-          "[auth/callback] Failed to check profile for login:",
-          studentResult.error?.message ?? teacherResult.error?.message,
-        );
-        await supabase.auth.signOut();
-        return NextResponse.redirect(new URL("/login?error=oauth", url.origin));
-      }
-
-      hasProfile = Boolean(studentResult.data || teacherResult.data);
-    }
-
-    if (!hasProfile) {
-      await supabase.auth.signOut();
-      return NextResponse.redirect(new URL("/login?error=not_signed_up", url.origin));
-    }
-  }
 
   if (wantsTeacher && role !== "teacher" && role !== "admin") {
     const admin = getAdminClient();
@@ -144,7 +111,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    return NextResponse.redirect(new URL("/teacher/apply", url.origin));
+    return NextResponse.redirect(new URL(`/${user.id}/apply`, url.origin));
   }
 
   if (!role) {
@@ -175,7 +142,7 @@ export async function GET(request: NextRequest) {
     role === "admin"
       ? "/admin"
       : role === "teacher" || role === "teacher_pending"
-        ? "/teacher"
+        ? `/${user.id}`
         : "/student";
 
   return NextResponse.redirect(new URL(destination, url.origin));

@@ -41,3 +41,4 @@ async function setUserRole(email: string, role: "teacher" | "student"|"admin") {
 
 
 //setUserRole("john.doe@example.com", "teacher");
+setUserRole("radia@example.com", "admin");

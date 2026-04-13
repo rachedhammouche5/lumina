@@ -90,8 +90,7 @@ export default function SignupPageView() {
     setError("");
     setSuccess("");
     setGoogleLoading(true);
-    const callbackUrl = new URL("/auth/callback", window.location.origin);
-    callbackUrl.searchParams.set("intent", "signup");
+    const callbackUrl=new URL("/auth/callback",window.location.origin);
     if(teacher){
       callbackUrl.searchParams.set("wants_teacher","1");
     }
