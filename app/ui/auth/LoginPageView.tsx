@@ -1,5 +1,5 @@
 "use client";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
 import clsx from "clsx";
@@ -10,6 +10,7 @@ import Button from "@/app/ui/Button";
 
 export default function LoginPageView() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const supabase = createClient();
   const [error, setError] = useState("");
 
@@ -17,7 +18,28 @@ export default function LoginPageView() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
+
+  async function signInWithGoogle() {
+    setError("");
+    setGoogleLoading(true);
+
+    const callbackUrl = new URL("/auth/callback", window.location.origin);
+    callbackUrl.searchParams.set("intent", "login");
+
+    const { error: googleError } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: callbackUrl.toString(),
+      },
+    });
+
+    if (googleError) {
+      setError(googleError.message);
+      setGoogleLoading(false);
+    }
+  }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -54,6 +76,16 @@ export default function LoginPageView() {
     const frame = requestAnimationFrame(() => setMounted(true));
     return () => cancelAnimationFrame(frame);
   }, []);
+
+  useEffect(() => {
+    const reason = searchParams.get("error");
+    if (!reason) return;
+    if (reason === "not_signed_up") {
+      setError("This Google account isn't signed up yet. Please sign up first.");
+      return;
+    }
+    setError("Login failed. Please try again.");
+  }, [searchParams]);
 
   return (
     <div
@@ -150,6 +182,17 @@ export default function LoginPageView() {
             </Button>
           </form>
 
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={signInWithGoogle}
+            disabled={googleLoading}
+            className="mt-2 flex w-full items-center justify-center gap-2 border border-slate-700 bg-slate-800 py-2 text-sm font-semibold text-white hover:border-slate-500 hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-70"
+          >
+            <GoogleIcon />
+            {googleLoading ? "Redirecting..." : "Log in with Google"}
+          </Button>
+
           <p className="mt-3 text-sm text-slate-300 text-center ">
             Don&apos;t have an account?{" "}
             <Link
@@ -163,5 +206,28 @@ export default function LoginPageView() {
         </div>
       </div>
     </div>
+  );
+}
+
+function GoogleIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        fill="#EA4335"
+        d="M12 10.2v3.9h5.4c-.2 1.3-1.5 3.9-5.4 3.9-3.2 0-5.9-2.7-5.9-6s2.7-6 5.9-6c1.8 0 3 .8 3.7 1.5l2.5-2.4C16.6 3.6 14.5 2.7 12 2.7 6.9 2.7 2.8 6.9 2.8 12s4.1 9.3 9.2 9.3c5.3 0 8.8-3.7 8.8-8.9 0-.6-.1-1.1-.2-1.5H12z"
+      />
+      <path
+        fill="#34A853"
+        d="M2.8 7.4l3.2 2.3c.9-1.8 2.7-3 5-3 1.8 0 3 .8 3.7 1.5l2.5-2.4C16.6 3.6 14.5 2.7 12 2.7c-3.6 0-6.7 2-8.3 4.7z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M12 21.3c2.4 0 4.5-.8 6-2.3l-2.8-2.2c-.8.6-1.8 1-3.2 1-2.7 0-4.9-1.8-5.7-4.3l-3.3 2.6c1.6 3.1 4.8 5.2 9 5.2z"
+      />
+      <path
+        fill="#4285F4"
+        d="M20.8 12.4c0-.6-.1-1.1-.2-1.5H12v3.9h5.4c-.3 1.5-1.2 2.6-2.2 3.4l2.8 2.2c1.7-1.6 2.8-4 2.8-8z"
+      />
+    </svg>
   );
 }

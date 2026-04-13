@@ -17,7 +17,26 @@ export default function CourseSearchClient() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const quickSearches = [
+    "Debugging",
+    "Git",
+    "Algorithm",
+    "Maintenance",
+    "Testing"
+
+    
+  ];
+
+  const handleQuickSearch = (value: string) => {
+    setQuery(value);
+  };
+
   const debounceQuery = useMemo(() => query.trim(), [query]);
+  const normalizedQuery = debounceQuery.toLowerCase();
+  const activePillClass =
+    "whitespace-nowrap px-8 py-2.5 rounded-2xl text-sm font-bold bg-orange-500 text-white shadow-[0_0_20px_rgba(249,115,22,0.3)] transition-all";
+  const inactivePillClass =
+    "whitespace-nowrap px-8 py-2.5 rounded-2xl text-sm font-medium text-slate-400 bg-slate-900/60 border border-white/5 hover:border-orange-500/30 hover:text-white transition-all";
 
   useEffect(() => {
     let cancelled = false;
@@ -81,22 +100,25 @@ export default function CourseSearchClient() {
           className="flex overflow-x-auto gap-3 no-scroll-bar pb-4 px-12 mask-fade-edges [scrollbar-width:none] [&::-webkit-scrollbar]:hidden
                 [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]"
         >
-          <button className="whitespace-nowrap px-8 py-2.5 rounded-2xl text-sm font-bold bg-orange-500 text-white shadow-[0_0_20px_rgba(249,115,22,0.3)] transition-all">
-            All Paths
+          <button
+            type="button"
+            onClick={() => handleQuickSearch("")}
+            className={
+              normalizedQuery === "" ? activePillClass : inactivePillClass
+            }
+          >
+            Quik Search
           </button>
-          {[
-            "Clean Code Writing",
-            "Unit & Integration Testing",
-            "Frontend Architecture",
-            "Backend Systems",
-            "DevOps & Deployment",
-            "Data Structures",
-            "Mobile Engineering",
-            "UI/UX Design Systems",
-          ].map((category) => (
+          {quickSearches.map((category) => (
             <button
+              type="button"
               key={category}
-              className="whitespace-nowrap px-8 py-2.5 rounded-2xl text-sm font-medium text-slate-400 bg-slate-900/60 border border-white/5 hover:border-orange-500/30 hover:text-white transition-all"
+              onClick={() => handleQuickSearch(category)}
+              className={
+                normalizedQuery === category.toLowerCase()
+                  ? activePillClass
+                  : inactivePillClass
+              }
             >
               {category}
             </button>

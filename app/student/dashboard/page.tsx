@@ -3,7 +3,14 @@ import { createClient } from "@/lib/supabase/server";
 import { getRole } from "@/features/utils/auth/getRole";
 import Button from "@/app/ui/Button";
 import { Award, Flame, Target, TrendingUp, TrendingDown } from "lucide-react";
-
+import { BookCheck } from "lucide-react"; // add to imports
+import ProgressChart from "./_components/ProgressChart";
+const progressData = [
+  { week: "Week 1", score: 58 },
+  { week: "Week 2", score: 63 },
+  { week: "Week 3", score: 70 },
+  { week: "Week 4", score: 76 },
+];
 const weakPoints = [
   { skill: "Python for Data Science", topic: "Pandas GroupBy", score: 48 },
   { skill: "Modern Backend Systems", topic: "JWT Refresh Flow", score: 52 },
@@ -85,15 +92,24 @@ export default async function StudentDashboardPage() {
             <p className="text-sm text-white/70 mt-1">Latest: Consistent Learner.</p>
           </article>
 
-          <article className="rounded-2xl border border-emerald-300/25 bg-gradient-to-br from-emerald-500/20 to-slate-900/80 p-5">
+
+          <article className="rounded-2xl border border-violet-300/25 bg-gradient-to-br from-violet-500/20 to-slate-900/80 p-5">
             <div className="flex items-center justify-between">
-              <h2 className="text-sm uppercase tracking-widest text-white/60">Average Topic Score</h2>
-              <Target className="text-emerald-300" size={18} />
+              <h2 className="text-sm uppercase tracking-widest text-white/60">Courses Completed</h2>
+              <BookCheck className="text-violet-300" size={18} />
             </div>
-            <p className="mt-3 text-3xl font-black">76%</p>
-            <p className="text-sm text-white/70 mt-1">+4% improvement this week.</p>
+            <p className="mt-3 text-3xl font-black">5 courses</p>
+            <p className="text-sm text-white/70 mt-1">+2 this month.</p>
           </article>
         </section>
+        <section className="rounded-3xl border border-white/10 bg-slate-900/50 p-6">
+  <div className="mb-4">
+    <h2 className="text-xl font-black">Progress Over Time</h2>
+    <p className="text-sm text-white/60 mt-1">Average topic score per week</p>
+  </div>
+  <ProgressChart />
+</section>
+        
 
         <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <article className="rounded-3xl border border-rose-300/20 bg-slate-900/50 p-6">
@@ -129,9 +145,11 @@ export default async function StudentDashboardPage() {
                   <span className="text-emerald-300 font-black">{item.score}%</span>
                 </div>
               ))}
+              
             </div>
           </article>
         </section>
+       
 
         
       </div>
