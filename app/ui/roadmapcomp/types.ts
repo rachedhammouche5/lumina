@@ -79,7 +79,7 @@ export const getNodeStyles = (status: RoadmapStatus, degree: number = 0): NodeTh
   }
 
   return {
-    container: "border-slate-700 opacity-50 grayscale-[0.8]",
+    container: "border-slate-500 opacity-100 grayscale-0 shadow-[0_0_18px_rgba(148,163,184,0.18)]",
     iconBox: "text-slate-500 border-white/5 bg-slate-900/50",
     statusText: "text-slate-600",
     divider: "via-slate-700"
