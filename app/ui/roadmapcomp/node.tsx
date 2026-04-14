@@ -1,6 +1,5 @@
 import { Handle, Position, type NodeProps } from "@xyflow/react";
 import { LockIcon, CheckCircle2, CircleDashed, LucideAirVent } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getNodeStyles, type RoadmapNodeData } from "@/app/ui/roadmapcomp/types";
 import { getGlowClass, getHoverClass } from "./actions";
@@ -11,12 +10,15 @@ export default function RoadmapNode({ data }: NodeProps) {
   const styles = getNodeStyles(status, degree);
   const hoverClass = getHoverClass(status, degree) ?? "";
   const glowClass = getGlowClass(status, degree) ?? "";
-  const showUnlockedPanel = status === "unlocked";
+
+  const isRoot = !data.parentId;
+  const showKnowledgePanel = !isRoot;
+
 
   const router = useRouter();
   const isLocked = status === "locked";
   const isPointer = !isLocked;
-  const isClickable = Boolean(learnHref) && !isLocked;
+  const isClickable = Boolean(learnHref) && status !== "locked";
 
   const shadowClass =
     status === "completed"
@@ -31,7 +33,8 @@ export default function RoadmapNode({ data }: NodeProps) {
       : status === "unlocked"
         ? "hover:-translate-y-2 transition-transform duration-300 hover:shadow-[0_0_42px_rgba(59,130,246,0.55)] hover:saturate-125"
         : "hover:-translate-y-1 transition-transform duration-300 hover:shadow-[0_0_26px_rgba(0,0,0,0.45)]";
-  const baseClassName = `group relative z-10 flex flex-col h-36 w-44 md:h-44 md:w-52 bg-[#0F111A]/90 backdrop-blur-xl rounded-3xl p-4 items-center border-2 transition-all duration-500 transform-gpu will-change-transform pointer-events-auto ${styles.container} ${shadowClass} ${hoverClass} ${glowClass}`;
+  const stackingClassName = isLocked ? "z-30" : "z-10";
+  const baseClassName = `group relative ${stackingClassName} flex flex-col h-36 w-44 md:h-44 md:w-52 bg-[#0F111A]/90 backdrop-blur-xl rounded-3xl p-4 items-center border-2 transition-all duration-500 transform-gpu will-change-transform pointer-events-auto ${styles.container} ${shadowClass} ${hoverClass} ${glowClass}`;
   const interactiveClassName = isPointer
     ? `cursor-pointer ${hoverMotionClass}`
     : `cursor-not-allowed ${hoverMotionClass}`;
@@ -88,79 +91,78 @@ export default function RoadmapNode({ data }: NodeProps) {
       className={`${baseClassName} ${interactiveClassName} ${isClickable ? "focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400/70" : ""}`}
     >
       {content}
-      {showUnlockedPanel && (
-  <div className="pointer-events-none absolute inset-x-0 top-[calc(100%+10px)] flex justify-center">
-    <div className="
-      relative pointer-events-auto w-[220px]
-      rounded-[18px] px-[14px] py-3
-      bg-[#0a0c14]/95 backdrop-blur-xl
-      border border-blue-500/20
-      shadow-[0_20px_48px_rgba(0,0,0,0.7),inset_0_0_0_1px_rgba(255,255,255,0.04)]
-      opacity-0 translate-y-2 scale-95
-      transition-all duration-[280ms] ease-[cubic-bezier(0.34,1.56,0.64,1)]
-      group-hover:opacity-100 group-hover:translate-y-0 group-hover:scale-100
-      before:content-[''] before:absolute before:top-[-1px] before:left-1/2 before:-translate-x-1/2
-      before:w-[60px] before:h-[2px] before:rounded-full
-      before:bg-gradient-to-r before:from-transparent before:via-blue-400/70 before:to-transparent
-    ">
-      {/* Header */}
-      <div className="flex items-center gap-1.5 mb-2">
-        <span className="
-          text-[9px] font-extrabold uppercase tracking-[0.14em] text-blue-300
-          bg-blue-500/15 border border-blue-500/20 rounded-md px-[7px] py-[2px]
-        ">
-          Next up
-        </span>
-        <span className="text-[9.5px] text-slate-400/60 tracking-wide">Keep momentum →</span>
-      </div>
+      {showKnowledgePanel && (
+        <div className="pointer-events-none absolute inset-x-0 top-[calc(100%+10px)] flex justify-center z-1000">
+          <div
+            className="
+              relative pointer-events-auto w-[220px]
+              rounded-[18px] px-[14px] py-3
+              bg-[#0a0c14]/95 backdrop-blur-xl
+              border border-blue-500/20
+              shadow-[0_20px_48px_rgba(0,0,0,0.7),inset_0_0_0_1px_rgba(255,255,255,0.04)]
+              opacity-0 translate-y-2 scale-95
+              transition-all duration-[280ms] ease-[cubic-bezier(0.34,1.56,0.64,1)]
+              group-hover:opacity-100 group-hover:translate-y-0 group-hover:scale-100
+              before:content-[''] before:absolute before:top-[-1px] before:left-1/2 before:-translate-x-1/2
+              before:w-[60px] before:h-[2px] before:rounded-full
+              before:bg-gradient-to-r before:from-transparent before:via-blue-400/70 before:to-transparent
+            "
+          >
+            <div className="flex items-center gap-1.5 mb-2">
+              <span className="
+                text-[9px] font-extrabold uppercase tracking-[0.14em] text-blue-300
+                bg-blue-500/15 border border-blue-500/20 rounded-md px-[7px] py-[2px]
+              ">
+                Next up
+              </span>
+              <span className="text-[9.5px] text-slate-400/60 tracking-wide">Keep momentum →</span>
+            </div>
 
-      {/* Question */}
-      <p className="text-[11px] text-slate-200/80 leading-relaxed mb-3">
-        Already know this topic?
-      </p>
+            <p className="text-[11px] text-slate-200/80 leading-relaxed mb-3">
+              Already know this topic?
+            </p>
 
-      {/* Actions */}
-      <div className="flex flex-col gap-[7px]">
-        <div className="flex gap-1.5">
-          {learnHref && (
-            <Button
-            variant="outline"
-              href={learnHref}
-              onClick={(e) => e.stopPropagation()}
-              className="
-                flex-1 inline-flex items-center justify-center gap-1.5
-                rounded-[10px] px-3 py-2
-                text-[10px] font-bold uppercase tracking-[0.1em]
-                transition-all duration-150
-              "
-            >
-              Open Module
-              <span>→</span>
-            </Button>
-          )}
-          {quizHref && (
-            <Button
-              variant="primary"
-              onClick={(e) => {
-                e.stopPropagation();
-                router.push(quizHref);
-              }}
-              className="
-                flex-1 inline-flex items-center justify-center gap-1.5
-                rounded-[10px] px-3 py-2
-                text-[10px] font-bold uppercase tracking-[0.1em]
-                transition-all duration-150
-              "
-            >
-              Quiz Me
-              <span>→</span>
-            </Button>
-          )}
+            <div className="flex flex-col gap-[7px]">
+              <div className="flex gap-1.5">
+                {!isLocked && learnHref && (
+                  <Button
+                    variant="outline"
+                    href={learnHref}
+                    onClick={(e) => e.stopPropagation()}
+                    className="
+                      flex-1 inline-flex items-center justify-center gap-1.5
+                      rounded-[10px] px-3 py-2
+                      text-[10px] font-bold uppercase tracking-[0.1em]
+                      transition-all duration-150
+                    "
+                  >
+                    Open Module
+                    <span>→</span>
+                  </Button>
+                )}
+                {quizHref && (
+                  <Button
+                    variant="primary"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      router.push(quizHref);
+                    }}
+                    className="
+                      flex-1 inline-flex items-center justify-center gap-1.5
+                      rounded-[10px] px-3 py-2
+                      text-[10px] font-bold uppercase tracking-[0.1em]
+                      transition-all duration-150
+                    "
+                  >
+                    Quiz Me
+                    <span>→</span>
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
-  </div>
-)}
+      )}
     </div>
   );
 }
