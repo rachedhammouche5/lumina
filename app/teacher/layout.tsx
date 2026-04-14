@@ -17,12 +17,7 @@ export default async function TeacherLayout({
     error,
   } = await supabase.auth.getUser();
 
-  if (error) {
-    console.error("Auth error :", error.message);
-    redirect("/");
-  }
-
-  if (!user) {
+  if (error || !user) {
     redirect("/");
   }
 
@@ -49,56 +44,23 @@ export default async function TeacherLayout({
   return (
     <>
       <NavBar />
-      <main className="min-h-screen bg-slate-950 pt-24 pb-16 px-4">
-        <div className="mx-auto flex w-full max-w-6xl gap-6">
-          <aside className="h-fit w-full max-w-xs rounded-xl border border-slate-700 bg-slate-900 p-4">
-            <h1 className="mb-4 text-xl font-bold text-white">
-              Teacher Dashboard
-            </h1>
+      <main className="pt-10">
+        {isRejected ? (
+          <div className="text-red-500 p-4 text-center">
+            <p className="font-semibold">Your teacher request was rejected.</p>
+            <p className="text-sm">Reason: {rejectionReason}</p>
+            <Link href={"/teacher/apply"} className="underline">
+              Submit a new application
+            </Link>
+          </div>
+        ) : isPending ? (
+          <div className="text-amber-500 p-4 text-center">
+            Your teacher application is pending admin approval. Actions are disabled until approval.
+          </div>
+        ) : null}
 
-            {isPending ? (
-              <button
-                disabled
-                className="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-3 text-left font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                Manage Courses
-              </button>
-            ) : (
-              <Link
-                href={"/teacher/skills"}
-                className="block w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-3 text-left font-semibold text-white transition hover:bg-slate-700"
-              >
-                Manage Courses
-              </Link>
-            )}
-          </aside>
-
-          <section className="flex-1 space-y-5 rounded-xl border border-slate-700 bg-slate-900 p-6">
-            {isRejected ? (
-              <div className="rounded-lg border border-red-400/40 bg-red-500/10 px-4 py-3 text-red-200">
-                <p className="font-semibold">
-                  Your teacher request was rejected.
-                </p>
-                <p className="mt-1 text-sm">
-                  Reason: <span className="font-medium">{rejectionReason}</span>
-                </p>
-                <Link
-                  href={"/teacher/apply"}
-                  className="mt-2 inline-block text-sm underline"
-                >
-                  Submit a new application
-                </Link>
-              </div>
-            ) : isPending ? (
-              <div className="rounded-lg border border-amber-400/40 bg-amber-500/10 px-4 py-3 text-amber-200">
-                Your teacher application is pending admin approval. Actions are
-                disabled until approval.
-              </div>
-            ) : null}
-
-            {children}
-          </section>
-        </div>
+        {/* الـ children سيأخذون كامل مساحة الصفحة الآن */}
+        {children}
       </main>
     </>
   );
