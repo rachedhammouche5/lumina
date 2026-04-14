@@ -63,6 +63,12 @@ export const getIconColorClass = (status: RoadmapStatus, degree?: number) => {
     return "text-[#bf00ff]";
 };
 
+const getNodeZIndex = (status: RoadmapStatus) => {
+    if (status === "locked") return 100;
+    if (status === "completed") return 30;
+    return 20;
+};
+
 
 
 
@@ -73,7 +79,6 @@ export const generateRoadmapElements = (
   root?: { id: string; title: string; subtitle?: string },
   isEnrolled = true,
 ): { nodes: Node<RoadmapNodeData>[]; edges: Edge[]; width: number; height: number } => {
-    const topicMap = new Map(topics.map((t) => [t.tpc_id, t]));
     const childrenMap = new Map<string, TopicRow[]>();
     topics.forEach((t) => {
         const parentKey = t.parent_id ?? "__ROOT__";
@@ -126,6 +131,7 @@ export const generateRoadmapElements = (
       id: root.id,
       type: 'roadmap',
       position: positions.get(root.id) ?? { x: 0, y: 0 },
+      zIndex: getNodeZIndex(!isEnrolled ? "locked" : allTopicsCompleted ? "completed" : "locked"),
       data: {
         title: root.title,
         subtitle: root.subtitle,
@@ -157,6 +163,7 @@ export const generateRoadmapElements = (
             id: topic.tpc_id,
             type: 'roadmap',
             position: positions.get(topic.tpc_id) ?? { x: 0, y: spacingY },
+            zIndex: getNodeZIndex(currentStatus),
             data: {
                 title: topic.tpc_title,
                 subtitle: topic.tpc_description ?? undefined,

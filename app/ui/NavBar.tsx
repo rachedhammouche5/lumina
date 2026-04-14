@@ -42,6 +42,7 @@ const NavBar: React.FC = () => {
   ? [
       { name: "Home", href: "/teacher", icon: House },
       { name: "My Skills", href: "/teacher/skills", icon: LibraryBig },
+      { name: 'Dashboard', href: '/teacher/dashboard', icon: Blocks },
     ]
   : role === "student"
   ? [
