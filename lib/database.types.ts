@@ -14,39 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      AuditLog: {
-        Row: {
-          action: string | null
-          actorId: string | null
-          actorRole: string | null
-          createdAt: string
-          details: Json | null
-          id: string
-          targetId: string | null
-          targetRole: string | null
-        }
-        Insert: {
-          action?: string | null
-          actorId?: string | null
-          actorRole?: string | null
-          createdAt?: string
-          details?: Json | null
-          id?: string
-          targetId?: string | null
-          targetRole?: string | null
-        }
-        Update: {
-          action?: string | null
-          actorId?: string | null
-          actorRole?: string | null
-          createdAt?: string
-          details?: Json | null
-          id?: string
-          targetId?: string | null
-          targetRole?: string | null
-        }
-        Relationships: []
-      }
       Content: {
         Row: {
           cntnt_id: string
@@ -56,7 +23,7 @@ export type Database = {
           tpc_id: string | null
         }
         Insert: {
-          cntnt_id: string
+          cntnt_id?: string
           cntnt_title: string
           cntnt_type: Database["public"]["Enums"]["cntnt_type"]
           cntnt_value?: string | null
@@ -82,18 +49,18 @@ export type Database = {
       enroll: {
         Row: {
           progress: number
-          skill_id: string | null
-          studentId: string
+          skill_id: string
+          student_id: string
         }
         Insert: {
           progress: number
-          skill_id?: string | null
-          studentId: string
+          skill_id: string
+          student_id: string
         }
         Update: {
           progress?: number
-          skill_id?: string | null
-          studentId?: string
+          skill_id?: string
+          student_id?: string
         }
         Relationships: [
           {
@@ -104,8 +71,8 @@ export type Database = {
             referencedColumns: ["skl_id"]
           },
           {
-            foreignKeyName: "enroll_studentId_fkey"
-            columns: ["studentId"]
+            foreignKeyName: "enroll_student_id_fkey"
+            columns: ["student_id"]
             isOneToOne: false
             referencedRelation: "Student"
             referencedColumns: ["std_id"]
@@ -115,19 +82,19 @@ export type Database = {
       q_response: {
         Row: {
           isCorrect: boolean
-          quizId: string
+          quizId: string | null
           response: string
           rspns_id: string
         }
         Insert: {
           isCorrect: boolean
-          quizId: string
+          quizId?: string | null
           response: string
-          rspns_id: string
+          rspns_id?: string
         }
         Update: {
           isCorrect?: boolean
-          quizId?: string
+          quizId?: string | null
           response?: string
           rspns_id?: string
         }
@@ -146,19 +113,19 @@ export type Database = {
           difficulty: Database["public"]["Enums"]["difficulty"]
           qst_id: string
           question: string
-          tpc_id: string
+          tpc_id: string | null
         }
         Insert: {
           difficulty: Database["public"]["Enums"]["difficulty"]
-          qst_id: string
+          qst_id?: string
           question: string
-          tpc_id: string
+          tpc_id?: string | null
         }
         Update: {
           difficulty?: Database["public"]["Enums"]["difficulty"]
           qst_id?: string
           question?: string
-          tpc_id?: string
+          tpc_id?: string | null
         }
         Relationships: [
           {
@@ -173,33 +140,85 @@ export type Database = {
       review: {
         Row: {
           comment: string
-          content_id: string
+          id: string
+          parent_id: string | null
           rating: number
+          skill_id: string
           studentId: string
+          time: string
         }
         Insert: {
           comment: string
-          content_id: string
+          id?: string
+          parent_id?: string | null
           rating: number
+          skill_id: string
           studentId: string
+          time?: string
         }
         Update: {
           comment?: string
-          content_id?: string
+          id?: string
+          parent_id?: string | null
           rating?: number
+          skill_id?: string
           studentId?: string
+          time?: string
         }
         Relationships: [
           {
-            foreignKeyName: "review_content_id_fkey"
-            columns: ["content_id"]
+            foreignKeyName: "review_parent_id_fkey"
+            columns: ["parent_id"]
             isOneToOne: false
-            referencedRelation: "Content"
-            referencedColumns: ["cntnt_id"]
+            referencedRelation: "review"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "review_skill_id_fkey"
+            columns: ["skill_id"]
+            isOneToOne: false
+            referencedRelation: "Skill"
+            referencedColumns: ["skl_id"]
           },
           {
             foreignKeyName: "review_studentId_fkey"
             columns: ["studentId"]
+            isOneToOne: false
+            referencedRelation: "Student"
+            referencedColumns: ["std_id"]
+          },
+        ]
+      }
+      review_likes: {
+        Row: {
+          created_at: string | null
+          id: string
+          review_id: string | null
+          student_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          review_id?: string | null
+          student_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          review_id?: string | null
+          student_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_likes_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "review"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "review_likes_student_id_fkey"
+            columns: ["student_id"]
             isOneToOne: false
             referencedRelation: "Student"
             referencedColumns: ["std_id"]
@@ -247,14 +266,15 @@ export type Database = {
           skl_dscrptn: string
           skl_duration: number
           skl_id: string
-          skl_title: string
           skl_picture: string | null
+          skl_title: string
           teacher_id: string | null
         }
         Insert: {
           skl_dscrptn: string
           skl_duration: number
           skl_id?: string
+          skl_picture?: string | null
           skl_title: string
           teacher_id?: string | null
         }
@@ -262,6 +282,7 @@ export type Database = {
           skl_dscrptn?: string
           skl_duration?: number
           skl_id?: string
+          skl_picture?: string | null
           skl_title?: string
           teacher_id?: string | null
         }
@@ -289,7 +310,7 @@ export type Database = {
         Insert: {
           std_email: string
           std_fullname: string
-          std_id: string
+          std_id?: string
           std_last_activeDate?: string
           std_level?: Database["public"]["Enums"]["level"]
           std_pfp?: string | null
@@ -319,7 +340,7 @@ export type Database = {
         Insert: {
           tchr_email: string
           tchr_fullname: string
-          tchr_id: string
+          tchr_id?: string
           tchr_pfp?: string | null
           user_id?: string | null
         }
@@ -374,7 +395,7 @@ export type Database = {
           parent_id?: string | null
           skill_id?: string | null
           tpc_description?: string | null
-          tpc_id: string
+          tpc_id?: string
           tpc_title: string
         }
         Update: {
@@ -409,7 +430,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      cntnt_type: "pdf" | "video" | "docs" | "audio"
+      cntnt_type: "pdf" | "video" | "mindmap" | "docs" | "audio"
       difficulty: "easy" | "medium" | "hard" | "pro"
       level: "beginner" | "intermediate" | "advanced" | "master"
     }
@@ -545,20 +566,32 @@ export const Constants = {
     },
   },
 } as const
-// add at the bottom of database.types.ts 
-export type Skill = Tables<"Skill">
-export type Topic = Tables<"Topic">
-export type Content = Tables<"Content">
-export type Student = Tables<"Student">
-export type Teacher = Tables<"Teacher">
+// ─── Table Row Types ───────────────────────────────────────────────
+export type Content        = Tables<"Content">
+export type Enroll         = Tables<"enroll">
+export type QResponse      = Tables<"q_response">
+export type Quiz           = Tables<"quiz">
+export type Review         = Tables<"review">
+export type ReviewLikes    = Tables<"review_likes">
+export type Score          = Tables<"score">
+export type Skill          = Tables<"Skill">
+export type Student        = Tables<"Student">
+export type Teacher        = Tables<"Teacher">
 export type TeacherRequest = Tables<"teacher_requests">
-export type Enroll = Tables<"enroll">
-export type Quiz = Tables<"quiz">
-export type QResponse = Tables<"q_response">
-export type Review = Tables<"review">
-export type Score = Tables<"score">
+export type Topic          = Tables<"Topic">
 
-// enum types
-export type ContentType = Enums<"cntnt_type">
-export type Difficulty = Enums<"difficulty">
-export type Level = Enums<"level">
+// ─── Enum Types ────────────────────────────────────────────────────
+export type ContentType = Enums<"cntnt_type">   // "pdf" | "video" | "mindmap" | "docs" | "audio"
+export type Difficulty  = Enums<"difficulty">   // "easy" | "medium" | "hard" | "pro"
+export type Level       = Enums<"level">        // "beginner" | "intermediate" | "advanced" | "master"
+
+// ─── Insert / Update Types (for forms and server actions) ──────────
+export type ContentInsert        = TablesInsert<"Content">
+export type QuizInsert           = TablesInsert<"quiz">
+export type QResponseInsert      = TablesInsert<"q_response">
+export type TopicInsert          = TablesInsert<"Topic">
+export type SkillInsert          = TablesInsert<"Skill">
+export type StudentInsert        = TablesInsert<"Student">
+export type TeacherInsert        = TablesInsert<"Teacher">
+export type EnrollInsert         = TablesInsert<"enroll">
+export type ScoreInsert          = TablesInsert<"score">

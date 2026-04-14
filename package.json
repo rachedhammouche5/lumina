@@ -12,7 +12,8 @@
     "seed": "tsx scripts/seed-supabase.ts",
     "test": "vitest run",
     "test:unit": "vitest run",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "gen:types": "supabase gen types typescript --project-id pjsschovqymnfflwquau > lib/database.types.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.8.0",
