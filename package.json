@@ -16,6 +16,7 @@
     "gen:types": "supabase gen types typescript --project-id pjsschovqymnfflwquau > lib/database.types.ts"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.98.0",
     "@xyflow/react": "^12.10.1",
@@ -27,8 +28,8 @@
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-youtube": "^10.1.0",
-    "style.css": "link:@xyflow/react/dist/style.css",
-    "recharts": "^3.8.1"
+    "recharts": "^3.8.1",
+    "style.css": "link:@xyflow/react/dist/style.css"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",
