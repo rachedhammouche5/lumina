@@ -35,37 +35,45 @@ export type NodeTheme = {
   divider: string;
 };
 
+export const getPerformanceTier = (degree: number = 0): "red" | "orange" | "green" | "purple" => {
+  if (degree >= 90) return "purple";
+  if (degree >= 70) return "green";
+  if (degree >= 50) return "orange";
+  return "red";
+};
+
 export const getNodeStyles = (status: RoadmapStatus, degree: number = 0): NodeTheme => {
   if (status === "completed") {
-    if (degree >= 80) {
+    const tier = getPerformanceTier(degree);
+    if (tier === "purple") {
       return {
         container: "border-purple-500 shadow-[0_0_20px_rgba(168,85,247,0.4)] opacity-100",
         iconBox: "text-purple-400 border-purple-500/40 bg-purple-500/10",
         statusText: "text-purple-400",
-        divider: "via-purple-500"
+        divider: "via-purple-500",
       };
     }
-    if (degree >= 60) {
+    if (tier === "green") {
       return {
-        container: "border-lime-400 shadow-[0_0_20px_rgba(16,185,129,0.3)] opacity-100",
-        iconBox: "text-lime-400 border-emerald-500/40 bg-emerald-500/10",
-        statusText: "text-lime-400",
-        divider: "via-emerald-500"
+        container: "border-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.3)] opacity-100",
+        iconBox: "text-emerald-400 border-emerald-500/40 bg-emerald-500/10",
+        statusText: "text-emerald-400",
+        divider: "via-emerald-500",
       };
     }
-    if (degree >= 40) {
+    if (tier === "orange") {
       return {
         container: "border-orange-500 shadow-[0_0_20px_rgba(249,115,22,0.3)] opacity-100",
         iconBox: "text-orange-400 border-orange-500/40 bg-orange-500/10",
         statusText: "text-orange-400",
-        divider: "via-orange-500"
+        divider: "via-orange-500",
       };
     }
     return {
       container: "border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.3)] opacity-100",
       iconBox: "text-red-400 border-red-500/40 bg-red-500/10",
       statusText: "text-red-400",
-      divider: "via-red-500"
+      divider: "via-red-500",
     };
   }
 

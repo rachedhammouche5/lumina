@@ -17,6 +17,7 @@ export type Database = {
       Content: {
         Row: {
           cntnt_id: string
+          cntnt_text: string | null
           cntnt_title: string
           cntnt_type: Database["public"]["Enums"]["cntnt_type"]
           cntnt_value: string | null
@@ -24,6 +25,7 @@ export type Database = {
         }
         Insert: {
           cntnt_id?: string
+          cntnt_text?: string | null
           cntnt_title: string
           cntnt_type: Database["public"]["Enums"]["cntnt_type"]
           cntnt_value?: string | null
@@ -31,6 +33,7 @@ export type Database = {
         }
         Update: {
           cntnt_id?: string
+          cntnt_text?: string | null
           cntnt_title?: string
           cntnt_type?: Database["public"]["Enums"]["cntnt_type"]
           cntnt_value?: string | null
@@ -43,6 +46,47 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "Topic"
             referencedColumns: ["tpc_id"]
+          },
+        ]
+      }
+      content_chunks: {
+        Row: {
+          chunk_index: number
+          chunk_text: string
+          content_id: string
+          embedding: string | null
+          id: string
+          level: string | null
+          metadata: Json | null
+          token_count: number | null
+        }
+        Insert: {
+          chunk_index: number
+          chunk_text: string
+          content_id: string
+          embedding?: string | null
+          id?: string
+          level?: string | null
+          metadata?: Json | null
+          token_count?: number | null
+        }
+        Update: {
+          chunk_index?: number
+          chunk_text?: string
+          content_id?: string
+          embedding?: string | null
+          id?: string
+          level?: string | null
+          metadata?: Json | null
+          token_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_content"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "Content"
+            referencedColumns: ["cntnt_id"]
           },
         ]
       }
@@ -438,6 +482,23 @@ export type Database = {
       get_student_count_by_teacher: {
         Args: { teacher_id_param: string }
         Returns: number
+      }
+      match_chunks: {
+        Args: {
+          filter_level?: string
+          match_count?: number
+          query_embedding: string
+        }
+        Returns: {
+          chunk_index: number
+          chunk_text: string
+          content_id: string
+          id: string
+          level: string
+          metadata: Json
+          similarity: number
+          token_count: number
+        }[]
       }
     }
     Enums: {

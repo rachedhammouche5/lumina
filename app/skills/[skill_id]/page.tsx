@@ -3,11 +3,12 @@ import RoadmapFlow from "@/app/ui/roadmapcomp/RoadmapFlow";
 import { createClient } from "@/lib/supabase/server";
 import type { TopicRow, ScoreRow } from "@/app/ui/roadmapcomp/types";
 import EnrollSection from "@/app/ui/roadmapcomp/EnrollSection";
-import { calculateRoadmapProgress } from "@/app/actions/roadmap";
+import { calculateRoadmapProgress, normalizeTopicScores } from "@/app/actions/roadmap";
 import CommentsSection from "@/app/ui/comments/CommentsSection";
 import { getSkillReviews } from "@/lib/reviews";  
 import { getRole } from "@/features/utils/auth/getRole";
 import Rating from "@/app/ui/comments/Rating";
+import type { Difficulty } from "./[topic_id]/quiz/quiz.types";
 
 export default async function RoadmapPage({
   params,
@@ -131,15 +132,28 @@ export default async function RoadmapPage({
     .eq("skill_id", skill_id);
 
   const topics = (topicsData ?? []) as TopicRow[];
+  const topicIds = topics.map((topic) => topic.tpc_id);
 
-  const { data: scoresData } = studentId
-    ? await supabase.from("score").select("*").eq("studentId", studentId)
+  const { data: quizData } = topicIds.length
+    ? await supabase
+        .from("quiz")
+        .select("tpc_id,difficulty")
+        .in("tpc_id", topicIds)
+    : { data: [] };
+
+  // page.tsx
+const { data: scoresData } = studentId
+    ? await supabase
+        .from("score")
+        .select("tpc_id, score")
+        .eq("studentId", studentId) 
     : { data: [] };
 
   const scores = (scoresData ?? []) as ScoreRow[];
+  const normalizedScores = normalizeTopicScores(scores, (quizData ?? []) as { tpc_id: string | null; difficulty: Difficulty }[]);
 
   const totalTopics = initialIsEnrolled ? topics.length : 0;
-  const progressValue = initialIsEnrolled && totalTopics > 0 ? calculateRoadmapProgress(topics, scores) : 0;
+  const progressValue = initialIsEnrolled && totalTopics > 0 ? calculateRoadmapProgress(topics, normalizedScores) : 0;
 
   return (
     <main className="min-h-screen min-w-screen bg-slate-950 text-white flex flex-col items-center pt-16 md:pt-20 px-4 sm:px-6 relative overflow-hidden font-sans gap-3">
@@ -153,7 +167,7 @@ export default async function RoadmapPage({
         <h3 className="text-xl md:text-2xl font-black italic tracking-tight mb-4">
           COURSE PATH
         </h3>
-        <RoadmapFlow topics={topics} scores={scores} isEnrolled={initialIsEnrolled} />
+        <RoadmapFlow topics={topics} scores={normalizedScores} isEnrolled={initialIsEnrolled} />
         <div className="mt-15">
           <h3 className="text-xl md:text-2xl font-black italic tracking-tight mb-4 uppercase">
           Rating & Reviews

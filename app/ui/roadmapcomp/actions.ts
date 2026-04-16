@@ -1,5 +1,6 @@
 import { type Edge, type Node } from "@xyflow/react";
 import type { RoadmapNodeData, RoadmapStatus, TopicRow, ScoreRow } from "./types";
+import { getPerformanceTier } from "./types";
 
 export const NODE_THEMES = {
     locked: {
@@ -21,12 +22,14 @@ export const NODE_THEMES = {
     },
 
     completed: {
-        container: "border-[#00f2fe] bg-[#08080c] shadow-[0_0_20px_rgba(0,242,254,0.3)] hover:shadow-[0_0_35px_rgba(0,242,254,0.5)] cursor-pointer",
-        iconBox: "border-cyan-500/20 bg-cyan-500/10",
-        iconColor: "text-[#00f2fe]",
+        // Removed the hardcoded cyan classes. 
+        // This allows the dynamic colors from types.ts (Green, Orange, Red, Purple) to work properly.
+        container: "bg-[#08080c] cursor-pointer transition-all duration-300",
+        iconBox: "border-transparent",
+        iconColor: "text-inherit",
         textTitle: "text-white",
-        textSub: "text-cyan-500/60",
-        handle: "bg-[#00f2fe] shadow-[0_0_10px_#00f2fe]"
+        textSub: "opacity-70",
+        handle: "shadow-none"
     }
 };
 
@@ -35,10 +38,10 @@ export const clampDegree = (degree?: number) =>
 
 export const getGlowClass = (status: RoadmapStatus, degree?: number) => {
     if (status !== "completed") return "";
-    const d = clampDegree(degree);
-    if (d <= 50) return "glow-red";
-    if (d <= 60) return "glow-orange";
-    if (d <= 80) return "glow-green";
+    const tier = getPerformanceTier(clampDegree(degree));
+    if (tier === "red") return "glow-red";
+    if (tier === "orange") return "glow-orange";
+    if (tier === "green") return "glow-green";
     return "glow-purple";
 };
 
@@ -47,20 +50,20 @@ export const getHoverClass = (status: RoadmapStatus, degree?: number) => {
     if (status === "unlocked") {
         return "hover:shadow-[0_0_36px_rgba(59,130,246,0.45)] hover:border-[#3b82f6]";
     }
-    const d = clampDegree(degree);
-    if (d <= 50) return "hover:shadow-[0_0_42px_rgba(255,0,85,0.9)] hover:border-[#ff0055]";
-    if (d <= 60) return "hover:shadow-[0_0_42px_rgba(255,119,0,0.8)] hover:border-[#ff7700]";
-    if (d <= 80) return "hover:shadow-[0_0_42px_rgba(0,242,254,0.8)] hover:border-[#00f2fe]";
-    return "hover:shadow-[0_0_46px_rgba(191,0,255,0.9)] hover:border-[#bf00ff]";
+    const tier = getPerformanceTier(clampDegree(degree));
+    if (tier === "red") return "hover:shadow-[0_0_42px_rgba(239,68,68,0.9)] hover:border-[#ef4444]";
+    if (tier === "orange") return "hover:shadow-[0_0_42px_rgba(249,115,22,0.8)] hover:border-[#f97316]";
+    if (tier === "green") return "hover:shadow-[0_0_42px_rgba(16,185,129,0.8)] hover:border-[#10b981]";
+    return "hover:shadow-[0_0_46px_rgba(168,85,247,0.9)] hover:border-[#a855f7]";
 };
 
 export const getIconColorClass = (status: RoadmapStatus, degree?: number) => {
     if (status !== "completed") return null;
-    const d = clampDegree(degree);
-    if (d <= 50) return "text-[#ff0055]";
-    if (d <= 60) return "text-[#ff7700]";
-    if (d <= 80) return "text-[#00f2fe]";
-    return "text-[#bf00ff]";
+    const tier = getPerformanceTier(clampDegree(degree));
+    if (tier === "red") return "text-[#ef4444]";
+    if (tier === "orange") return "text-[#f97316]";
+    if (tier === "green") return "text-[#10b981]";
+    return "text-[#a855f7]";
 };
 
 const getNodeZIndex = (status: RoadmapStatus) => {
@@ -68,10 +71,6 @@ const getNodeZIndex = (status: RoadmapStatus) => {
     if (status === "completed") return 30;
     return 20;
 };
-
-
-
-
 
 export const generateRoadmapElements = (
   topics: TopicRow[] = [],
@@ -87,8 +86,35 @@ export const generateRoadmapElements = (
         childrenMap.set(parentKey, list);
     });
 
-    const completedIds = new Set(scores.map((s) => s.tpc_id));
-    const allTopicsCompleted = topics.length > 0 && topics.every((t) => completedIds.has(t.tpc_id));
+    const scoreamap = new Map(scores.map((s) => [s.tpc_id, s.score]));
+
+    // Compute effective degrees
+    const effectiveDegrees = new Map<string, number>();
+
+    // Root effective degree
+    const rootEffective = topics.length > 0 && topics.every((t) => (scoreamap.get(t.tpc_id) || 0) >= 50) ? 100 : 0;
+    if (root) effectiveDegrees.set(root.id, rootEffective);
+
+    // Recursive function to compute effective degrees
+    function computeEffective(topicId: string, parentEffective: number) {
+        const ownDegree = scoreamap.get(topicId) || 0;
+        let effective = ownDegree;
+        if (effective < 50 && parentEffective >= 50) {
+            effective = parentEffective;
+        }
+        effectiveDegrees.set(topicId, effective);
+        const children = childrenMap.get(topicId) || [];
+        children.forEach(child => computeEffective(child.tpc_id, effective));
+    }
+
+    // Compute for root-level topics
+    topics.filter(t => !t.parent_id).forEach(t => computeEffective(t.tpc_id, rootEffective));
+
+    // Update passing based on effective degrees
+    const effectivePassingIds = new Set([...effectiveDegrees.entries()].filter(([_, d]) => d >= 50).map(([id]) => id));
+
+    // Update all topics completed
+    const allTopicsEffectiveCompleted = rootEffective === 100;
 
     const spacingX = 260;
     const spacingY = 260;
@@ -131,13 +157,12 @@ export const generateRoadmapElements = (
       id: root.id,
       type: 'roadmap',
       position: positions.get(root.id) ?? { x: 0, y: 0 },
-      zIndex: getNodeZIndex(!isEnrolled ? "locked" : allTopicsCompleted ? "completed" : "locked"),
+      zIndex: getNodeZIndex(!isEnrolled ? "locked" : allTopicsEffectiveCompleted ? "completed" : "locked"),
       data: {
         title: root.title,
         subtitle: root.subtitle,
-        // Root stays locked until every topic is completed, then becomes completed.
-        status: !isEnrolled ? "locked" : allTopicsCompleted ? "completed" : "locked",
-        degree: allTopicsCompleted ? 100 : 0,
+        status: !isEnrolled ? "locked" : allTopicsEffectiveCompleted ? "completed" : "locked",
+        degree: rootEffective,
         id: root.id,
       }
     });
@@ -145,17 +170,19 @@ export const generateRoadmapElements = (
 
     topics.forEach((topic) => {
         const userScore = scores.find((s) => s.tpc_id === topic.tpc_id);
+        const effectiveDegree = effectiveDegrees.get(topic.tpc_id) || 0;
+        const hasEffectiveScore = effectiveDegree > 0;
         const children = childrenMap.get(topic.tpc_id) ?? [];
-        const areChildrenCompleted = children.length > 0 && children.every((c) => completedIds.has(c.tpc_id));
+        const areChildrenPassed = children.length > 0 && children.every((c) => (effectiveDegrees.get(c.tpc_id) || 0) >= 50);
 
         let currentStatus: RoadmapStatus = "locked";
         if (!isEnrolled) {
             currentStatus = "locked";
-        } else if (userScore) {
+        } else if (hasEffectiveScore) {
             currentStatus = "completed";
         } else if (children.length === 0) {
             currentStatus = "unlocked";
-        } else if (areChildrenCompleted) {
+        } else if (areChildrenPassed) {
             currentStatus = "unlocked";
         }
 
@@ -168,7 +195,7 @@ export const generateRoadmapElements = (
                 title: topic.tpc_title,
                 subtitle: topic.tpc_description ?? undefined,
                 status: currentStatus,
-                degree: userScore?.score || 0,
+                degree: effectiveDegree,
                 id: topic.tpc_id,
                 parentId: topic.parent_id ?? undefined,
                 learnHref: `/skills/${topic.skill_id}/${topic.tpc_id}`,
@@ -185,7 +212,7 @@ export const generateRoadmapElements = (
                 id: `e-${root.id}-${t.tpc_id}`,
                 source: root.id,
                 target: t.tpc_id,
-                animated: scores.some((s) => s.tpc_id === t.tpc_id),
+                animated: effectivePassingIds.has(t.tpc_id),
             }),
         );
     }
@@ -197,7 +224,7 @@ export const generateRoadmapElements = (
                 id: `e-${t.parent_id}-${t.tpc_id}`,
                 source: t.parent_id as string,
                 target: t.tpc_id,
-                animated: scores.some((s) => s.tpc_id === t.parent_id),
+                animated: effectivePassingIds.has(t.tpc_id),
             }),
         );
 

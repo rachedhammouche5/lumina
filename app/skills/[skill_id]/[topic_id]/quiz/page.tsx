@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import QuizClient from "./QuizClient";
 import StreakCelebration from "@/app/features/streak/StreakCelebration";
+import router from "next/dist/shared/lib/router/router";
 
 export default async function QuizPage({
   params,

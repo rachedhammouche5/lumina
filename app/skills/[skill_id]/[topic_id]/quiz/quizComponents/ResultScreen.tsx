@@ -39,8 +39,10 @@ export default function ResultsScreen({ answers, onGoRoadmap, onGoDashboard }: P
                 </div>
               </div>
               <h2 className="mt-4 text-2xl font-black tracking-tight text-white">
-                {percentage >= 80
-                  ? "Excellent work!"
+                {percentage >= 90
+                  ? "Perfect mastery!"
+                  : percentage >= 70
+                  ? "Great work!"
                   : percentage >= 50
                   ? "Good effort!"
                   : "Keep practicing!"}

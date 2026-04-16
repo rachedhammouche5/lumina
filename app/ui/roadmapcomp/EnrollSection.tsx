@@ -1,10 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import EnrollButton from "./EnrollButton";
 import ProgressBar from "./ProgressBar";
 import BackButton from "@/app/ui/roadmapcomp/BackButton";
 import InfoCard from "@/app/ui/roadmapcomp/InfoCard";
+
+type SkillCardData = {
+  skl_id: string;
+  skl_title: string;
+  skl_dscrptn: string | null;
+};
 
 export default function EnrollSection({
   skill,
@@ -12,13 +18,17 @@ export default function EnrollSection({
   initialIsEnrolled,
   progressValue,
 }: {
-  skill: any;
+  skill: SkillCardData;
   isLoggedIn: boolean;
   initialIsEnrolled: boolean;
   progressValue: number;
 }) {
   const [isEnrolled, setIsEnrolled] = useState(initialIsEnrolled);
   const [progress, setProgress] = useState(progressValue);
+
+  useEffect(() => {
+    setProgress(progressValue);
+  }, [progressValue]);
 
   return (
     <div className="w-full max-w-[1400px] px-4">
@@ -34,7 +44,10 @@ export default function EnrollSection({
       </div>
       <div className="mb-8 flex w-full flex-row items-start gap-5 md:mb-10">
         <div className="flex-1">
-          <InfoCard title={skill?.skl_title} subtitle={skill?.skl_dscrptn} />
+          <InfoCard
+            title={skill.skl_title}
+            subtitle={skill.skl_dscrptn ?? "This skill is ready for exploration."}
+          />
         </div>
         {isEnrolled && (
           <div className="flex-1 md:max-w-[360px]">

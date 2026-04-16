@@ -92,12 +92,12 @@ export default function RoadmapNode({ data }: NodeProps) {
     >
       {content}
       {showKnowledgePanel && (
-        <div className="pointer-events-none absolute inset-x-0 top-[calc(100%+10px)] flex justify-center z-1000">
+        <div className="pointer-events-none absolute inset-x-0 top-[calc(100%+10px)] flex justify-center z-[1000]">
           <div
             className="
               relative pointer-events-auto w-[220px]
               rounded-[18px] px-[14px] py-3
-              bg-[#0a0c14]/95 backdrop-blur-xl
+              bg-[#0a0c14] backdrop-blur-xl
               border border-blue-500/20
               shadow-[0_20px_48px_rgba(0,0,0,0.7),inset_0_0_0_1px_rgba(255,255,255,0.04)]
               opacity-0 translate-y-2 scale-95
