@@ -5,6 +5,7 @@ import AddTopicForm from "./AddTopicForm";
 import AddQuizForm from "./AddQuizForm";
 import { useMemo, useState } from "react";
 import { Skill, Topic, Content } from "@/lib/database.types";
+import { Star } from "lucide-react";
 
 export default function CourseDetailView({
   skill,
@@ -54,11 +55,37 @@ export default function CourseDetailView({
   };
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-2">
-        <h2 className="text-2xl font-bold text-white">{skill.skl_title}</h2>
-        <p className="text-slate-300">{skill.skl_dscrptn}</p>
-        <p className="text-sm text-slate-400">Duration: {skill.skl_duration}</p>
+    <div className="">
+      <div className="space-y-2 py-6 px-8 bg-linear-to-br from-slate-600/40 to-slate-950 rounded-lg mb-6 items-center justify-center">
+        <div className="flex flex-row items-center mb-15">
+          {skill.skl_picture ? (
+            <img
+              src={skill.skl_picture}
+              alt={skill.skl_title}
+              className="w-26 h-26 object-cover rounded-md mr-4"
+            />
+          ) : (
+            <div className="w-26 h-26 bg-slate-700 rounded-md mr-4 flex items-center justify-center">
+              <span className="text-sm text-slate-400">No Image</span>
+            </div>
+          )}
+          <div className="w-full ">
+            <div className="flex flex-row w-full justify-between items-center border-b border-slate-400/40 mt-2">
+              <h2 className="text-3xl font-bold text-white mb-3">{skill.skl_title}</h2>
+              <div className="flex flex-row  justify-center items-center gap-2 bg-linear-to-br from-yellow-100 to-yellow-500 px-3 py-1 rounded-lg">
+                <h4 className="text-2xl font-black text-slate-950">{skill.rating}</h4>
+                <Star size={20} strokeWidth={3} className="text-slate-950" />  
+              </div>
+            </div>
+            <p className="text-slate-300 mb-3">{skill.skl_dscrptn}</p>
+            <div className="flex flex-row items-center gap-6 bg-orange-600/10 w-fit px-5 py-2 rounded-full border border-orange-400">
+              <p className="text-sm text-orange-300">Duration: {skill.skl_duration}</p>
+            </div>
+          </div>
+        </div>
+        
+        
+        
       </div>
 
       <div className="space-y-3">

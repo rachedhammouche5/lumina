@@ -1,13 +1,13 @@
 # 📁 lumina - Project Structure
 
-*Generated on: 4/13/2026, 5:59:35 PM*
+*Generated on: 4/16/2026, 4:16:24 PM*
 
 ## 📋 Quick Overview
 
 | Metric | Value |
 |--------|-------|
-| 📄 Total Files | 170 |
-| 📁 Total Folders | 67 |
+| 📄 Total Files | 186 |
+| 📁 Total Folders | 72 |
 | 🌳 Max Depth | 6 levels |
 | 🛠️ Tech Stack | React, Next.js, TypeScript, CSS, Node.js |
 
@@ -24,45 +24,45 @@
 
 ### By File Type
 
-- ⚛️ **.tsx** (React TypeScript files): 74 files (43.5%)
-- 🔷 **.ts** (TypeScript files): 40 files (23.5%)
-- 📄 **.** (Other files): 10 files (5.9%)
-- 🖼️ **.png** (PNG images): 7 files (4.1%)
-- 🎨 **.svg** (SVG images): 6 files (3.5%)
-- 📄 **.sql** (Other files): 5 files (2.9%)
-- 📄 **.txt** (Text files): 4 files (2.4%)
-- 📕 **.pdf** (PDF files): 4 files (2.4%)
-- 📄 **.mjs** (Other files): 3 files (1.8%)
-- 🖼️ **.jpg** (JPEG images): 3 files (1.8%)
-- 📖 **.md** (Markdown files): 2 files (1.2%)
-- 🎨 **.css** (Stylesheets): 2 files (1.2%)
-- ⚙️ **.json** (JSON files): 2 files (1.2%)
-- ⚙️ **.yaml** (YAML files): 2 files (1.2%)
-- ⚙️ **.yml** (YAML files): 1 files (0.6%)
-- 🚫 **.gitignore** (Git ignore): 1 files (0.6%)
-- 🖼️ **.ico** (Icon files): 1 files (0.6%)
-- 📄 **.mp3** (Other files): 1 files (0.6%)
-- 📄 **.mp4** (Other files): 1 files (0.6%)
-- 📄 **.tsbuildinfo** (Other files): 1 files (0.6%)
+- ⚛️ **.tsx** (React TypeScript files): 83 files (44.6%)
+- 🔷 **.ts** (TypeScript files): 45 files (24.2%)
+- 📄 **.** (Other files): 10 files (5.4%)
+- 🖼️ **.png** (PNG images): 7 files (3.8%)
+- 🎨 **.svg** (SVG images): 6 files (3.2%)
+- 📄 **.sql** (Other files): 5 files (2.7%)
+- 📄 **.txt** (Text files): 4 files (2.2%)
+- 📕 **.pdf** (PDF files): 4 files (2.2%)
+- 📖 **.md** (Markdown files): 3 files (1.6%)
+- 📄 **.mjs** (Other files): 3 files (1.6%)
+- ⚙️ **.json** (JSON files): 3 files (1.6%)
+- 🖼️ **.jpg** (JPEG images): 3 files (1.6%)
+- 🎨 **.css** (Stylesheets): 2 files (1.1%)
+- ⚙️ **.yaml** (YAML files): 2 files (1.1%)
+- ⚙️ **.yml** (YAML files): 1 files (0.5%)
+- 🚫 **.gitignore** (Git ignore): 1 files (0.5%)
+- 🖼️ **.ico** (Icon files): 1 files (0.5%)
+- 📄 **.mp3** (Other files): 1 files (0.5%)
+- 📄 **.mp4** (Other files): 1 files (0.5%)
+- 📄 **.tsbuildinfo** (Other files): 1 files (0.5%)
 
 ### By Category
 
-- **React**: 74 files (43.5%)
-- **TypeScript**: 40 files (23.5%)
-- **Other**: 21 files (12.4%)
-- **Assets**: 17 files (10.0%)
-- **Docs**: 10 files (5.9%)
-- **Config**: 5 files (2.9%)
-- **Styles**: 2 files (1.2%)
-- **DevOps**: 1 files (0.6%)
+- **React**: 83 files (44.6%)
+- **TypeScript**: 45 files (24.2%)
+- **Other**: 21 files (11.3%)
+- **Assets**: 17 files (9.1%)
+- **Docs**: 11 files (5.9%)
+- **Config**: 6 files (3.2%)
+- **Styles**: 2 files (1.1%)
+- **DevOps**: 1 files (0.5%)
 
 ### 📁 Largest Directories
 
-- **root**: 170 files
-- **app**: 96 files
-- **app/ui**: 29 files
+- **root**: 186 files
+- **app**: 109 files
+- **app/ui**: 37 files
 - **public**: 22 files
-- **app/skills**: 15 files
+- **app/teacher**: 16 files
 
 ## 🌳 Directory Structure
 
@@ -85,7 +85,12 @@ lumina/
 │   │   └── ⚛️ default.tsx
 │   ├── 📂 actions/
 │   │   ├── 🔷 enrollement.ts
-│   │   └── 🔷 roadmap.ts
+│   │   ├── 📂 review/
+│   │   │   ├── 🔷 comments.ts
+│   │   │   ├── 🔷 rating-utils.ts
+│   │   │   └── 🔷 types.ts
+│   │   ├── 🔷 roadmap.ts
+│   │   └── 🔷 teacherGlobalDashboard.ts
 │   ├── 📂 admin/
 │   │   ├── 📂 _components/
 │   │   │   ├── ⚛️ AdminUsersSection.tsx
@@ -160,6 +165,8 @@ lumina/
 │   ├── 📂 teacher/
 │   │   ├── 📂 apply/
 │   │   │   └── ⚛️ page.tsx
+│   │   ├── 📂 dashboard/
+│   │   │   └── ⚛️ page.tsx
 │   │   ├── ⚛️ layout.tsx
 │   │   ├── ⚛️ page.tsx
 │   │   └── 📂 skills/
@@ -183,6 +190,12 @@ lumina/
 │   │   │   └── ⚛️ SignupPageView.tsx
 │   │   ├── ⚛️ Button.tsx
 │   │   ├── ⚛️ Card.tsx
+│   │   ├── 📂 comments/
+│   │   │   ├── ⚛️ Avatar.tsx
+│   │   │   ├── ⚛️ CommentCard.tsx
+│   │   │   ├── ⚛️ CommentsSection.tsx
+│   │   │   ├── ⚛️ Composer.tsx
+│   │   │   └── ⚛️ Rating.tsx
 │   │   ├── ⚛️ Features.tsx
 │   │   ├── ⚛️ Footer.tsx
 │   │   ├── 🎨 global.css
@@ -205,10 +218,15 @@ lumina/
 │   │   │   ├── ⚛️ ProgressBar.tsx
 │   │   │   ├── ⚛️ RoadmapFlow.tsx
 │   │   │   └── 🔷 types.ts
-│   │   └── 📂 Skills/
+│   │   ├── 📂 Skills/
 │   │   │   ├── ⚛️ CourseCard.tsx
 │   │   │   ├── ⚛️ CourseCardSkeleton.tsx
 │   │   │   └── ⚛️ CourseSearchClient.tsx
+│   │   └── 📂 teacherDashboard/
+│   │   │   ├── 📂 chart/
+│   │   │   │   ├── ⚛️ BaseAreaChart.tsx
+│   │   │   │   └── ⚛️ container.tsx
+│   │   │   └── ⚛️ generalCards.tsx
 ├── 📖 CLAUDE.md
 ├── 🔷 database.types.ts
 ├── 🔵 🔍 **eslint.config.mjs**
@@ -224,6 +242,7 @@ lumina/
 │   │   │   └── 🔷 getRole.ts
 ├── 📚 lib/
 │   ├── 🔷 database.types.ts
+│   ├── 🔷 reviews.ts
 │   └── 📂 supabase/
 │   │   ├── 🔷 client.ts
 │   │   └── 🔷 server.ts
@@ -238,6 +257,7 @@ lumina/
 ├── 📄 project_snapshot_part2.txt
 ├── 📄 project_snapshot_part3.txt
 ├── 📄 project_snapshot.txt
+├── 📖 project_structure.md
 ├── 🔷 proxy.ts
 ├── 🌐 public/
 │   ├── 🖼️ orangecyan.jpg
@@ -278,6 +298,7 @@ lumina/
 │   ├── 📂 .temp/
 │   │   ├── 📄 cli-latest
 │   │   ├── 📄 gotrue-version
+│   │   ├── ⚙️ linked-project.json
 │   │   ├── 📄 pooler-url
 │   │   ├── 📄 postgres-version
 │   │   ├── 📄 project-ref
