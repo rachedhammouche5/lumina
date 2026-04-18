@@ -1,11 +1,17 @@
 "use client";
 
-import TopicNode from "./TopicNode";
 import AddTopicForm from "./AddTopicForm";
 import AddQuizForm from "./AddQuizForm";
-import { useMemo, useState } from "react";
+import QuizManagerModal from "./QuizManagerModal";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Skill, Topic, Content } from "@/lib/database.types";
-import { Star } from "lucide-react";
+import RoadmapFlow from "@/app/ui/roadmapcomp/teacherRoadmap/TRoadmapFlow";
+import { deleteTopic } from "./actions";
+import { deleteSkill } from "../actions";
+import SkillFormModal from "../SkillFormModal";
+import SkillHeader from "@/app/ui/SkillHeader";
+import { Pencil, Trash2 } from "lucide-react";
 
 export default function CourseDetailView({
   skill,
@@ -16,16 +22,19 @@ export default function CourseDetailView({
   topics: Topic[];
   contents: Content[];
 }) {
+  const teacher_id = skill.teacher_id ?? "";
+  const [activeView, setActiveView] = useState<"roadmap" | "quiz">("roadmap");
+  const [editOpen, setEditOpen] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deletingSkill, setDeletingSkill] = useState(false);
+  const router = useRouter();
   const [parentId, setParentId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [prefillTopic, setPrefillTopic] = useState<Topic | null>(null);
   const [isQuizModalOpen, setQuizModalOpen] = useState(false);
   const [quizTopic, setQuizTopic] = useState<Topic | null>(null);
-
-  const rootTopics = useMemo(
-    () => topics.filter((topic) => topic.parent_id === null),
-    [topics],
-  );
+  const [selectedQuizTopicId, setSelectedQuizTopicId] = useState<string>(topics[0]?.tpc_id ?? "");
+  const [quizManagerVersion, setQuizManagerVersion] = useState(0);
 
   const openTopicModal = (topic: Topic | null, editing: boolean) => {
     if (editing) {
@@ -54,66 +63,221 @@ export default function CourseDetailView({
     setQuizModalOpen(false);
   };
 
+  const handleAddChildTopic = (topicId: string | null) => {
+    setParentId(topicId);
+    setPrefillTopic(null);
+    setIsModalOpen(true);
+  };
+
+  const handlePreviewTopic = (topicId: string) => {
+    router.push(`/skills/${skill.skl_id}/${topicId}`);
+  };
+
+  const handleAddQuizTopic = (topicId: string) => {
+    const topic = topics.find((item) => item.tpc_id === topicId);
+    if (topic) {
+      setActiveView("quiz");
+      setSelectedQuizTopicId(topicId);
+      setQuizTopic(topic);
+      setQuizModalOpen(true);
+    }
+  };
+
+  const handleRemoveTopic = async (topicId: string) => {
+    if (!window.confirm("Delete this item?")) return;
+
+    if (topicId === skill.skl_id) {
+      const result = await deleteSkill(skill.skl_id, skill.teacher_id ?? "");
+      if ("error" in result && result.error) {
+        console.error(result.error);
+        return;
+      }
+      router.push("/teacher/skills");
+      return;
+    }
+
+    const result = await deleteTopic(topicId, skill.skl_id);
+    if ("error" in result && result.error) {
+      console.error(result.error);
+      return;
+    }
+    if (topicId === skill.skl_id) {
+      const result = await deleteSkill(skill.skl_id, skill.teacher_id ?? "");
+      router.push("/teacher/skills");
+      return;
+    }
+
+    if ("error" in result && result.error) {
+      console.error(result.error);
+      return;
+    }
+    router.refresh();
+  };
+
+  const handleDeleteSkill = async () => {
+    setDeletingSkill(true);
+    const result = await deleteSkill(skill.skl_id, teacher_id);
+    setDeletingSkill(false);
+    if ("error" in result && result.error) {
+      console.error(result.error);
+      return;
+    }
+    router.push("/teacher/skills");
+  };
+
   return (
-    <div className="">
-      <div className="space-y-2 py-6 px-8 bg-linear-to-br from-slate-600/40 to-slate-950 rounded-lg mb-6 items-center justify-center">
-        <div className="flex flex-row items-center mb-15">
-          {skill.skl_picture ? (
-            <img
-              src={skill.skl_picture}
-              alt={skill.skl_title}
-              className="w-26 h-26 object-cover rounded-md mr-4"
-            />
-          ) : (
-            <div className="w-26 h-26 bg-slate-700 rounded-md mr-4 flex items-center justify-center">
-              <span className="text-sm text-slate-400">No Image</span>
-            </div>
-          )}
-          <div className="w-full ">
-            <div className="flex flex-row w-full justify-between items-center border-b border-slate-400/40 mt-2">
-              <h2 className="text-3xl font-bold text-white mb-3">{skill.skl_title}</h2>
-              <div className="flex flex-row  justify-center items-center gap-2 bg-linear-to-br from-yellow-100 to-yellow-500 px-3 py-1 rounded-lg">
-                <h4 className="text-2xl font-black text-slate-950">{skill.rating}</h4>
-                <Star size={20} strokeWidth={3} className="text-slate-950" />  
+    <div className="space-y-5">
+      <SkillHeader
+        data={skill}
+        actions={
+          <>
+            <button
+              type="button"
+              onClick={() => setEditOpen(true)}
+              className="inline-flex items-center gap-2 rounded-xl border border-indigo-400/40 bg-indigo-500/10 px-4 py-2 text-sm font-semibold text-indigo-100 transition hover:bg-indigo-500/20"
+            >
+              <Pencil size={15} />
+              Edit skill
+            </button>
+            <button
+              type="button"
+              onClick={() => setDeleteConfirmOpen(true)}
+              className="inline-flex items-center gap-2 rounded-xl border border-red-400/40 bg-red-500/10 px-4 py-2 text-sm font-semibold text-red-100 transition hover:bg-red-500/20"
+            >
+              <Trash2 size={15} />
+              Remove skill
+            </button>
+          </>
+        }
+      />
+
+      <div className="rounded-3xl border border-slate-700/80 bg-slate-900/70 p-2 sm:p-3">
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => setActiveView("roadmap")}
+            className={`rounded-2xl px-4 py-2 text-sm font-semibold transition sm:text-base ${
+              activeView === "roadmap"
+                ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/30"
+                : "bg-slate-800 text-slate-300 hover:bg-slate-700"
+            }`}
+          >
+            Roadmap studio
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveView("quiz")}
+            className={`rounded-2xl px-4 py-2 text-sm font-semibold transition sm:text-base ${
+              activeView === "quiz"
+                ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/30"
+                : "bg-slate-800 text-slate-300 hover:bg-slate-700"
+            }`}
+          >
+            Quiz studio
+          </button>
+        </div>
+      </div>
+
+      <div className="relative overflow-hidden rounded-3xl border border-slate-700 bg-slate-900/60">
+        <div className="flex min-h-[520px] w-[200%] transition-transform duration-500 ease-out" style={{ transform: activeView === "roadmap" ? "translateX(0%)" : "translateX(-50%)" }}>
+          <section className="w-1/2 space-y-4 p-4 sm:p-6">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-semibold text-white">Roadmap studio</h2>
+                <p className="text-sm text-slate-400">Build topic flow and attach quiz tasks directly from nodes.</p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => openTopicModal(null, false)}
+                  className="rounded-xl border border-indigo-400/40 bg-indigo-500/10 px-3 py-2 text-sm font-semibold text-indigo-100 transition hover:bg-indigo-500/20"
+                >
+                  Add topic
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveView("quiz")}
+                  className="rounded-xl border border-emerald-400/40 bg-emerald-500/10 px-3 py-2 text-sm font-semibold text-emerald-100 transition hover:bg-emerald-500/20"
+                >
+                  Open quiz studio
+                </button>
               </div>
             </div>
-            <p className="text-slate-300 mb-3">{skill.skl_dscrptn}</p>
-            <div className="flex flex-row items-center gap-6 bg-orange-600/10 w-fit px-5 py-2 rounded-full border border-orange-400">
-              <p className="text-sm text-orange-300">Duration: {skill.skl_duration}</p>
+
+            <RoadmapFlow
+              topics={topics}
+              root={{
+                id: skill.skl_id,
+                title: skill.skl_title,
+                subtitle: skill.skl_dscrptn,
+              }}
+              forceUnlocked
+              onAddChild={handleAddChildTopic}
+              onPreviewTopic={handlePreviewTopic}
+              onAddQuizTopic={handleAddQuizTopic}
+              onRemoveTopic={handleRemoveTopic}
+            />
+          </section>
+
+          <section className="w-1/2 space-y-4 p-4 sm:p-6">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-semibold text-white">Quiz studio</h2>
+                <p className="text-sm text-slate-400">Pick a topic and manage quiz items like a full page workspace.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setQuizModalOpen(true)}
+                disabled={!selectedQuizTopicId}
+                className="rounded-xl border border-emerald-400/40 bg-emerald-500/10 px-3 py-2 text-sm font-semibold text-emerald-100 transition hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Add question
+              </button>
+            </div>
+
+            <QuizManagerModal
+              key={quizManagerVersion}
+              skill={skill}
+              topics={topics}
+              selectedTopicId={selectedQuizTopicId}
+              onSelectTopic={setSelectedQuizTopicId}
+              onCreateQuestion={(topic) => {
+                setSelectedQuizTopicId(topic.tpc_id);
+                setQuizTopic(topic);
+                setQuizModalOpen(true);
+              }}
+            />
+          </section>
+        </div>
+      </div>
+
+      {deleteConfirmOpen ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="w-full max-w-md rounded-2xl border border-slate-700 bg-slate-900 p-5">
+            <h3 className="text-lg font-semibold text-white">Delete this skill?</h3>
+            <p className="mt-2 text-sm text-slate-300">
+              This removes the skill with all topics and quiz data. This action cannot be undone.
+            </p>
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setDeleteConfirmOpen(false)}
+                className="rounded-lg border border-slate-600 px-4 py-2 text-sm text-slate-200"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteSkill}
+                disabled={deletingSkill}
+                className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-500 disabled:opacity-60"
+              >
+                {deletingSkill ? "Deleting..." : "Delete skill"}
+              </button>
             </div>
           </div>
         </div>
-        
-        
-        
-      </div>
-
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 className="text-xl font-semibold text-white">Topics</h3>
-          <button
-            type="button"
-            onClick={() => openTopicModal(null, false)}
-            className="rounded-md bg-indigo-500 px-3 py-2 text-sm font-semibold text-white transition hover:bg-indigo-400"
-          >
-            Add Topic
-          </button>
-        </div>
-
-        <ul className="space-y-2">
-          {rootTopics.map((topic) => (
-            <TopicNode
-              key={topic.tpc_id}
-              topic={topic}
-              allTopics={topics}
-              skillId={skill.skl_id} 
-              level={0}
-              onAddTopic={openTopicModal}
-              onAddQuiz={openQuizModal}
-            />
-          ))}
-        </ul>
-      </div>
+      ) : null}
 
       {isModalOpen ? (
         prefillTopic != null ? (
@@ -140,10 +304,17 @@ export default function CourseDetailView({
           <AddQuizForm
             skill={skill}
             topic={quizTopic}
-            onClose={closeQuizModal}
+            onClose={() => {
+              closeQuizModal();
+              setQuizManagerVersion((prev) => prev + 1);
+            }}
           />
         ) : null
       ) : null}
+
+      {editOpen && (
+        <SkillFormModal teacher_id={teacher_id} editingSkill={skill} onClose={() => setEditOpen(false)} />
+      )}
     </div>
   );
 }

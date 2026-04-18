@@ -12,6 +12,10 @@ export type RoadmapNodeData = {
   icon?: LucideIcon;
   learnHref?: string;
   quizHref?: string;
+  onAddChild?: () => void;
+  onPreview?: () => void;
+  onAddQuiz?: () => void;
+  onRemove?: () => void;
 };
 
 // Minimal Supabase row shapes we rely on for the roadmap

@@ -77,6 +77,11 @@ export const generateRoadmapElements = (
   scores: ScoreRow[] = [],
   root?: { id: string; title: string; subtitle?: string },
   isEnrolled = true,
+  onAddChild?: (parentId: string | null) => void,
+  onPreviewTopic?: (topicId: string) => void,
+  onAddQuizTopic?: (topicId: string) => void,
+  onRemoveTopic?: (topicId: string) => void,
+  forceUnlocked = false,
 ): { nodes: Node<RoadmapNodeData>[]; edges: Edge[]; width: number; height: number } => {
     const childrenMap = new Map<string, TopicRow[]>();
     topics.forEach((t) => {
@@ -153,30 +158,42 @@ export const generateRoadmapElements = (
     const nodes: Node<RoadmapNodeData>[] = [];
 
     if (root) {
-    nodes.push({
-      id: root.id,
-      type: 'roadmap',
-      position: positions.get(root.id) ?? { x: 0, y: 0 },
-      zIndex: getNodeZIndex(!isEnrolled ? "locked" : allTopicsEffectiveCompleted ? "completed" : "locked"),
-      data: {
-        title: root.title,
-        subtitle: root.subtitle,
-        status: !isEnrolled ? "locked" : allTopicsEffectiveCompleted ? "completed" : "locked",
-        degree: rootEffective,
-        id: root.id,
-      }
-    });
-  }
+        const rootStatus: RoadmapStatus = forceUnlocked
+            ? "unlocked"
+            : !isEnrolled
+            ? "locked"
+            : allTopicsEffectiveCompleted
+            ? "completed"
+            : "locked";
+
+        nodes.push({
+            id: root.id,
+            type: "roadmap",
+            position: positions.get(root.id) ?? { x: 0, y: 0 },
+            zIndex: getNodeZIndex(rootStatus),
+            data: {
+                title: root.title,
+                subtitle: root.subtitle,
+                status: rootStatus,
+                degree: rootEffective,
+                id: root.id,
+                onAddChild: () => onAddChild?.(null),
+                onPreview: () => onPreviewTopic?.(root.id),
+                onRemove: () => onRemoveTopic?.(root.id),
+            },
+        });
+    }
 
     topics.forEach((topic) => {
-        const userScore = scores.find((s) => s.tpc_id === topic.tpc_id);
         const effectiveDegree = effectiveDegrees.get(topic.tpc_id) || 0;
         const hasEffectiveScore = effectiveDegree > 0;
         const children = childrenMap.get(topic.tpc_id) ?? [];
         const areChildrenPassed = children.length > 0 && children.every((c) => (effectiveDegrees.get(c.tpc_id) || 0) >= 50);
 
         let currentStatus: RoadmapStatus = "locked";
-        if (!isEnrolled) {
+        if (forceUnlocked) {
+            currentStatus = "unlocked";
+        } else if (!isEnrolled) {
             currentStatus = "locked";
         } else if (hasEffectiveScore) {
             currentStatus = "completed";
@@ -188,7 +205,7 @@ export const generateRoadmapElements = (
 
         nodes.push({
             id: topic.tpc_id,
-            type: 'roadmap',
+            type: "roadmap",
             position: positions.get(topic.tpc_id) ?? { x: 0, y: spacingY },
             zIndex: getNodeZIndex(currentStatus),
             data: {
@@ -200,7 +217,11 @@ export const generateRoadmapElements = (
                 parentId: topic.parent_id ?? undefined,
                 learnHref: `/skills/${topic.skill_id}/${topic.tpc_id}`,
                 quizHref: `/skills/${topic.skill_id}/${topic.tpc_id}/quiz`,
-            }
+                        onAddChild: () => onAddChild?.(topic.tpc_id),
+                onPreview: () => onPreviewTopic?.(topic.tpc_id),
+                onAddQuiz: () => onAddQuizTopic?.(topic.tpc_id),
+                onRemove: () => onRemoveTopic?.(topic.tpc_id),
+            },
         });
     });
 

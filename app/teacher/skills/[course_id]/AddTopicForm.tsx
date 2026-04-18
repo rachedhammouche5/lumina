@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Topic, Skill, Content, ContentType } from "@/lib/database.types";
 import { addTopic, updateTopic, uploadContentFile, deleteContent } from "./actions";
 import {Trash2} from "lucide-react";
@@ -105,6 +106,8 @@ export default function AddTopicForm({
     }));
   }
 
+  const router = useRouter();
+
   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -149,6 +152,7 @@ export default function AddTopicForm({
       );
 
       if ("error" in result && result.error) { console.error(result.error); return; }
+      router.refresh();
       onClose();
       return;
     }
@@ -160,6 +164,7 @@ export default function AddTopicForm({
     });
 
     if ("error" in result && result.error) { console.error(result.error); return; }
+    router.refresh();
     onClose();
   };
 
