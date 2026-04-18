@@ -115,6 +115,13 @@ export type Database = {
             referencedColumns: ["skl_id"]
           },
           {
+            foreignKeyName: "enroll_skill_id_fkey"
+            columns: ["skill_id"]
+            isOneToOne: false
+            referencedRelation: "skill_with_avg_rating"
+            referencedColumns: ["skl_id"]
+          },
+          {
             foreignKeyName: "enroll_student_id_fkey"
             columns: ["student_id"]
             isOneToOne: false
@@ -225,6 +232,13 @@ export type Database = {
             referencedColumns: ["skl_id"]
           },
           {
+            foreignKeyName: "review_skill_id_fkey"
+            columns: ["skill_id"]
+            isOneToOne: false
+            referencedRelation: "skill_with_avg_rating"
+            referencedColumns: ["skl_id"]
+          },
+          {
             foreignKeyName: "review_studentId_fkey"
             columns: ["studentId"]
             isOneToOne: false
@@ -307,6 +321,7 @@ export type Database = {
       }
       Skill: {
         Row: {
+          rating: number
           skl_dscrptn: string
           skl_duration: number
           skl_id: string
@@ -315,6 +330,7 @@ export type Database = {
           teacher_id: string | null
         }
         Insert: {
+          rating?: number
           skl_dscrptn: string
           skl_duration: number
           skl_id?: string
@@ -323,6 +339,7 @@ export type Database = {
           teacher_id?: string | null
         }
         Update: {
+          rating?: number
           skl_dscrptn?: string
           skl_duration?: number
           skl_id?: string
@@ -464,11 +481,38 @@ export type Database = {
             referencedRelation: "Skill"
             referencedColumns: ["skl_id"]
           },
+          {
+            foreignKeyName: "Topic_skill_id_fkey"
+            columns: ["skill_id"]
+            isOneToOne: false
+            referencedRelation: "skill_with_avg_rating"
+            referencedColumns: ["skl_id"]
+          },
         ]
       }
     }
     Views: {
-      [_ in never]: never
+      skill_with_avg_rating: {
+        Row: {
+          avg_rating: number | null
+          rating: number | null
+          skl_dscrptn: string | null
+          skl_duration: number | null
+          skl_id: string | null
+          skl_picture: string | null
+          skl_title: string | null
+          teacher_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "Skill_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "Teacher"
+            referencedColumns: ["tchr_id"]
+          },
+        ]
+      }
     }
     Functions: {
       get_avg_rating_by_teacher: {

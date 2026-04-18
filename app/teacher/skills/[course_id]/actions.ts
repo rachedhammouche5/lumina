@@ -204,13 +204,27 @@ export async function deleteContent(contentId: string, skillId: string) {
 export async function deleteTopic(topicId: string, skillId: string) {
   const supabase = await createClient();
 
-  // Delete contents first (if no CASCADE on FK)
-  await supabase.from("Content").delete().eq("tpc_id", topicId);
+  const idsToDelete: string[] = [topicId];
+  const queue = [topicId];
 
-  const { error } = await supabase
-    .from("Topic")
-    .delete()
-    .eq("tpc_id", topicId);
+  while (queue.length > 0) {
+    const current = queue.pop();
+    if (!current) continue;
+
+    const { data: children, error: childError } = await supabase
+      .from("Topic")
+      .select("tpc_id")
+      .eq("parent_id", current);
+
+    if (childError) return { error: childError.message };
+
+    const childIds = (children ?? []).map((child) => child.tpc_id);
+    queue.push(...childIds);
+    idsToDelete.push(...childIds);
+  }
+
+  await supabase.from("Content").delete().in("tpc_id", idsToDelete);
+  const { error } = await supabase.from("Topic").delete().in("tpc_id", idsToDelete);
 
   if (error) return { error: error.message };
 

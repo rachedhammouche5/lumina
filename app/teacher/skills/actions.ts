@@ -70,10 +70,97 @@ export async function updateSkill(formData: {
 export async function deleteSkill(skl_id: string, teacher_id: string) {
   const supabase = await createClient();
 
-  const { error } = await supabase.from("Skill").delete().eq("skl_id", skl_id);
+  if (!skl_id || !teacher_id) {
+    return { error: "Missing skill or teacher id." };
+  }
+
+  const { data: ownedSkill, error: ownedSkillError } = await supabase
+    .from("Skill")
+    .select("skl_id")
+    .eq("skl_id", skl_id)
+    .eq("teacher_id", teacher_id)
+    .maybeSingle();
+
+  if (ownedSkillError) return { error: ownedSkillError.message };
+  if (!ownedSkill) return { error: "Skill not found or not owned by this teacher." };
+
+  const { data: topicRows, error: topicError } = await supabase
+    .from("Topic")
+    .select("tpc_id")
+    .eq("skill_id", skl_id);
+
+  if (topicError) return { error: topicError.message };
+
+  const topicIds = (topicRows ?? []).map((topic) => topic.tpc_id);
+
+  if (topicIds.length > 0) {
+    const { data: quizRows, error: quizFetchError } = await supabase
+      .from("quiz")
+      .select("qst_id")
+      .in("tpc_id", topicIds);
+    if (quizFetchError) return { error: quizFetchError.message };
+
+    const quizIds = (quizRows ?? []).map((quiz) => quiz.qst_id);
+
+    if (quizIds.length > 0) {
+      const { error: responseDeleteError } = await supabase
+        .from("q_response")
+        .delete()
+        .in("quizId", quizIds);
+      if (responseDeleteError) return { error: responseDeleteError.message };
+    }
+
+    const { error: quizDeleteError } = await supabase
+      .from("quiz")
+      .delete()
+      .in("tpc_id", topicIds);
+    if (quizDeleteError) return { error: quizDeleteError.message };
+
+    const { error: scoreDeleteError } = await supabase
+      .from("score")
+      .delete()
+      .in("tpc_id", topicIds);
+    if (scoreDeleteError) return { error: scoreDeleteError.message };
+
+    const { error: contentDeleteError } = await supabase
+      .from("Content")
+      .delete()
+      .in("tpc_id", topicIds);
+    if (contentDeleteError) return { error: contentDeleteError.message };
+
+    const { error: topicDeleteError } = await supabase
+      .from("Topic")
+      .delete()
+      .in("tpc_id", topicIds);
+    if (topicDeleteError) return { error: topicDeleteError.message };
+  }
+
+  const { data: reviewRows, error: reviewFetchError } = await supabase
+    .from("review")
+    .select("id")
+    .eq("skill_id", skl_id);
+  if (reviewFetchError) return { error: reviewFetchError.message };
+
+  const reviewIds = (reviewRows ?? []).map((review) => review.id);
+  if (reviewIds.length > 0) {
+    const { error: likesDeleteError } = await supabase
+      .from("review_likes")
+      .delete()
+      .in("review_id", reviewIds);
+    if (likesDeleteError) return { error: likesDeleteError.message };
+  }
+
+  const { error: reviewDeleteError } = await supabase.from("review").delete().eq("skill_id", skl_id);
+  if (reviewDeleteError) return { error: reviewDeleteError.message };
+
+  const { error: enrollDeleteError } = await supabase.from("enroll").delete().eq("skill_id", skl_id);
+  if (enrollDeleteError) return { error: enrollDeleteError.message };
+
+  const { error } = await supabase.from("Skill").delete().eq("skl_id", skl_id).eq("teacher_id", teacher_id);
 
   if (error) return { error: error.message };
 
   revalidatePath(`/teacher/skills`);
+  revalidatePath(`/teacher/skills/${skl_id}`);
   return { success: true };
 }

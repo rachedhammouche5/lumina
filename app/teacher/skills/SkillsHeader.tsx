@@ -3,22 +3,18 @@
 import { useState } from "react";
 import SkillFormModal from "./SkillFormModal";
 import { Skill } from "@/lib/database.types";
+import Button from "@/app/ui/Button";
+import { Plus } from "lucide-react";
 
 export default function SkillsHeader({ teacher_id }: { teacher_id: string }) {
   const [modalOpen, setModalOpen] = useState(false);
 
   return (
     <>
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-white">Skills</h2>
-        <button
-          type="button"
-          onClick={() => setModalOpen(true)}
-          className="rounded-lg bg-indigo-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-400"
-        >
-          + Add Skill
-        </button>
-      </div>
+      <Button variant="secondary" className="gap-3" onClick={setModalOpen} >
+        <Plus size={20} />
+        Add Skill
+      </Button>
 
       {modalOpen && (
         <SkillFormModal
