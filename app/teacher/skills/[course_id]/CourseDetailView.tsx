@@ -35,6 +35,7 @@ export default function CourseDetailView({
   const [quizTopic, setQuizTopic] = useState<Topic | null>(null);
   const [selectedQuizTopicId, setSelectedQuizTopicId] = useState<string>(topics[0]?.tpc_id ?? "");
   const [quizManagerVersion, setQuizManagerVersion] = useState(0);
+  const hasRootTopic = topics.some((topic) => topic.parent_id === null);
 
   const openTopicModal = (topic: Topic | null, editing: boolean) => {
     if (editing) {
@@ -189,9 +190,10 @@ export default function CourseDetailView({
                 <button
                   type="button"
                   onClick={() => openTopicModal(null, false)}
-                  className="rounded-xl border border-indigo-400/40 bg-indigo-500/10 px-3 py-2 text-sm font-semibold text-indigo-100 transition hover:bg-indigo-500/20"
+                  disabled={hasRootTopic}
+                  className="rounded-xl border border-indigo-400/40 bg-indigo-500/10 px-3 py-2 text-sm font-semibold text-indigo-100 transition hover:bg-indigo-500/20 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  Add topic
+                  Add root
                 </button>
                 <button
                   type="button"
@@ -205,11 +207,6 @@ export default function CourseDetailView({
 
             <RoadmapFlow
               topics={topics}
-              root={{
-                id: skill.skl_id,
-                title: skill.skl_title,
-                subtitle: skill.skl_dscrptn,
-              }}
               forceUnlocked
               onAddChild={handleAddChildTopic}
               onPreviewTopic={handlePreviewTopic}
