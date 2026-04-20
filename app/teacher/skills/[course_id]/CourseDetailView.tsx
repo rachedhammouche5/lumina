@@ -3,6 +3,7 @@
 import AddTopicForm from "./AddTopicForm";
 import AddQuizForm from "./AddQuizForm";
 import QuizManagerModal from "./QuizManagerModal";
+import ContentManagerPanel from "./ContentManagerPanel";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Skill, Topic, Content } from "@/lib/database.types";
@@ -23,7 +24,7 @@ export default function CourseDetailView({
   contents: Content[];
 }) {
   const teacher_id = skill.teacher_id ?? "";
-  const [activeView, setActiveView] = useState<"roadmap" | "quiz">("roadmap");
+  const [activeView, setActiveView] = useState<"roadmap" | "quiz" | "content">("roadmap");
   const [editOpen, setEditOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deletingSkill, setDeletingSkill] = useState(false);
@@ -34,6 +35,7 @@ export default function CourseDetailView({
   const [isQuizModalOpen, setQuizModalOpen] = useState(false);
   const [quizTopic, setQuizTopic] = useState<Topic | null>(null);
   const [selectedQuizTopicId, setSelectedQuizTopicId] = useState<string>(topics[0]?.tpc_id ?? "");
+  const [selectedContentTopicId, setSelectedContentTopicId] = useState<string>(topics[0]?.tpc_id ?? "");
   const [quizManagerVersion, setQuizManagerVersion] = useState(0);
   const hasRootTopic = topics.some((topic) => topic.parent_id === null);
 
@@ -153,7 +155,7 @@ export default function CourseDetailView({
       />
 
       <div className="rounded-3xl border border-slate-700/80 bg-slate-900/70 p-2 sm:p-3">
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-3 gap-2">
           <button
             type="button"
             onClick={() => setActiveView("roadmap")}
@@ -175,6 +177,17 @@ export default function CourseDetailView({
             }`}
           >
             Quiz studio
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveView("content")}
+            className={`rounded-2xl px-4 py-2 text-sm font-semibold transition sm:text-base ${
+              activeView === "content"
+                ? "bg-indigo-500 text-white shadow-lg shadow-indigo-500/30"
+                : "bg-slate-800 text-slate-300 hover:bg-slate-700"
+            }`}
+          >
+            Content studio
           </button>
         </div>
       </div>
@@ -201,6 +214,13 @@ export default function CourseDetailView({
                   className="rounded-xl border border-emerald-400/40 bg-emerald-500/10 px-3 py-2 text-sm font-semibold text-emerald-100 transition hover:bg-emerald-500/20"
                 >
                   Open quiz studio
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveView("content")}
+                  className="rounded-xl border border-indigo-400/40 bg-indigo-500/10 px-3 py-2 text-sm font-semibold text-indigo-100 transition hover:bg-indigo-500/20"
+                >
+                  Open content studio
                 </button>
               </div>
             </div>
@@ -243,6 +263,22 @@ export default function CourseDetailView({
                 setQuizModalOpen(true);
               }}
             />
+        </section>
+
+        <section className={`${activeView === "content" ? "block" : "hidden"} space-y-4 p-4 sm:p-6`}>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="text-xl font-semibold text-white">Content studio</h2>
+              <p className="text-sm text-slate-400">Manage topic content in a full-page workspace, similar to quiz studio.</p>
+            </div>
+          </div>
+
+          <ContentManagerPanel
+            skill={skill}
+            topics={topics}
+            selectedTopicId={selectedContentTopicId}
+            onSelectTopic={setSelectedContentTopicId}
+          />
         </section>
       </div>
 
