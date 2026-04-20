@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import Logo from "../ui/Logo";
 import Button from "../ui/Button";
 import Link from "next/link";
-import { House, LibraryBig, Blocks, Menu, User, X, FileText } from "lucide-react";
+import { House, LibraryBig, Blocks, Menu, User, X, FileText, Bot } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import ProfileMenu from "./ProfileMenu";
 
@@ -46,6 +46,7 @@ const NavBar: React.FC = () => {
     ]
   : role === "student"
   ? [
+    { name: "AI Tutor", href: "/ai-tutor", icon: Bot },
       { name: "Home", href: "/student", icon: House },
       { name: "My Learning", href: "/student/dashboard", icon: LibraryBig },
       { name: "Explore", href: "/skills", icon: Blocks },

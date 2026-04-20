@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import Avatar from './Avatar'
 import Composer from './Composer'
-import { formatDistanceToNow } from 'date-fns'
 import type { CommentItem, CurrentUser } from '../../actions/review/types'
 
 type CommentCardProps = {
@@ -11,6 +10,44 @@ type CommentCardProps = {
   currentUser: CurrentUser
   onLike: (reviewId: string) => Promise<void>
   onReply: (parentId: string, content: string) => Promise<void>
+}
+
+const relativeTimeFormatter = new Intl.RelativeTimeFormat("en", { numeric: "auto" })
+
+function formatDistanceToNow(date: Date) {
+  const diffSeconds = Math.round((date.getTime() - Date.now()) / 1000)
+  const absSeconds = Math.abs(diffSeconds)
+
+  if (Number.isNaN(diffSeconds)) {
+    return "just now"
+  }
+
+  if (absSeconds < 60) {
+    return relativeTimeFormatter.format(diffSeconds, "second")
+  }
+
+  const diffMinutes = Math.round(diffSeconds / 60)
+  if (Math.abs(diffMinutes) < 60) {
+    return relativeTimeFormatter.format(diffMinutes, "minute")
+  }
+
+  const diffHours = Math.round(diffMinutes / 60)
+  if (Math.abs(diffHours) < 24) {
+    return relativeTimeFormatter.format(diffHours, "hour")
+  }
+
+  const diffDays = Math.round(diffHours / 24)
+  if (Math.abs(diffDays) < 30) {
+    return relativeTimeFormatter.format(diffDays, "day")
+  }
+
+  const diffMonths = Math.round(diffDays / 30)
+  if (Math.abs(diffMonths) < 12) {
+    return relativeTimeFormatter.format(diffMonths, "month")
+  }
+
+  const diffYears = Math.round(diffDays / 365)
+  return relativeTimeFormatter.format(diffYears, "year")
 }
 
 const renderStars = (rating: number) =>
@@ -44,7 +81,7 @@ export default function CommentCard({ comment, currentUser, onLike, onReply }: C
               {isTeacher ? "Teacher" : "Student"}
             </span>
             <span className="text-[11px] text-slate-500">
-              {formatDistanceToNow(comment.createdAt)} ago
+              {formatDistanceToNow(comment.createdAt)}
             </span>
             <span className="inline-flex items-center gap-0.5 text-[11px]">
               {renderStars(comment.rating)}
@@ -85,7 +122,7 @@ export default function CommentCard({ comment, currentUser, onLike, onReply }: C
                       <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.18em] ${reply.user.role === "teacher" ? "bg-blue-500/15 text-blue-300 border-blue-500/20" : "bg-orange-500/15 text-orange-300 border-orange-500/20"}`}>
                         {reply.user.role === "teacher" ? "Teacher" : "Student"}
                       </span>
-                      <span className="text-[10px] text-slate-500">{formatDistanceToNow(reply.createdAt)} ago</span>
+                      <span className="text-[10px] text-slate-500">{formatDistanceToNow(reply.createdAt)}</span>
                       <span className="inline-flex items-center gap-0.5 text-[10px]">
                         {renderStars(reply.rating)}
                         <span className="ml-1 text-slate-500">{reply.rating}/5</span>

@@ -1,124 +1,121 @@
-import { Bot, BrainCircuit, MessageCircle, Zap } from "lucide-react";
-import Button from "@/app/ui/Button";
+"use client";
+import { useState, useRef } from "react";
+import { useProfile } from "./hooks/useProfile";
+import { useChat } from "./hooks/useChat";
+import MessageList from "@/app/ui/ai-tutor/MessageList";
 
-const features = [
-  {
-    title: "Smart Diagnostics",
-    description: "Identifies gaps in your student model and skips redundant content.",
-    icon: Zap,
-  },
-  {
-    title: "Contextual Guidance",
-    description: "Understands the exact roadmap node you are studying and keeps you on track.",
-    icon: Bot,
-  },
-  {
-    title: "Concept Simplification",
-    description: "Breaks down complex Software Engineering topics into concise, teachable chunks.",
-    icon: BrainCircuit,
-  },
-];
+export default function AITutorPage() {
+  const { profile } = useProfile();
+  const { messages, loading, sendMessage } = useChat(profile);
+  const [input, setInput] = useState("");
+  const [chipsVisible, setChipsVisible] = useState(true);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-export default function AiTutorPage() {
+  const handleSend = (text: string) => {
+    if (!text.trim()) return;
+    setChipsVisible(false);
+    sendMessage(text);
+    setInput("");
+    if (textareaRef.current) textareaRef.current.style.height = "auto";
+  };
+
+  const autoResize = () => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = Math.min(el.scrollHeight, 120) + "px";
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend(input);
+    }
+  };
+
   return (
-    <main className="min-h-screen bg-slate-900 text-white">
-      <section className="px-6 lg:px-12 pt-24 pb-16 max-w-6xl mx-auto grid gap-10 lg:grid-cols-2 items-center">
-        <div className="space-y-6">
-          <p className="text-sm font-semibold text-orange-400 uppercase tracking-[0.3em]">
-            AI Tutor
-          </p>
-          <h1 className="text-4xl md:text-5xl font-extrabold leading-tight">
-            Your 24/7 Academic Mentor.
-          </h1>
-          <p className="text-lg text-slate-300 leading-relaxed">
-            Not just a chatbot. An AI agent built for NTIC students that tracks your student model and guides
-            you through expert-curated skill paths.
-          </p>
-          <div className="flex flex-wrap gap-3">
-            <Button href="/signup" variant="primary" className="shadow-orange-500/30">
-              Try the AI Tutor
-            </Button>
-            <Button href="/courses" variant="outline" className="border-white/20 text-slate-100">
-              View Skill Catalog
-            </Button>
-          </div>
-        </div>
+    <div className="relative min-h-screen bg-[#080c18] overflow-hidden font-[DM_Sans,system-ui,sans-serif]">
+      {/* Ambient orbs */}
+      <div className="fixed -top-30 -left-30 w-[500px] h-[500px] rounded-full pointer-events-none z-0 animate-[float_8s_ease-in-out_infinite] bg-[radial-gradient(circle,rgba(232,114,12,0.12)_0%,transparent_70%)]" />
+      <div className="fixed -bottom-20 -right-20 w-[400px] h-[400px] rounded-full pointer-events-none z-0 animate-[float_10s_ease-in-out_infinite_reverse] bg-[radial-gradient(circle,rgba(99,102,241,0.1)_0%,transparent_70%)]" />
+      <div className="fixed top-[40%] left-[35%] w-[300px] h-[300px] rounded-full pointer-events-none z-0 animate-[float_12s_ease-in-out_2s_infinite] bg-[radial-gradient(circle,rgba(14,165,233,0.06)_0%,transparent_70%)]" />
 
-        <div className="relative">
-          <div className="absolute -inset-4 bg-orange-500/10 blur-3xl rounded-full" aria-hidden />
-          <div className="relative rounded-3xl border border-white/5 bg-slate-950/80 p-5 shadow-2xl backdrop-blur">
-            <div className="flex items-center gap-3 pb-4 border-b border-white/5">
-              <div className="h-10 w-10 rounded-full bg-orange-500/20 flex items-center justify-center text-orange-300">
-                <Bot size={22} />
+      <div className="relative z-10 flex h-screen">
+        <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
+
+          {/* Header */}
+          <div className="flex items-center justify-between px-7 py-4 border-b border-white/[0.07] bg-[rgba(10,14,26,0.6)] backdrop-blur-xl flex-shrink-0">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#e8720c] to-[#f4a435] flex items-center justify-center text-lg flex-shrink-0 shadow-[0_4px_20px_rgba(232,114,12,0.35)]">
+                ✦
               </div>
               <div>
-                <p className="text-sm text-slate-300">Lumina AI</p>
-                <p className="text-xs text-slate-500">Context: Design Patterns · Node #12</p>
+                <div className="text-base font-semibold text-white font-[Syne,sans-serif]">
+                  AI Tutor
+                </div>
+                <div className="flex items-center gap-1.5 text-xs text-[#7c83a0] mt-0.5">
+                  <span className="w-[7px] h-[7px] rounded-full bg-[#2ecc71] shadow-[0_0_6px_rgba(46,204,113,0.6)]" />
+                  Personalized to {profile.name}
+                </div>
               </div>
             </div>
+            <span className="bg-[rgba(232,114,12,0.1)] border border-[rgba(232,114,12,0.3)] text-[#e8720c] text-xs font-medium px-3.5 py-1.5 rounded-full">
+              {profile.currentSkill}
+            </span>
+          </div>
 
-            <div className="space-y-4 pt-4">
-              <div className="flex gap-3">
-                <div className="h-8 w-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-300">
-                  <MessageCircle size={16} />
-                </div>
-                <div className="max-w-md rounded-2xl bg-slate-800/70 px-4 py-3 text-sm text-slate-200">
-                  I'm stuck on the Strategy pattern. How do I explain it in an interview?
-                </div>
-              </div>
+          {/* Messages */}
+          <MessageList messages={messages} loading={loading} profile={profile} />
 
-              <div className="flex gap-3">
-                <div className="h-8 w-8 rounded-full bg-orange-500/20 flex items-center justify-center text-orange-300">
-                  <Bot size={16} />
-                </div>
-                <div className="max-w-md rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 px-4 py-3 text-sm text-slate-100 border border-orange-500/30 shadow-[0_10px_40px_rgba(249,115,22,0.18)]">
-                  Think of Strategy as swapping algorithms without changing the caller. In your roadmap, you're on
-                  "Behavioral Patterns: Step 2." Next, I'll give you a 3-step elevator pitch and a quick UML sketch
-                  so you can answer concisely.
-                </div>
-              </div>
-
-              <div className="flex gap-3">
-                <div className="h-8 w-8 rounded-full bg-orange-500/20 flex items-center justify-center text-orange-300">
-                  <Bot size={16} />
-                </div>
-                <div className="max-w-md rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 px-4 py-3 text-sm text-slate-100 border border-orange-500/30">
-                  Also noticed you mastered "Factory Method" last week—want a 2-question check to compare?
-                </div>
-              </div>
+          {/* Input area */}
+          <div className="px-7 pb-6 pt-3 border-t border-white/[0.07] bg-[rgba(10,14,26,0.6)] backdrop-blur-xl flex-shrink-0">
+            <div className="flex gap-2.5 items-end bg-[rgba(21,28,48,0.9)] border border-white/10 rounded-2xl px-3 py-2.5 focus-within:border-[rgba(232,114,12,0.4)] transition-colors">
+              <textarea
+                ref={textareaRef}
+                value={input}
+                onChange={(e) => { setInput(e.target.value); autoResize(); }}
+                onKeyDown={handleKeyDown}
+                placeholder="Ask anything about your course…"
+                rows={1}
+                className="flex-1 bg-transparent border-none outline-none text-[#c8d4e8] text-sm font-[DM_Sans,sans-serif] resize-none min-h-[22px] max-h-[120px] leading-snug caret-[#e8720c] placeholder:text-[#3d4560]"
+              />
+              <button
+                onClick={() => handleSend(input)}
+                disabled={!input.trim() || loading}
+                className="w-9 h-9 bg-gradient-to-br from-[#e8720c] to-[#f4a435] border-none rounded-xl cursor-pointer flex items-center justify-center flex-shrink-0 transition-opacity duration-150 shadow-[0_2px_12px_rgba(232,114,12,0.4)] disabled:opacity-40 disabled:cursor-default"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
+                  <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+                </svg>
+              </button>
+            </div>
+            <div className="text-[11px] text-[#2a3050] mt-2 text-center">
+              Press Enter to send · Shift+Enter for new line
             </div>
           </div>
-        </div>
-      </section>
 
-      <section className="px-6 lg:px-12 pb-20 max-w-6xl mx-auto">
-        <div className="grid gap-6 md:grid-cols-3">
-          {features.map((feature) => (
-            <div
-              key={feature.title}
-              className="rounded-2xl border border-white/5 bg-slate-950/70 p-6 shadow-lg shadow-black/40"
-            >
-              <div className="flex items-center gap-3 mb-4">
-                <div className="h-12 w-12 rounded-2xl bg-orange-500/15 text-orange-400 flex items-center justify-center">
-                  <feature.icon />
-                </div>
-                <h3 className="text-lg font-semibold">{feature.title}</h3>
-              </div>
-              <p className="text-sm text-slate-300 leading-relaxed">{feature.description}</p>
-            </div>
-          ))}
-        </div>
+        </main>
+      </div>
 
-        <div className="mt-12 flex flex-col items-center gap-4 text-center">
-          <p className="text-slate-300 max-w-2xl">
-            Lumina's AI Tutor reads your student model, cross-references the roadmap node you're on, and responds
-            like a mentor who knows your progress—not a generic chatbot.
-          </p>
-          <Button href="/signup" variant="primary" className="px-7 py-3 shadow-orange-500/30">
-            Try the AI Tutor
-          </Button>
-        </div>
-      </section>
-    </main>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap');
+        * { box-sizing: border-box; }
+        @keyframes bounce {
+          0%, 60%, 100% { transform: translateY(0); opacity: 0.35; }
+          30% { transform: translateY(-6px); opacity: 1; }
+        }
+        @keyframes float {
+          0%, 100% { transform: translateY(0px) scale(1); }
+          50% { transform: translateY(-20px) scale(1.04); }
+        }
+        @keyframes fadeSlideUp {
+          from { opacity: 0; transform: translateY(12px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+      `}</style>
+    </div>
   );
 }
