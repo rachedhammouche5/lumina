@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache"
 import { writeFile, mkdir } from "fs/promises"
 import path from "path"
 import { ContentType } from "@/lib/database.types"
-
+import { indexTopicContents } from "@/lib/ai/content-ingestion"
 type TopicContentInput = {
   id?: string
   title: string
@@ -41,7 +41,7 @@ export async function addTopic(
   }
 ) {
   const supabase = await createClient()
-
+let indexingWarning: string | null = null
   const { data: newTopic, error: topicError } = await supabase
     .from("Topic")
     .insert({
@@ -71,10 +71,42 @@ export async function addTopic(
 
     if (contentsError) return { error: contentsError.message }
   }
+  if (form.contents.length > 0) {
+  const contentRows = form.contents.map((content) => ({
+    cntnt_id: content.id ?? crypto.randomUUID(),
+    cntnt_title: content.title,
+    cntnt_type: content.type,
+    cntnt_value: content.value,
+    tpc_id: newTopic.tpc_id,
+  }))
+
+  const { error: contentsError } = await supabase
+    .from("Content")
+    .insert(contentRows)
+
+  if (contentsError) return { error: contentsError.message }
+
+  const { skipped } = await indexTopicContents(
+    contentRows.map((content) => ({
+      contentId: content.cntnt_id,
+      skillId,
+      topicId: newTopic.tpc_id,
+      level: null,
+      title: content.cntnt_title,
+      type: content.cntnt_type,
+      value: content.cntnt_value,
+    })),
+  )
+
+  if (skipped.length > 0) {
+    indexingWarning = `Indexed with partial success. ${skipped.length} content item(s) were skipped.`
+  }
+}
 
   revalidatePath(`/teacher/skills/${skillId}`)
-  return { data: newTopic }
+  return { data: newTopic, warning: indexingWarning }
 }
+
 
 export async function updateTopic(
   skillId: string,
@@ -89,6 +121,7 @@ export async function updateTopic(
 ) {
   const supabase = await createClient()
   let updatedTopic = null
+  let indexingWarning: string | null = null
 
   if (form.hasTopicChanges) {
     const { data, error: topicError } = await supabase
@@ -108,19 +141,35 @@ export async function updateTopic(
   }
 
   if (form.contents.length > 0) {
+    const contentRows = form.contents.map((content) => ({
+      cntnt_id: content.id ?? crypto.randomUUID(),
+      cntnt_title: content.title,
+      cntnt_type: content.type,
+      cntnt_value: content.value,
+      tpc_id: topicId,
+    }))
+
     const { error: contentsError } = await supabase
       .from("Content")
-      .upsert(
-        form.contents.map((content) => ({
-          cntnt_id: content.id ?? crypto.randomUUID(),
-          cntnt_title: content.title,
-          cntnt_type: content.type,
-          cntnt_value: content.value,
-          tpc_id: topicId,
-        }))
-      )
+      .upsert(contentRows)
 
     if (contentsError) return { error: contentsError.message }
+
+    const { skipped } = await indexTopicContents(
+      contentRows.map((content) => ({
+        contentId: content.cntnt_id,
+        skillId,
+        topicId,
+        level: null,
+        title: content.cntnt_title,
+        type: content.cntnt_type,
+        value: content.cntnt_value,
+      })),
+    )
+
+    if (skipped.length > 0) {
+      indexingWarning = `Indexed with partial success. ${skipped.length} content item(s) were skipped.`
+    }
   }
 
 revalidatePath(`/teacher/skills/${skillId}`)
@@ -129,7 +178,7 @@ if (!form.hasTopicChanges && form.contents.length === 0) {
   return { data: { tpc_id: topicId }, skipped: true }
 }
 
-return { data: updatedTopic ?? { tpc_id: topicId } }
+return { data: updatedTopic ?? { tpc_id: topicId }, warning: indexingWarning }
 }
 
 type QuizAnswerInput = {
