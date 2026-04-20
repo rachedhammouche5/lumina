@@ -178,9 +178,8 @@ export default function CourseDetailView({
         </div>
       </div>
 
-      <div className="relative overflow-hidden rounded-3xl border border-slate-700 bg-slate-900/60">
-        <div className="flex min-h-[520px] w-[200%] transition-transform duration-500 ease-out" style={{ transform: activeView === "roadmap" ? "translateX(0%)" : "translateX(-50%)" }}>
-          <section className="w-1/2 space-y-4 p-4 sm:p-6">
+      <div className="rounded-3xl border border-slate-700 bg-slate-900/60">
+        <section className={`${activeView === "roadmap" ? "block" : "hidden"} space-y-4 p-4 sm:p-6`}>
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h2 className="text-xl font-semibold text-white">Roadmap studio</h2>
@@ -217,9 +216,9 @@ export default function CourseDetailView({
               onAddQuizTopic={handleAddQuizTopic}
               onRemoveTopic={handleRemoveTopic}
             />
-          </section>
+        </section>
 
-          <section className="w-1/2 space-y-4 p-4 sm:p-6">
+        <section className={`${activeView === "quiz" ? "block" : "hidden"} space-y-4 p-4 sm:p-6`}>
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h2 className="text-xl font-semibold text-white">Quiz studio</h2>
@@ -247,8 +246,7 @@ export default function CourseDetailView({
                 setQuizModalOpen(true);
               }}
             />
-          </section>
-        </div>
+        </section>
       </div>
 
       {deleteConfirmOpen ? (
