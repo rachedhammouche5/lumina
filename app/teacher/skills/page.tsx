@@ -68,7 +68,7 @@ export default async function TeacherCoursesPage() {
           </div>
         </div>
 
-        <ul className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+        <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {skills.length > 0 ? (
             skills.map((skill) => (
               <SkillCard key={skill.skl_id} skill={skill} teacher_id={teacher.tchr_id} />
