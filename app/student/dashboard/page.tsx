@@ -6,7 +6,7 @@ import Link from "next/link";
 import ProgressChart from "./_components/ProgressChart";
 
 const weakPoints = [
-  { skill: "Python for Data Science", topic: "Pandas GroupBy", score: 48, href: "/courses/python-data-science/pandas-groupby" },
+  { skill: "Python", topic: "Pandas GroupBy", score: 48, href: "/courses/python-data-science/pandas-groupby" },
   { skill: "Modern Backend Systems", topic: "JWT Refresh Flow", score: 52, href: "/courses/backend-systems/jwt-refresh" },
   { skill: "Debugging Techniques", topic: "Race Conditions", score: 45, href: "/courses/debugging/race-conditions" },
 ] as const;
