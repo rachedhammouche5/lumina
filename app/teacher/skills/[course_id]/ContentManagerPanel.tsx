@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { ContentType, Skill, Topic } from "@/lib/database.types";
-import { uploadContentFile } from "./actions";
+import { deleteContent, updateTopic, uploadContentFile } from "./actions";
 
 type ManagedContent = {
   id: string;
@@ -44,6 +44,8 @@ export default function ContentManagerPanel({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingDraft, setEditingDraft] = useState<ManagedContent | null>(null);
   const [newDraft, setNewDraft] = useState<DraftContent>(EMPTY_DRAFT);
   const [creating, setCreating] = useState(false);
 
@@ -98,34 +100,38 @@ export default function ContentManagerPanel({
   };
 
   const handleUpdate = async (content: ManagedContent) => {
-    if (!content.title.trim()) {
-      setError("Content title is required.");
-      return;
-    }
-    if (!content.value?.trim()) {
-      setError("Content value is required.");
-      return;
-    }
+    if (!content.title.trim() || !content.value?.trim()) return;
     setError("");
     setSavingId(content.id);
     try {
-      const response = await fetch("/api/teacher/content", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contentId: content.id,
-          skillId: skill.skl_id,
-          title: content.title,
-          type: content.type,
-          value: content.value,
-        }),
-      });
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data?.error || "Unable to update content.");
+      if (!selectedTopic) {
+        throw new Error("Select a topic first.");
       }
-      const data = await response.json();
-      setContents((prev) => prev.map((item) => (item.id === content.id ? data.content : item)));
+      const result = await updateTopic(skill.skl_id, selectedTopic.tpc_id, selectedTopic.parent_id, {
+        hasTopicChanges: false,
+        title: selectedTopic.tpc_title,
+        description: selectedTopic.tpc_description ?? "",
+        contents: [
+          {
+            id: content.id,
+            title: content.title.trim(),
+            type: content.type,
+            value: content.value?.trim() ?? "",
+          },
+        ],
+      });
+      if ("error" in result && result.error) {
+        throw new Error(result.error);
+      }
+      setContents((prev) =>
+        prev.map((item) =>
+          item.id === content.id
+            ? { ...item, title: content.title.trim(), type: content.type, value: content.value?.trim() ?? "" }
+            : item,
+        ),
+      );
+      setEditingId(null);
+      setEditingDraft(null);
     } catch (updateError) {
       setError(updateError instanceof Error ? updateError.message : "Failed to update content.");
     } finally {
@@ -133,19 +139,25 @@ export default function ContentManagerPanel({
     }
   };
 
+  const startEdit = (content: ManagedContent) => {
+    setError("");
+    setEditingId(content.id);
+    setEditingDraft({ ...content });
+  };
+
+  const discardEdit = () => {
+    setEditingId(null);
+    setEditingDraft(null);
+  };
+
   const handleDelete = async (contentId: string) => {
     if (!window.confirm("Delete this content item?")) return;
     setError("");
     setSavingId(contentId);
     try {
-      const response = await fetch("/api/teacher/content", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contentId, skillId: skill.skl_id }),
-      });
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data?.error || "Unable to delete content.");
+      const result = await deleteContent(contentId, skill.skl_id);
+      if ("error" in result && result.error) {
+        throw new Error(result.error);
       }
       setContents((prev) => prev.filter((item) => item.id !== contentId));
     } catch (deleteError) {
@@ -168,23 +180,35 @@ export default function ContentManagerPanel({
       if (!resolvedValue.trim()) {
         throw new Error("Content value is required.");
       }
-      const response = await fetch("/api/teacher/content", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          topicId: selectedTopicId,
-          skillId: skill.skl_id,
-          title: newDraft.title,
-          type: newDraft.type,
-          value: resolvedValue,
-        }),
-      });
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data?.error || "Unable to create content.");
+      if (!selectedTopic) {
+        throw new Error("Select a topic first.");
       }
-      const data = await response.json();
-      setContents((prev) => [data.content, ...prev]);
+      const contentId = crypto.randomUUID();
+      const result = await updateTopic(skill.skl_id, selectedTopic.tpc_id, selectedTopic.parent_id, {
+        hasTopicChanges: false,
+        title: selectedTopic.tpc_title,
+        description: selectedTopic.tpc_description ?? "",
+        contents: [
+          {
+            id: contentId,
+            title: newDraft.title.trim(),
+            type: newDraft.type,
+            value: resolvedValue.trim(),
+          },
+        ],
+      });
+      if ("error" in result && result.error) {
+        throw new Error(result.error);
+      }
+      setContents((prev) => [
+        {
+          id: contentId,
+          title: newDraft.title.trim(),
+          type: newDraft.type,
+          value: resolvedValue.trim(),
+        },
+        ...prev,
+      ]);
       setNewDraft(EMPTY_DRAFT);
     } catch (createError) {
       setError(createError instanceof Error ? createError.message : "Failed to create content.");
@@ -278,6 +302,7 @@ export default function ContentManagerPanel({
           <div>
             <p className="text-sm uppercase tracking-[0.26em] text-slate-500">Content Items</p>
             <p className="text-xl font-semibold text-white">{contents.length} items</p>
+            <p className="mt-1 text-xs text-slate-400">Use Edit to modify, then Save or Discard.</p>
           </div>
           <div className="text-right text-sm text-slate-400">{selectedTopic?.tpc_title ?? "No topic selected"}</div>
         </div>
@@ -296,65 +321,93 @@ export default function ContentManagerPanel({
           <div className="space-y-3">
             {contents.map((content) => (
               <div key={content.id} className="rounded-2xl border border-slate-700 bg-slate-900 p-4">
-                <div className="grid gap-3 md:grid-cols-2">
-                  <input
-                    value={content.title}
-                    onChange={(event) =>
-                      setContents((prev) =>
-                        prev.map((item) => (item.id === content.id ? { ...item, title: event.target.value } : item)),
-                      )
-                    }
-                    className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
-                  />
-                  <select
-                    value={content.type}
-                    onChange={(event) =>
-                      setContents((prev) =>
-                        prev.map((item) =>
-                          item.id === content.id
-                            ? { ...item, type: event.target.value as ContentType, value: "" }
-                            : item,
-                        ),
-                      )
-                    }
-                    className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
-                  >
-                    <option value="video">video</option>
-                    <option value="docs">docs</option>
-                    <option value="mindmap">mindmap</option>
-                    <option value="audio">audio</option>
-                    <option value="pdf">pdf</option>
-                  </select>
-                  <input
-                    value={content.value ?? ""}
-                    onChange={(event) =>
-                      setContents((prev) =>
-                        prev.map((item) => (item.id === content.id ? { ...item, value: event.target.value } : item)),
-                      )
-                    }
-                    placeholder={isFileType(content.type) ? "/uploads/audio/file.mp3" : "https://"}
-                    className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white md:col-span-2"
-                  />
-                </div>
+                {editingId === content.id && editingDraft ? (
+                  <>
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <input
+                        value={editingDraft.title}
+                        onChange={(event) =>
+                          setEditingDraft((prev) => (prev ? { ...prev, title: event.target.value } : prev))
+                        }
+                        className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
+                      />
+                      <select
+                        value={editingDraft.type}
+                        onChange={(event) =>
+                          setEditingDraft((prev) =>
+                            prev ? { ...prev, type: event.target.value as ContentType, value: "" } : prev,
+                          )
+                        }
+                        className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
+                      >
+                        <option value="video">video</option>
+                        <option value="docs">docs</option>
+                        <option value="mindmap">mindmap</option>
+                        <option value="audio">audio</option>
+                        <option value="pdf">pdf</option>
+                      </select>
+                      <input
+                        value={editingDraft.value ?? ""}
+                        onChange={(event) =>
+                          setEditingDraft((prev) => (prev ? { ...prev, value: event.target.value } : prev))
+                        }
+                        placeholder={isFileType(editingDraft.type) ? "/uploads/audio/file.mp3" : "https://"}
+                        className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white md:col-span-2"
+                      />
+                    </div>
 
-                <div className="mt-3 flex justify-end gap-2">
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(content.id)}
-                    disabled={savingId === content.id}
-                    className="rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-200 transition hover:bg-red-500/20 disabled:opacity-60"
-                  >
-                    Delete
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleUpdate(content)}
-                    disabled={savingId === content.id}
-                    className="rounded-lg border border-emerald-400/40 bg-emerald-500/10 px-3 py-2 text-sm font-semibold text-emerald-100 transition hover:bg-emerald-500/20 disabled:opacity-60"
-                  >
-                    {savingId === content.id ? "Saving..." : "Save changes"}
-                  </button>
-                </div>
+                    <div className="mt-3 flex justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={discardEdit}
+                        className="rounded-lg border border-slate-500 px-3 py-2 text-sm text-slate-200 transition hover:bg-slate-700/60"
+                      >
+                        Discard changes
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void handleUpdate(editingDraft)}
+                        disabled={savingId === content.id}
+                        className="rounded-lg border border-emerald-400/40 bg-emerald-500/10 px-3 py-2 text-sm font-semibold text-emerald-100 transition hover:bg-emerald-500/20 disabled:opacity-60"
+                      >
+                        {savingId === content.id ? "Saving..." : "Save changes"}
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <div className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-200">
+                        {content.title}
+                      </div>
+                      <div className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-200 uppercase">
+                        {content.type}
+                      </div>
+                      <div className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-200 md:col-span-2">
+                        {content.value ?? "-"}
+                      </div>
+                    </div>
+
+                    <div className="mt-3 flex justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={() => startEdit(content)}
+                        disabled={Boolean(editingId)}
+                        className="rounded-lg border border-indigo-400/40 bg-indigo-500/10 px-3 py-2 text-sm font-semibold text-indigo-100 transition hover:bg-indigo-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(content.id)}
+                        disabled={savingId === content.id}
+                        className="rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-200 transition hover:bg-red-500/20 disabled:opacity-60"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             ))}
           </div>
