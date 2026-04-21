@@ -41,7 +41,8 @@ export async function addTopic(
   }
 ) {
   const supabase = await createClient()
-let indexingWarning: string | null = null
+  let indexingWarning: string | null = null
+
   const { data: newTopic, error: topicError } = await supabase
     .from("Topic")
     .insert({
@@ -56,57 +57,42 @@ let indexingWarning: string | null = null
 
   if (topicError) return { error: topicError.message }
 
+  // ✅ Only ONE block — IDs are generated once and reused for both insert and indexing
   if (form.contents.length > 0) {
+    const contentRows = form.contents.map((content) => ({
+      cntnt_id: content.id ?? crypto.randomUUID(),
+      cntnt_title: content.title,
+      cntnt_type: content.type,
+      cntnt_value: content.value,
+      tpc_id: newTopic.tpc_id,
+    }))
+
     const { error: contentsError } = await supabase
       .from("Content")
-      .insert(
-        form.contents.map((content) => ({
-          cntnt_id: content.id ?? crypto.randomUUID(),
-          cntnt_title: content.title,
-          cntnt_type: content.type,
-          cntnt_value: content.value,
-          tpc_id: newTopic.tpc_id,
-        }))
-      )
+      .insert(contentRows)
 
     if (contentsError) return { error: contentsError.message }
+
+    const { skipped } = await indexTopicContents(
+      contentRows.map((content) => ({
+        contentId: content.cntnt_id,
+        skillId,
+        topicId: newTopic.tpc_id,
+        level: null,
+        title: content.cntnt_title,
+        type: content.cntnt_type,
+        value: content.cntnt_value,
+      }))
+    )
+
+    if (skipped.length > 0) {
+      indexingWarning = `Indexed with partial success. ${skipped.length} content item(s) were skipped.`
+    }
   }
-  if (form.contents.length > 0) {
-  const contentRows = form.contents.map((content) => ({
-    cntnt_id: content.id ?? crypto.randomUUID(),
-    cntnt_title: content.title,
-    cntnt_type: content.type,
-    cntnt_value: content.value,
-    tpc_id: newTopic.tpc_id,
-  }))
-
-  const { error: contentsError } = await supabase
-    .from("Content")
-    .insert(contentRows)
-
-  if (contentsError) return { error: contentsError.message }
-
-  const { skipped } = await indexTopicContents(
-    contentRows.map((content) => ({
-      contentId: content.cntnt_id,
-      skillId,
-      topicId: newTopic.tpc_id,
-      level: null,
-      title: content.cntnt_title,
-      type: content.cntnt_type,
-      value: content.cntnt_value,
-    })),
-  )
-
-  if (skipped.length > 0) {
-    indexingWarning = `Indexed with partial success. ${skipped.length} content item(s) were skipped.`
-  }
-}
 
   revalidatePath(`/teacher/skills/${skillId}`)
   return { data: newTopic, warning: indexingWarning }
 }
-
 
 export async function updateTopic(
   skillId: string,

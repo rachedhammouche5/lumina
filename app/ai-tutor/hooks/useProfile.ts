@@ -29,7 +29,8 @@ export function useProfile() {
         skill: s.Topic?.[0]?.Skill?.[0]?.skl_title || "",
         score: Math.round(s.score),
       });
-
+        
+        
       setProfile({
         name: student?.std_fullname || "Student",
         currentSkill: "Python",
@@ -39,8 +40,8 @@ export function useProfile() {
       });
       setProfileLoading(false);
     }
-
-    fetchProfile();
+ fetchProfile();
+    
   }, []);
 
   return { profile, profileLoading };
