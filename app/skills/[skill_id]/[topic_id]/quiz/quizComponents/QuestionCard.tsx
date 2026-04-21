@@ -1,14 +1,14 @@
-import { CheckCircle2, XCircle, Clock, Lightbulb, Loader2 } from "lucide-react";
 import { DIFFICULTY_POINTS, DIFFICULTY_STYLE, formatTime, TIME_LIMIT } from "../quiz.lib";
 import type { QuizWithResponses, QResponse, QuizPhase } from "../quiz.types";
-
+import { CheckCircle2, XCircle, Clock, Lightbulb } from "lucide-react";
 type Props = {
   question: QuizWithResponses;
   phase: QuizPhase;
   timer: number;
   selectedResponse: QResponse | null;
-  hintUsed: boolean;
-  hintLoading: boolean;
+  hintUsed: boolean;       
+  hintReady: boolean;     
+  hintVisible: boolean;
   hintText: string | null;
   onSelect: (response: QResponse) => void;
   onHint: () => void;
@@ -20,7 +20,8 @@ export default function QuestionCard({
   timer,
   selectedResponse,
   hintUsed,
-  hintLoading,
+  hintReady,
+  hintVisible,
   hintText,
   onSelect,
   onHint,
@@ -70,32 +71,34 @@ export default function QuestionCard({
         </p>
 
         {/* Hint area */}
-        {phase === "question" && (
-          <div className="mt-4">
-            {!hintUsed ? (
-              <button
-                onClick={onHint}
-                className="flex items-center gap-2 rounded-xl border border-amber-400/20 bg-amber-500/10 px-3 py-2 text-xs font-semibold text-amber-300 transition hover:bg-amber-500/20"
-              >
-                <Lightbulb size={13} />
-                Use hint (costs −1 bonus point)
-              </button>
-            ) : hintLoading ? (
-              <div className="flex items-center gap-2 rounded-xl border border-amber-400/20 bg-amber-500/10 px-3 py-2 text-xs text-amber-300">
-                <Loader2 size={13} className="animate-spin" />
-                Generating hint…
-              </div>
-            ) : (
-              <div className="rounded-xl border border-amber-400/20 bg-amber-500/10 px-3 py-2">
-                <div className="flex items-center gap-1.5 text-amber-300">
-                  <Lightbulb size={12} />
-                  <span className="text-[10px] font-bold uppercase tracking-widest">Hint</span>
-                </div>
-                <p className="mt-1 text-xs leading-relaxed text-amber-100/80">{hintText}</p>
-              </div>
-            )}
-          </div>
-        )}
+{phase === "question" && (
+  <div className="mt-4">
+    {!hintVisible ? (
+      // Button state — changes label based on whether AI is ready
+      <button
+        onClick={onHint}
+        disabled={!hintReady}  // disabled until AI finishes
+        className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold transition
+          ${!hintReady
+            ? "border-white/10 bg-white/5 text-slate-500 cursor-not-allowed"   // still generating
+            : "border-amber-400/20 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 cursor-pointer" // ready
+          }`}
+      >
+        <Lightbulb size={13} className={!hintReady ? "animate-pulse" : ""} />
+        {!hintReady ? "Preparing hint…" : "Use hint (costs −1 bonus point)"}
+      </button>
+    ) : (
+      // Hint revealed — no more loading spinner needed
+      <div className="rounded-xl border border-amber-400/20 bg-amber-500/10 px-3 py-2">
+        <div className="flex items-center gap-1.5 text-amber-300">
+          <Lightbulb size={12} />
+          <span className="text-[10px] font-bold uppercase tracking-widest">Hint</span>
+        </div>
+        <p className="mt-1 text-xs leading-relaxed text-amber-100/80">{hintText}</p>
+      </div>
+    )}
+  </div>
+)}
 
         {/* Choices */}
         <div className="mt-5 space-y-3">

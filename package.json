@@ -23,6 +23,7 @@
     "@xyflow/react": "^12.10.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
+    "groq-sdk": "^1.1.2",
     "lucide-react": "^0.575.0",
     "next": "16.1.6",
     "pdfjs-dist": "^5.6.205",
@@ -30,7 +31,8 @@
     "react-dom": "19.2.3",
     "react-youtube": "^10.1.0",
     "recharts": "^3.8.1",
-    "style.css": "link:@xyflow/react/dist/style.css"
+    "style.css": "link:@xyflow/react/dist/style.css",
+    "youtube-transcript": "^1.3.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",
