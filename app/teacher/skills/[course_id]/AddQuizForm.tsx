@@ -132,10 +132,10 @@ export default function AddQuizForm({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/70 p-4">
-      <div className="flex min-h-full items-start justify-center py-6">
-        <div className="w-full my-6 max-w-3xl max-h-[calc(90vh-1rem)] overflow-y-auto no-scrollbar rounded-lg border border-slate-700 bg-slate-900 p-5">
-          <div className="mb-4 flex items-center justify-between">
+    <div className="fixed inset-0 z-50 bg-slate-950/80 p-3 backdrop-blur-sm sm:p-4">
+      <div className="flex min-h-full items-end justify-center sm:items-center">
+        <div className="no-scrollbar w-full max-w-3xl max-h-[calc(100dvh-1.5rem)] overflow-y-auto rounded-2xl border border-slate-700 bg-slate-900 p-5 shadow-2xl shadow-black/40 sm:rounded-3xl sm:p-6">
+          <div className="mb-4 flex items-start justify-between gap-3">
             <h4 className="text-lg font-semibold text-white">
               Add Quiz to {topic.tpc_title}
             </h4>
@@ -251,7 +251,7 @@ export default function AddQuizForm({
               <button
                 type="button"
                 onClick={addQuestion}
-                className="rounded-md border border-indigo-400 px-3 py-2 text-sm font-semibold text-indigo-200 transition hover:bg-indigo-500/20"
+                className="rounded-md border border-orange-400 px-3 py-2 text-sm font-semibold text-orange-200 transition hover:bg-orange-500/20"
               >
                 + Add Question
               </button>
@@ -259,7 +259,7 @@ export default function AddQuizForm({
 
             {error ? <p className="text-sm text-red-400">{error}</p> : null}
 
-            <div className="flex justify-end gap-2">
+            <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
               <button
                 type="button"
                 onClick={onClose}
@@ -270,7 +270,7 @@ export default function AddQuizForm({
               <button
                 type="submit"
                 disabled={submitting}
-                className="rounded-md bg-emerald-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-400 disabled:opacity-60"
+                className="rounded-md bg-linear-to-r from-orange-500 to-amber-400 px-4 py-2 text-sm font-semibold text-white transition hover:from-orange-400 hover:to-amber-300 disabled:opacity-60"
               >
                 {submitting ? "Saving..." : "Save Quiz"}
               </button>

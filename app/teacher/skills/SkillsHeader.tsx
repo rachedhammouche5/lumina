@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import SkillFormModal from "./SkillFormModal";
-import { Skill } from "@/lib/database.types";
 import Button from "@/app/ui/Button";
 import { Plus } from "lucide-react";
 
@@ -11,8 +10,13 @@ export default function SkillsHeader({ teacher_id }: { teacher_id: string }) {
 
   return (
     <>
-      <Button variant="secondary" className="gap-3" onClick={setModalOpen} >
-        <Plus size={20} />
+      <Button
+        variant="secondary"
+        size="s"
+        className="w-full gap-2 sm:w-auto"
+        onClick={() => setModalOpen(true)}
+      >
+        <Plus size={16} />
         Add Skill
       </Button>
 

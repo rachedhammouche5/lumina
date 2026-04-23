@@ -102,8 +102,8 @@ export default function QuizManagerModal({
   };
 
   return (
-    <div className="grid gap-4 lg:grid-cols-[300px_1fr]">
-      <div className="rounded-3xl border border-slate-700 bg-slate-950 p-4">
+    <div className="grid gap-4 lg:grid-cols-[280px_1fr]">
+      <div className="rounded-3xl border border-slate-700 bg-slate-950/90 p-4 shadow-2xl shadow-slate-950/40">
         <div className="mb-3 flex items-center justify-between gap-3">
           <div>
             <p className="text-sm uppercase tracking-[0.26em] text-slate-500">Topic</p>
@@ -114,7 +114,7 @@ export default function QuizManagerModal({
         <select
           value={selectedTopicId}
           onChange={(event) => onSelectTopic(event.target.value)}
-          className="w-full rounded-2xl border border-slate-700 bg-slate-900 px-3 py-3 text-sm text-white outline-none transition focus:border-emerald-400"
+          className="w-full rounded-2xl border border-slate-700 bg-slate-900 px-3 py-3 text-sm text-white outline-none transition focus:border-orange-400"
         >
           {topics.map((topic) => (
             <option key={topic.tpc_id} value={topic.tpc_id}>
@@ -130,7 +130,7 @@ export default function QuizManagerModal({
             type="button"
             disabled={!selectedTopic}
             onClick={() => selectedTopic && onCreateQuestion(selectedTopic)}
-            className="w-full rounded-xl border border-emerald-400/40 bg-emerald-500/10 px-3 py-2 text-sm font-semibold text-emerald-100 transition hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-50"
+            className="w-full rounded-xl border border-orange-400/40 bg-orange-500/10 px-3 py-2 text-sm font-semibold text-orange-100 transition hover:bg-orange-500/20 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Add question to this topic
           </button>
@@ -138,7 +138,7 @@ export default function QuizManagerModal({
       </div>
 
       <div className="space-y-4">
-        <div className="flex items-center justify-between gap-4 rounded-3xl border border-slate-700 bg-slate-950 p-4">
+        <div className="flex flex-col gap-3 rounded-3xl border border-slate-700 bg-slate-950 p-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-sm uppercase tracking-[0.26em] text-slate-500">Questions</p>
             <p className="text-xl font-semibold text-white">{questions.length} items</p>
@@ -192,7 +192,7 @@ export default function QuizManagerModal({
                       <div className="flex items-center justify-between gap-2">
                         <p className="text-sm text-slate-300">Answer</p>
                         {response.isCorrect ? (
-                          <span className="rounded-full bg-emerald-500/15 px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-300">
+                          <span className="rounded-full bg-orange-500/15 px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-orange-300">
                             Correct
                           </span>
                         ) : null}

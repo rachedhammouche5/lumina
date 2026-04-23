@@ -57,10 +57,6 @@ export default function CourseDetailView({
     setPrefillTopic(null);
   };
 
-  const openQuizModal = (topic: Topic) => {
-    setQuizTopic(topic);
-    setQuizModalOpen(true);
-  };
   const closeQuizModal = () => {
     setQuizTopic(null);
     setQuizModalOpen(false);
@@ -90,9 +86,9 @@ export default function CourseDetailView({
     if (!window.confirm("Delete this item?")) return;
 
     if (topicId === skill.skl_id) {
-      const result = await deleteSkill(skill.skl_id, skill.teacher_id ?? "");
-      if ("error" in result && result.error) {
-        console.error(result.error);
+      const deleteResult = await deleteSkill(skill.skl_id, skill.teacher_id ?? "");
+      if ("error" in deleteResult && deleteResult.error) {
+        console.error(deleteResult.error);
         return;
       }
       router.push("/teacher/skills");
@@ -100,16 +96,6 @@ export default function CourseDetailView({
     }
 
     const result = await deleteTopic(topicId, skill.skl_id);
-    if ("error" in result && result.error) {
-      console.error(result.error);
-      return;
-    }
-    if (topicId === skill.skl_id) {
-      const result = await deleteSkill(skill.skl_id, skill.teacher_id ?? "");
-      router.push("/teacher/skills");
-      return;
-    }
-
     if ("error" in result && result.error) {
       console.error(result.error);
       return;
@@ -137,7 +123,7 @@ export default function CourseDetailView({
             <button
               type="button"
               onClick={() => setEditOpen(true)}
-              className="inline-flex items-center gap-2 rounded-xl border border-indigo-400/40 bg-indigo-500/10 px-4 py-2 text-sm font-semibold text-indigo-100 transition hover:bg-indigo-500/20"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-orange-400/40 bg-orange-500/10 px-4 py-2 text-sm font-semibold text-orange-100 transition hover:bg-orange-500/20 sm:w-auto"
             >
               <Pencil size={15} />
               Edit skill
@@ -145,7 +131,7 @@ export default function CourseDetailView({
             <button
               type="button"
               onClick={() => setDeleteConfirmOpen(true)}
-              className="inline-flex items-center gap-2 rounded-xl border border-red-400/40 bg-red-500/10 px-4 py-2 text-sm font-semibold text-red-100 transition hover:bg-red-500/20"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-red-400/40 bg-red-500/10 px-4 py-2 text-sm font-semibold text-red-100 transition hover:bg-red-500/20 sm:w-auto"
             >
               <Trash2 size={15} />
               Remove skill
@@ -155,13 +141,13 @@ export default function CourseDetailView({
       />
 
       <div className="rounded-3xl border border-slate-700/80 bg-slate-900/70 p-2 sm:p-3">
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
           <button
             type="button"
             onClick={() => setActiveView("roadmap")}
             className={`rounded-2xl px-4 py-2 text-sm font-semibold transition sm:text-base ${
               activeView === "roadmap"
-                ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/30"
+                ? "bg-orange-500 text-white shadow-lg shadow-orange-500/30"
                 : "bg-slate-800 text-slate-300 hover:bg-slate-700"
             }`}
           >
@@ -172,7 +158,7 @@ export default function CourseDetailView({
             onClick={() => setActiveView("quiz")}
             className={`rounded-2xl px-4 py-2 text-sm font-semibold transition sm:text-base ${
               activeView === "quiz"
-                ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/30"
+                ? "bg-orange-500 text-white shadow-lg shadow-orange-500/30"
                 : "bg-slate-800 text-slate-300 hover:bg-slate-700"
             }`}
           >
@@ -183,7 +169,7 @@ export default function CourseDetailView({
             onClick={() => setActiveView("content")}
             className={`rounded-2xl px-4 py-2 text-sm font-semibold transition sm:text-base ${
               activeView === "content"
-                ? "bg-indigo-500 text-white shadow-lg shadow-indigo-500/30"
+                ? "bg-orange-500 text-white shadow-lg shadow-orange-500/30"
                 : "bg-slate-800 text-slate-300 hover:bg-slate-700"
             }`}
           >
@@ -199,26 +185,26 @@ export default function CourseDetailView({
                 <h2 className="text-xl font-semibold text-white">Roadmap studio</h2>
                 <p className="text-sm text-slate-400">Build topic flow and attach quiz tasks directly from nodes.</p>
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                 <button
                   type="button"
                   onClick={() => openTopicModal(null, false)}
                   disabled={hasRootTopic}
-                  className="rounded-xl border border-indigo-400/40 bg-indigo-500/10 px-3 py-2 text-sm font-semibold text-indigo-100 transition hover:bg-indigo-500/20 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="rounded-xl border border-orange-400/40 bg-orange-500/10 px-3 py-2 text-sm font-semibold text-orange-100 transition hover:bg-orange-500/20 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Add root
                 </button>
                 <button
                   type="button"
                   onClick={() => setActiveView("quiz")}
-                  className="rounded-xl border border-emerald-400/40 bg-emerald-500/10 px-3 py-2 text-sm font-semibold text-emerald-100 transition hover:bg-emerald-500/20"
+                  className="rounded-xl border border-orange-400/40 bg-orange-500/10 px-3 py-2 text-sm font-semibold text-orange-100 transition hover:bg-orange-500/20"
                 >
                   Open quiz studio
                 </button>
                 <button
                   type="button"
                   onClick={() => setActiveView("content")}
-                  className="rounded-xl border border-indigo-400/40 bg-indigo-500/10 px-3 py-2 text-sm font-semibold text-indigo-100 transition hover:bg-indigo-500/20"
+                  className="rounded-xl border border-orange-400/40 bg-orange-500/10 px-3 py-2 text-sm font-semibold text-orange-100 transition hover:bg-orange-500/20"
                 >
                   Open content studio
                 </button>

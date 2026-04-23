@@ -43,27 +43,30 @@ export default async function TeacherPage() {
     currentHour < 12 ? "Good morning" : currentHour < 18 ? "Good afternoon" : "Good evening";
 
   return (
-    <section className="mx-auto max-w-7xl px-4 pt-12 pb-7 sm:px-6 lg:px-8">
+    <section className="mx-auto max-w-7xl px-4 pt-12 pb-28 sm:px-6 lg:px-8 lg:pb-7">
       <div className="space-y-6">
-        <div className="rounded-3xl border border-slate-700 bg-gradient-to-br from-slate-700 via-slate-950 to-transparent  p-6 shadow-2xl shadow-slate-700/70 sm:p-8">
+        <div className="rounded-3xl border border-slate-700 bg-gradient-to-br from-slate-700 via-slate-950 to-transparent p-5 shadow-2xl shadow-slate-700/70 sm:p-8">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <p className="inline-flex items-center gap-2 rounded-full border border-orange-500/30 bg-orange-600/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-orange-500">
                 <Sparkles size={14} />
                 Teacher Home
               </p>
-              <h1 className="mt-3 text-3xl font-bold text-white sm:text-4xl">
-                {dayGreeting}, <span className="bg-linear-to-br from-orange-300 to-orange-600 bg-clip-text text-transparent uppercase text-5xl">{homeData.teacherName}</span>
+              <h1 className="mt-3 text-2xl font-bold leading-tight text-white sm:text-4xl">
+                {dayGreeting},{" "}
+                <span className="block text-3xl uppercase text-transparent bg-linear-to-br from-orange-300 to-orange-600 bg-clip-text sm:inline sm:text-5xl">
+                  {homeData.teacherName}
+                </span>
               </h1>
               <p className="mt-2 max-w-2xl text-sm text-slate-400 sm:text-base">
                 Your space is ready: track activity, grow your skills, and keep learners engaged with polished content.
               </p>
             </div>
-            <div className="flex flex-wrap gap-2">
-              <Link href="/teacher/skills" className="rounded-xl bg-linear-to-br from-orange-400 to-orange-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-linear-0 from-orange-200 to-orange-200 hover:shadow-xl shadow-orange-400/30">
+            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+              <Link href="/teacher/skills" className="rounded-xl bg-linear-to-br from-orange-400 to-orange-600 px-4 py-3 text-center text-sm font-semibold text-white transition hover:bg-linear-0 from-orange-200 to-orange-200 hover:shadow-xl shadow-orange-400/30 sm:py-2">
                 Manage Skills
               </Link>
-              <Link href="/teacher/dashboard" className="rounded-xl border border-slate-600 bg-linear-to-br from-slate-500 to-transparent px-4 py-2 text-sm font-semibold text-slate-100 transition hover:bg-slate-700">
+              <Link href="/teacher/dashboard" className="rounded-xl border border-slate-600 bg-linear-to-br from-slate-500 to-transparent px-4 py-3 text-center text-sm font-semibold text-slate-100 transition hover:bg-slate-700 sm:py-2">
                 Open Analytics
               </Link>
             </div>
@@ -74,7 +77,7 @@ export default async function TeacherPage() {
           <article className="rounded-2xl border border-slate-700 bg-linear-to-br from-slate-600 via-slate-950 to-transparent shadow-2xl shadow-slate-700/70 p-4">
             <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Skills</p>
             <div className="mt-2 flex items-end justify-between">
-              <p className="text-3xl font-bold text-white">
+              <p className="text-2xl font-bold text-white sm:text-3xl">
                 <AnimatedStatNumber value={homeData.skillsCount} />
               </p>
               <BookOpenCheck className="text-cyan-300" size={18} />
@@ -83,7 +86,7 @@ export default async function TeacherPage() {
           <article className="rounded-2xl border border-slate-700 bg-linear-to-br from-slate-600 via-slate-950 to-transparent shadow-2xl shadow-slate-700/30 p-4">
             <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Topics</p>
             <div className="mt-2 flex items-end justify-between">
-              <p className="text-3xl font-bold text-white">
+              <p className="text-2xl font-bold text-white sm:text-3xl">
                 <AnimatedStatNumber value={homeData.topicsCount} />
               </p>
               <BarChart3 className="text-violet-300" size={18} />
@@ -92,7 +95,7 @@ export default async function TeacherPage() {
           <article className="rounded-2xl border border-slate-700 bg-linear-to-br from-slate-600 via-slate-950 to-transparent shadow-2xl shadow-slate-700/30 p-4">
             <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Quiz Questions</p>
             <div className="mt-2 flex items-end justify-between">
-              <p className="text-3xl font-bold text-white">
+              <p className="text-2xl font-bold text-white sm:text-3xl">
                 <AnimatedStatNumber value={homeData.quizzesCount} />
               </p>
               <GraduationCap className="text-emerald-300" size={18} />
@@ -101,7 +104,7 @@ export default async function TeacherPage() {
           <article className="rounded-2xl border border-slate-700 bg-linear-to-br from-slate-600 via-slate-950 to-transparent shadow-2xl shadow-slate-700/30 p-4">
             <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Active Learners</p>
             <div className="mt-2 flex items-end justify-between">
-              <p className="text-3xl font-bold text-white">
+              <p className="text-2xl font-bold text-white sm:text-3xl">
                 <AnimatedStatNumber value={homeData.activeLearnersCount} />
               </p>
               <Users className="text-orange-300" size={18} />

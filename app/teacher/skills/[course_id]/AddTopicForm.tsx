@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Topic, Skill, Content, ContentType } from "@/lib/database.types";
 import { addTopic, updateTopic, uploadContentFile, deleteContent } from "./actions";
@@ -40,20 +40,40 @@ export default function AddTopicForm({
     isExisting: false,
   });
 
-  const [form, setForm] = useState<TopicFormState>({
-    title: "",
-    description: "",
-    contents: [buildContentInput()],
-  });
+  const getContentByTpcId = (topicId: string) =>
+    contents.filter((c) => c.tpc_id === topicId);
+
+  const createInitialForm = (): TopicFormState => {
+    if (prefillTopic != null) {
+      const topicContents: ContentInput[] = getContentByTpcId(prefillTopic.tpc_id).map((c) => ({
+        id: c.cntnt_id,
+        title: c.cntnt_title,
+        type: c.cntnt_type,
+        value: c.cntnt_value,
+        isExisting: true,
+      }));
+
+      return {
+        title: prefillTopic.tpc_title,
+        description: prefillTopic.tpc_description ?? "",
+        contents: topicContents.length > 0 ? topicContents : [buildContentInput()],
+      };
+    }
+
+    return {
+      title: "",
+      description: "",
+      contents: [buildContentInput()],
+    };
+  };
+
+  const [form, setForm] = useState<TopicFormState>(() => createInitialForm());
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const onClose = () => {
     closeTopicModal();
-    setForm({ title: "", description: "", contents: [buildContentInput()] });
+    setForm(createInitialForm());
   };
-
-  const getContentByTpcId = (topicId: string) =>
-    contents.filter((c) => c.tpc_id === topicId);
 
   const hasContentChanged = (
     original: Content | undefined,
@@ -66,25 +86,6 @@ export default function AddTopicForm({
       (original.cntnt_value ?? "") !== (current.value ?? "")
     );
   };
-
-  useEffect(() => {
-    if (prefillTopic != null) {
-      const topicContents: ContentInput[] = getContentByTpcId(
-        prefillTopic.tpc_id,
-      ).map((c) => ({
-        id: c.cntnt_id,
-        title: c.cntnt_title,
-        type: c.cntnt_type,
-        value: c.cntnt_value,
-        isExisting: true,
-      }));
-      setForm({
-        title: prefillTopic.tpc_title,
-        description: prefillTopic.tpc_description ?? "",
-        contents: topicContents.length > 0 ? topicContents : [buildContentInput()],
-      });
-    }
-  }, []);
 
   // Delete an existing DB content row immediately
   async function handleDeleteContent(contentId: string) {
@@ -169,10 +170,10 @@ export default function AddTopicForm({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/70 p-4">
-      <div className="flex min-h-full items-start justify-center py-6">
-        <div className="w-full my-6 max-w-2xl max-h-[calc(90vh-1rem)] overflow-y-auto no-scrollbar rounded-lg border border-slate-700 bg-slate-900 p-5">
-          <div className="mb-4 flex items-center justify-between">
+    <div className="fixed inset-0 z-50 bg-slate-950/80 p-3 backdrop-blur-sm sm:p-4">
+      <div className="flex min-h-full items-end justify-center sm:items-center">
+        <div className="no-scrollbar w-full max-w-2xl max-h-[calc(100dvh-1.5rem)] overflow-y-auto rounded-2xl border border-slate-700 bg-slate-900 p-5 shadow-2xl shadow-black/40 sm:rounded-3xl sm:p-6">
+          <div className="mb-4 flex items-start justify-between gap-3">
             <h4 className="text-lg font-semibold text-white">
               {prefillTopic ? "Edit Topic" : "Add Topic"}
             </h4>
@@ -340,13 +341,13 @@ export default function AddTopicForm({
               <button
                 type="button"
                 onClick={() => setForm((prev) => ({ ...prev, contents: [...prev.contents, buildContentInput()] }))}
-                className="rounded-md border border-indigo-400 px-3 py-2 text-sm text-indigo-200 transition hover:bg-indigo-500/20"
+                className="rounded-md border border-orange-400 px-3 py-2 text-sm text-orange-200 transition hover:bg-orange-500/20"
               >
                 Add New Content
               </button>
             </div>
 
-            <div className="flex justify-end gap-2">
+            <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
               <button
                 type="button"
                 onClick={onClose}
@@ -356,7 +357,7 @@ export default function AddTopicForm({
               </button>
               <button
                 type="submit"
-                className="rounded-md bg-emerald-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-400"
+                className="rounded-md bg-linear-to-r from-orange-500 to-amber-400 px-4 py-2 text-sm font-semibold text-white transition hover:from-orange-400 hover:to-amber-300"
               >
                 Save Topic
               </button>

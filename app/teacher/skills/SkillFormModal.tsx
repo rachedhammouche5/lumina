@@ -7,43 +7,66 @@ import { Skill } from "@/lib/database.types";
 
 type Props = {
   teacher_id: string;
-  editingSkill?: Skill | null;   // null/undefined → add mode
+  editingSkill?: Skill | null;
   onClose: () => void;
 };
 
 const EMPTY_FORM = { title: "", description: "", duration: "" as string };
 
+function getInitialForm(editingSkill?: Skill | null) {
+  if (!editingSkill) return EMPTY_FORM;
+
+  return {
+    title: editingSkill.skl_title,
+    description: editingSkill.skl_dscrptn,
+    duration: String(editingSkill.skl_duration),
+  };
+}
+
 export default function SkillFormModal({ teacher_id, editingSkill, onClose }: Props) {
   const isEdit = !!editingSkill;
 
-  const [form, setForm] = useState(EMPTY_FORM);
+  const [form, setForm] = useState(() => getInitialForm(editingSkill));
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
+  const [preview, setPreview] = useState<string | null>(() => editingSkill?.skl_picture ?? null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const previewUrlRef = useRef<string | null>(null);
 
-  // Populate form when editing
   useEffect(() => {
-    if (editingSkill) {
-      setForm({
-        title: editingSkill.skl_title,
-        description: editingSkill.skl_dscrptn,
-        duration: String(editingSkill.skl_duration),
-      });
-      setPreview(editingSkill.skl_picture ?? null);
-    } else {
-      setForm(EMPTY_FORM);
-      setPreview(null);
-      setImageFile(null);
-    }
-  }, [editingSkill]);
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener("keydown", onKeyDown);
+
+      if (previewUrlRef.current?.startsWith("blob:")) {
+        URL.revokeObjectURL(previewUrlRef.current);
+      }
+      previewUrlRef.current = null;
+    };
+  }, [onClose]);
 
   function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
     setImageFile(file);
-    setPreview(URL.createObjectURL(file));
+
+    if (previewUrlRef.current?.startsWith("blob:")) {
+      URL.revokeObjectURL(previewUrlRef.current);
+    }
+
+    const objectUrl = URL.createObjectURL(file);
+    previewUrlRef.current = objectUrl;
+    setPreview(objectUrl);
   }
 
   async function onSubmit(e: React.FormEvent) {
@@ -53,12 +76,15 @@ export default function SkillFormModal({ teacher_id, editingSkill, onClose }: Pr
 
     let picturePath: string | null = editingSkill?.skl_picture ?? null;
 
-    // Upload new image if selected
     if (imageFile) {
       const fd = new FormData();
       fd.append("file", imageFile);
       const upload = await uploadSkillImage(fd);
-      if (upload.error) { setError(upload.error); setLoading(false); return; }
+      if (upload.error) {
+        setError(upload.error);
+        setLoading(false);
+        return;
+      }
       picturePath = upload.url ?? null;
     }
 
@@ -74,137 +100,170 @@ export default function SkillFormModal({ teacher_id, editingSkill, onClose }: Pr
       ? await updateSkill({ skl_id: editingSkill!.skl_id, ...payload })
       : await addSkill(payload);
 
-    if (result.error) { setError(result.error); setLoading(false); return; }
+    if (result.error) {
+      setError(result.error);
+      setLoading(false);
+      return;
+    }
 
     setLoading(false);
     onClose();
   }
 
+  const clearImage = () => {
+    if (previewUrlRef.current?.startsWith("blob:")) {
+      URL.revokeObjectURL(previewUrlRef.current);
+    }
+    previewUrlRef.current = null;
+    setPreview(null);
+    setImageFile(null);
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-      <div className="w-full max-w-lg rounded-xl border border-slate-700 bg-slate-900 p-6 shadow-2xl">
-        <div className="mb-5 flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-white">
-            {isEdit ? "Edit Skill" : "Add Skill"}
-          </h3>
-          <button
-            type="button"
-            onClick={onClose}
-            className="text-slate-400 transition hover:text-white"
-          >
-            ✕
-          </button>
-        </div>
-
-        <form onSubmit={onSubmit} className="space-y-4">
-          {/* Image upload */}
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-slate-200">
-              Cover Image
-            </label>
-            <div
-              onClick={() => fileRef.current?.click()}
-              className="relative flex h-36 cursor-pointer items-center justify-center overflow-hidden rounded-lg border-2 border-dashed border-slate-600 bg-slate-800 transition hover:border-indigo-400"
-            >
-              {preview ? (
-                <Image
-                  src={preview}
-                  alt="preview"
-                  fill
-                  className="object-cover"
-                />
-              ) : (
-                <div className="text-center">
-                  <p className="text-sm text-slate-400">Click to upload image</p>
-                  <p className="text-xs text-slate-500 mt-1">PNG, JPG, WEBP</p>
-                </div>
-              )}
+    <div
+      className="fixed inset-0 z-50 bg-slate-950/80 p-3 backdrop-blur-sm sm:p-4"
+      onClick={onClose}
+      role="presentation"
+    >
+      <div className="flex min-h-full items-end justify-center sm:items-center">
+        <div
+          className="flex max-h-[calc(100dvh-1.5rem)] w-full max-w-2xl flex-col overflow-hidden rounded-3xl border border-slate-700/80 bg-slate-900 shadow-2xl shadow-black/60 sm:max-w-lg"
+          onClick={(event) => event.stopPropagation()}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="skill-form-title"
+        >
+          <div className="flex items-start justify-between gap-4 border-b border-slate-700/70 px-4 py-4 sm:px-6">
+            <div>
+              <p className="text-xs uppercase tracking-[0.24em] text-slate-500">
+                {isEdit ? "Update skill" : "New skill"}
+              </p>
+              <h3 id="skill-form-title" className="mt-1 text-lg font-semibold text-white sm:text-xl">
+                {isEdit ? "Edit Skill" : "Add Skill"}
+              </h3>
             </div>
-            <input
-              ref={fileRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleImageChange}
-            />
-            {preview && (
-              <button
-                type="button"
-                onClick={() => { setPreview(null); setImageFile(null); }}
-                className="text-xs text-red-400 hover:text-red-300 transition"
-              >
-                Remove image
-              </button>
-            )}
-          </div>
-
-          {/* Title */}
-          <div className="space-y-1">
-            <label htmlFor="skl-title" className="block text-sm font-medium text-slate-200">
-              Title
-            </label>
-            <input
-              id="skl-title"
-              value={form.title}
-              onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
-              required
-              placeholder="Enter skill title"
-              className="w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-white outline-none ring-indigo-400 focus:ring"
-            />
-          </div>
-
-          {/* Description */}
-          <div className="space-y-1">
-            <label htmlFor="skl-desc" className="block text-sm font-medium text-slate-200">
-              Description
-            </label>
-            <textarea
-              id="skl-desc"
-              rows={3}
-              value={form.description}
-              onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
-              required
-              placeholder="Enter skill description"
-              className="w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-white outline-none ring-indigo-400 focus:ring"
-            />
-          </div>
-
-          {/* Duration */}
-          <div className="space-y-1">
-            <label htmlFor="skl-dur" className="block text-sm font-medium text-slate-200">
-              Duration (hours)
-            </label>
-            <input
-              id="skl-dur"
-              type="number"
-              min={1}
-              value={form.duration}
-              onChange={(e) => setForm((p) => ({ ...p, duration: e.target.value }))}
-              required
-              placeholder="e.g. 10"
-              className="w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-white outline-none ring-indigo-400 focus:ring"
-            />
-          </div>
-
-          {error && <p className="text-sm text-red-400">{error}</p>}
-
-          <div className="flex justify-end gap-3 pt-1">
             <button
               type="button"
               onClick={onClose}
-              className="rounded-md border border-slate-600 px-4 py-2 text-sm text-slate-300 transition hover:bg-slate-700"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-700 bg-slate-800/80 text-slate-300 transition hover:border-slate-500 hover:text-white"
+              aria-label="Close skill form"
             >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="rounded-md bg-emerald-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-400 disabled:opacity-50"
-            >
-              {loading ? "Saving…" : isEdit ? "Save Changes" : "Add Skill"}
+              ✕
             </button>
           </div>
-        </form>
+
+          <form onSubmit={onSubmit} className="flex-1 space-y-4 overflow-y-auto px-4 py-4 sm:px-6">
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-slate-200">
+                Cover Image
+              </label>
+              <div
+                onClick={() => fileRef.current?.click()}
+                className="relative flex h-44 cursor-pointer items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-slate-600 bg-slate-800 transition hover:border-orange-400 sm:h-48"
+              >
+                {preview ? (
+                  <Image
+                    src={preview}
+                    alt="preview"
+                    fill
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="px-6 text-center">
+                    <p className="text-sm font-medium text-slate-300">
+                      Tap to upload a cover image
+                    </p>
+                    <p className="mt-1 text-xs text-slate-500">PNG, JPG, or WEBP</p>
+                  </div>
+                )}
+              </div>
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleImageChange}
+              />
+              {preview && (
+                <button
+                  type="button"
+                  onClick={clearImage}
+                  className="text-xs font-medium text-red-300 transition hover:text-red-200"
+                >
+                  Remove image
+                </button>
+              )}
+            </div>
+
+            <div className="space-y-1">
+              <label htmlFor="skl-title" className="block text-sm font-medium text-slate-200">
+                Title
+              </label>
+              <input
+                id="skl-title"
+                value={form.title}
+                onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
+                required
+                placeholder="Enter skill title"
+                className="w-full rounded-xl border border-slate-600 bg-slate-800 px-3 py-3 text-sm text-white outline-none ring-orange-400 transition placeholder:text-slate-500 focus:border-orange-400 focus:ring-2"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label htmlFor="skl-desc" className="block text-sm font-medium text-slate-200">
+                Description
+              </label>
+              <textarea
+                id="skl-desc"
+                rows={4}
+                value={form.description}
+                onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
+                required
+                placeholder="Enter skill description"
+                className="w-full rounded-xl border border-slate-600 bg-slate-800 px-3 py-3 text-sm text-white outline-none ring-orange-400 transition placeholder:text-slate-500 focus:border-orange-400 focus:ring-2"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label htmlFor="skl-dur" className="block text-sm font-medium text-slate-200">
+                Duration (hours)
+              </label>
+              <input
+                id="skl-dur"
+                type="number"
+                min={1}
+                value={form.duration}
+                onChange={(e) => setForm((p) => ({ ...p, duration: e.target.value }))}
+                required
+                placeholder="e.g. 10"
+                className="w-full rounded-xl border border-slate-600 bg-slate-800 px-3 py-3 text-sm text-white outline-none ring-orange-400 transition placeholder:text-slate-500 focus:border-orange-400 focus:ring-2"
+              />
+            </div>
+
+            {error && (
+              <p className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
+                {error}
+              </p>
+            )}
+
+            <div className="flex flex-col-reverse gap-3 border-t border-slate-700/70 pt-4 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={onClose}
+                className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-600 px-4 text-sm font-medium text-slate-200 transition hover:border-slate-500 hover:bg-slate-800"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="inline-flex h-11 items-center justify-center rounded-xl bg-gradient-to-r from-orange-500 to-amber-400 px-5 text-sm font-semibold text-white shadow-lg shadow-orange-500/20 transition hover:from-orange-400 hover:to-amber-300 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {loading ? "Saving..." : isEdit ? "Save Changes" : "Add Skill"}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );
