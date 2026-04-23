@@ -1,14 +1,16 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import "@xyflow/react/dist/style.css";
-import { Background, Controls, ReactFlow, type NodeTypes } from "@xyflow/react";
+import { Background, Controls, ReactFlow, type NodeProps, type NodeTypes } from "@xyflow/react";
+import { useEffect, useState } from "react";
+import type { ComponentType } from "react";
 import TRoadmapNode from "./Tnode";
 import type { ScoreRow, TopicRow } from "../types";
+import type { RoadmapNodeData } from "../types";
 import { generateRoadmapElements } from "../actions";
 
 const nodeTypes: NodeTypes = {
-  roadmap:  TRoadmapNode as any,
+  roadmap: TRoadmapNode as ComponentType<NodeProps<RoadmapNodeData>>,
 };
 
 export default function RoadmapFlow({
@@ -18,8 +20,8 @@ export default function RoadmapFlow({
   isEnrolled = true,
   forceUnlocked = false,
   onAddChild,
-  onPreviewTopic,
-  onAddQuizTopic,
+  onManageTopic,
+  onModifyQuizTopic,
   onRemoveTopic,
 }: {
   topics?: TopicRow[];
@@ -28,21 +30,31 @@ export default function RoadmapFlow({
   isEnrolled?: boolean;
   forceUnlocked?: boolean;
   onAddChild?: (parentId: string | null) => void;
-  onPreviewTopic?: (topicId: string) => void;
-  onAddQuizTopic?: (topicId: string) => void;
+  onManageTopic?: (topicId: string) => void;
+  onModifyQuizTopic?: (topicId: string) => void;
   onRemoveTopic?: (topicId: string) => void;
 }) {
-    const { nodes, edges, width, height } = generateRoadmapElements(
-      topics,
-      scores,
-      root,
-      isEnrolled,
-      onAddChild,
-      onPreviewTopic,
-      onAddQuizTopic,
-      onRemoveTopic,
-      forceUnlocked,
-    );
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const query = window.matchMedia("(max-width: 640px)");
+    const update = () => setIsMobile(query.matches);
+    update();
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
+
+  const { nodes, edges, width, height } = generateRoadmapElements(
+    topics,
+    scores,
+    root,
+    isEnrolled,
+    onAddChild,
+    onManageTopic,
+    onModifyQuizTopic,
+    onRemoveTopic,
+    forceUnlocked,
+  );
 
   const padding = 120;
   const translateExtent: [[number, number], [number, number]] = [
@@ -51,7 +63,7 @@ export default function RoadmapFlow({
   ];
 
   // Clamp the visible canvas height so the roadmap block stays compact.
-  const clampedHeight = Math.min(height, 500);
+  const clampedHeight = Math.min(height, isMobile ? 420 : 500);
 
   return (
     <div className="w-full overflow-hidden border-2 border-slate-400/40 rounded-4xl shadow-2xl shadow-slate-400/40 mb-5 bg-linear-to-br from-slate-900 to-transparent">
@@ -64,9 +76,9 @@ export default function RoadmapFlow({
           edges={edges}
           nodeTypes={nodeTypes}
           fitView
-          fitViewOptions={{ padding: 0.2, includeHiddenNodes: true }}
-          minZoom={0.6}
-          maxZoom={1.8}
+          fitViewOptions={{ padding: isMobile ? 0.35 : 0.2, includeHiddenNodes: true }}
+          minZoom={isMobile ? 0.45 : 0.6}
+          maxZoom={isMobile ? 1.35 : 1.8}
           zoomOnScroll={false}
           zoomOnPinch={false}
           zoomOnDoubleClick={false}
@@ -81,7 +93,11 @@ export default function RoadmapFlow({
           proOptions={{ hideAttribution: true }}
         >
           <Background color="gray" gap={28} size={1} />
-          <Controls position="bottom-right" showFitView className="roadmap-controls" />
+          <Controls
+            position="bottom-right"
+            showFitView
+            className={isMobile ? "roadmap-controls roadmap-controls-mobile" : "roadmap-controls"}
+          />
         </ReactFlow>
       </div>
     </div>

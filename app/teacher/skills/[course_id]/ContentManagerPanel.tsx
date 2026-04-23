@@ -218,14 +218,14 @@ export default function ContentManagerPanel({
   };
 
   return (
-    <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
-      <div className="rounded-3xl border border-slate-700 bg-slate-950 p-4">
-        <p className="text-sm uppercase tracking-[0.26em] text-slate-500">Topic</p>
-        <p className="mb-3 text-sm text-slate-400">Choose where to manage learning content.</p>
+    <div className="grid gap-3 lg:grid-cols-[300px_1fr]">
+      <div className="rounded-3xl border border-slate-700 bg-linear-to-br from-slate-700/80 via-slate-950 to-transparent p-3 shadow-2xl shadow-black/20 sm:p-4">
+        <p className="text-[11px] uppercase tracking-[0.2em] text-orange-300 sm:text-xs">Topic</p>
+        <p className="mb-3 text-xs text-slate-400 sm:text-sm">Choose where to manage learning content.</p>
         <select
           value={selectedTopicId}
           onChange={(event) => onSelectTopic(event.target.value)}
-          className="w-full rounded-2xl border border-slate-700 bg-slate-900 px-3 py-3 text-sm text-white outline-none transition focus:border-indigo-400"
+          className="w-full rounded-2xl border border-slate-700 bg-slate-900 px-3 py-2.5 text-sm text-white outline-none transition focus:border-orange-400"
         >
           {topics.map((topic) => (
             <option key={topic.tpc_id} value={topic.tpc_id}>
@@ -234,24 +234,24 @@ export default function ContentManagerPanel({
           ))}
         </select>
 
-        <div className="mt-5 space-y-3 rounded-2xl border border-slate-700 bg-slate-900/80 p-4">
+        <div className="mt-4 space-y-2 rounded-2xl border border-slate-700 bg-slate-900/80 p-3">
           <p className="text-sm font-semibold text-white">Topic details</p>
-          <p className="text-sm text-slate-300">{selectedTopic?.tpc_description ?? "No topic selected."}</p>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs leading-relaxed text-slate-300 sm:text-sm">{selectedTopic?.tpc_description ?? "No topic selected."}</p>
+          <p className="text-[11px] leading-relaxed text-slate-400">
             Add, edit, and remove content for this topic without opening the topic modal.
           </p>
         </div>
       </div>
 
-      <div className="space-y-4">
-        <div className="rounded-3xl border border-slate-700 bg-slate-950 p-4">
-          <p className="text-sm uppercase tracking-[0.26em] text-slate-500">Add Content</p>
-          <div className="mt-3 grid gap-3 md:grid-cols-2">
+      <div className="space-y-3 min-w-0">
+        <div className="overflow-hidden rounded-3xl border border-slate-700 bg-linear-to-br from-slate-700/80 via-slate-950 to-transparent p-4 shadow-2xl shadow-black/20 sm:p-5">
+          <p className="text-[11px] uppercase tracking-[0.2em] text-orange-300 sm:text-xs">Add content</p>
+          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
             <input
               value={newDraft.title}
               onChange={(event) => setNewDraft((prev) => ({ ...prev, title: event.target.value }))}
               placeholder="Content title"
-              className="rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white"
+              className="h-12 w-full min-w-0 rounded-xl border border-slate-700 bg-slate-900 px-4 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-orange-400 sm:col-span-2"
             />
             <select
               value={newDraft.type}
@@ -263,7 +263,7 @@ export default function ContentManagerPanel({
                   file: null,
                 }))
               }
-              className="rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white"
+              className="h-12 w-full min-w-0 rounded-xl border border-slate-700 bg-slate-900 px-4 text-sm text-white outline-none transition focus:border-orange-400 sm:col-span-1"
             >
               <option value="video">Video URL</option>
               <option value="docs">Documentation URL</option>
@@ -277,59 +277,59 @@ export default function ContentManagerPanel({
                 onChange={(event) =>
                   setNewDraft((prev) => ({ ...prev, file: event.target.files?.[0] ?? null, value: "" }))
                 }
-                className="rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white"
+                className="h-12 w-full min-w-0 rounded-xl border border-slate-700 bg-slate-900 px-4 text-sm text-white outline-none transition file:mr-3 file:rounded-lg file:border-0 file:bg-orange-500/20 file:px-3 file:py-2 file:text-xs file:font-semibold file:text-orange-100 hover:border-orange-400 sm:col-span-2"
               />
             ) : (
               <input
                 value={newDraft.value}
                 onChange={(event) => setNewDraft((prev) => ({ ...prev, value: event.target.value }))}
                 placeholder="https://"
-                className="rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white"
+                className="h-12 w-full min-w-0 rounded-xl border border-slate-700 bg-slate-900 px-4 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-orange-400 sm:col-span-2"
               />
             )}
             <button
               type="button"
               onClick={handleCreate}
               disabled={!selectedTopicId || creating}
-              className="rounded-xl border border-indigo-400/40 bg-indigo-500/10 px-4 py-2 text-sm font-semibold text-indigo-100 transition hover:bg-indigo-500/20 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex h-12 w-full items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-amber-400 px-4 text-sm font-semibold text-white shadow-lg shadow-orange-500/20 transition hover:from-orange-400 hover:to-amber-300 disabled:cursor-not-allowed disabled:opacity-50 sm:col-span-2"
             >
               {creating ? "Adding..." : "Add content"}
             </button>
           </div>
         </div>
 
-        <div className="flex items-center justify-between gap-4 rounded-3xl border border-slate-700 bg-slate-950 p-4">
+        <div className="mt-4 flex flex-col gap-2 rounded-3xl border border-slate-700 bg-linear-to-br from-slate-700/80 via-slate-950 to-transparent p-3 shadow-2xl shadow-black/20 sm:mt-0 sm:flex-row sm:items-center sm:justify-between sm:p-4">
           <div>
-            <p className="text-sm uppercase tracking-[0.26em] text-slate-500">Content Items</p>
-            <p className="text-xl font-semibold text-white">{contents.length} items</p>
-            <p className="mt-1 text-xs text-slate-400">Use Edit to modify, then Save or Discard.</p>
+            <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500 sm:text-xs">Content items</p>
+            <p className="text-lg font-semibold text-white sm:text-xl">{contents.length} items</p>
+            <p className="mt-1 text-[11px] text-slate-400 sm:text-xs">Use Edit to modify, then Save or Discard.</p>
           </div>
-          <div className="text-right text-sm text-slate-400">{selectedTopic?.tpc_title ?? "No topic selected"}</div>
+          <div className="min-w-0 break-words text-xs text-slate-400 sm:text-sm">{selectedTopic?.tpc_title ?? "No topic selected"}</div>
         </div>
 
-        {error ? <div className="rounded-2xl border border-red-500/40 bg-red-500/5 p-4 text-sm text-red-200">{error}</div> : null}
+        {error ? <div className="rounded-2xl border border-red-500/40 bg-red-500/5 p-3 text-sm text-red-200">{error}</div> : null}
 
         {loading ? (
-          <div className="rounded-3xl border border-slate-700 bg-slate-950 p-6 text-center text-slate-300">
+          <div className="rounded-3xl border border-slate-700 bg-slate-950 p-5 text-center text-slate-300">
             Loading content...
           </div>
         ) : contents.length === 0 ? (
-          <div className="rounded-3xl border border-slate-700 bg-slate-950 p-6 text-slate-300">
+          <div className="rounded-3xl border border-dashed border-slate-700 bg-slate-950/80 p-5 text-sm text-slate-300">
             No content found for this topic yet. Add content above to start managing it.
           </div>
         ) : (
           <div className="space-y-3">
             {contents.map((content) => (
-              <div key={content.id} className="rounded-2xl border border-slate-700 bg-slate-900 p-4">
+              <div key={content.id} className="min-w-0 rounded-3xl border border-slate-700 bg-slate-900/80 p-3 shadow-sm shadow-black/20 sm:p-4">
                 {editingId === content.id && editingDraft ? (
                   <>
-                    <div className="grid gap-3 md:grid-cols-2">
+                    <div className="grid gap-3 sm:grid-cols-2">
                       <input
                         value={editingDraft.title}
                         onChange={(event) =>
                           setEditingDraft((prev) => (prev ? { ...prev, title: event.target.value } : prev))
                         }
-                        className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
+                        className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-orange-400 sm:col-span-2"
                       />
                       <select
                         value={editingDraft.type}
@@ -338,7 +338,7 @@ export default function ContentManagerPanel({
                             prev ? { ...prev, type: event.target.value as ContentType, value: "" } : prev,
                           )
                         }
-                        className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
+                        className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-white outline-none transition focus:border-orange-400 sm:col-span-1"
                       >
                         <option value="video">video</option>
                         <option value="docs">docs</option>
@@ -352,15 +352,15 @@ export default function ContentManagerPanel({
                           setEditingDraft((prev) => (prev ? { ...prev, value: event.target.value } : prev))
                         }
                         placeholder={isFileType(editingDraft.type) ? "/uploads/audio/file.mp3" : "https://"}
-                        className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white md:col-span-2"
+                        className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-orange-400 sm:col-span-1"
                       />
                     </div>
 
-                    <div className="mt-3 flex justify-end gap-2">
+                    <div className="mt-3 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                       <button
                         type="button"
                         onClick={discardEdit}
-                        className="rounded-lg border border-slate-500 px-3 py-2 text-sm text-slate-200 transition hover:bg-slate-700/60"
+                        className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-600 px-3 text-sm text-slate-200 transition hover:border-slate-500 hover:bg-slate-800"
                       >
                         Discard changes
                       </button>
@@ -368,7 +368,7 @@ export default function ContentManagerPanel({
                         type="button"
                         onClick={() => void handleUpdate(editingDraft)}
                         disabled={savingId === content.id}
-                        className="rounded-lg border border-emerald-400/40 bg-emerald-500/10 px-3 py-2 text-sm font-semibold text-emerald-100 transition hover:bg-emerald-500/20 disabled:opacity-60"
+                        className="inline-flex h-11 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-amber-400 px-3 text-sm font-semibold text-white transition hover:from-orange-400 hover:to-amber-300 disabled:opacity-60"
                       >
                         {savingId === content.id ? "Saving..." : "Save changes"}
                       </button>
@@ -376,24 +376,24 @@ export default function ContentManagerPanel({
                   </>
                 ) : (
                   <>
-                    <div className="grid gap-3 md:grid-cols-2">
-                      <div className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-200">
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-200 sm:col-span-2">
                         {content.title}
                       </div>
-                      <div className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-200 uppercase">
+                      <div className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-[11px] uppercase tracking-[0.16em] text-slate-300 sm:col-span-1">
                         {content.type}
                       </div>
-                      <div className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-200 md:col-span-2">
-                        {content.value ?? "-"}
+                      <div className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-200 sm:col-span-1">
+                        <span className="break-words">{content.value ?? "-"}</span>
                       </div>
                     </div>
 
-                    <div className="mt-3 flex justify-end gap-2">
+                    <div className="mt-3 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                       <button
                         type="button"
                         onClick={() => startEdit(content)}
                         disabled={Boolean(editingId)}
-                        className="rounded-lg border border-indigo-400/40 bg-indigo-500/10 px-3 py-2 text-sm font-semibold text-indigo-100 transition hover:bg-indigo-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+                        className="inline-flex h-11 items-center justify-center rounded-xl border border-orange-400/40 bg-orange-500/10 px-3 text-sm font-semibold text-orange-100 transition hover:bg-orange-500/20 disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         Edit
                       </button>
@@ -401,7 +401,7 @@ export default function ContentManagerPanel({
                         type="button"
                         onClick={() => handleDelete(content.id)}
                         disabled={savingId === content.id}
-                        className="rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-200 transition hover:bg-red-500/20 disabled:opacity-60"
+                        className="inline-flex h-11 items-center justify-center rounded-xl border border-red-500/40 bg-red-500/10 px-3 text-sm font-semibold text-red-200 transition hover:bg-red-500/20 disabled:opacity-60"
                       >
                         Delete
                       </button>

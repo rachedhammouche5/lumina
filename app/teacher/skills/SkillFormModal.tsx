@@ -135,7 +135,7 @@ export default function SkillFormModal({ teacher_id, editingSkill, onClose }: Pr
         >
           <div className="flex items-start justify-between gap-4 border-b border-slate-700/70 px-4 py-4 sm:px-6">
             <div>
-              <p className="text-xs uppercase tracking-[0.24em] text-slate-500">
+              <p className="text-xs uppercase tracking-[0.24em] text-orange-300">
                 {isEdit ? "Update skill" : "New skill"}
               </p>
               <h3 id="skill-form-title" className="mt-1 text-lg font-semibold text-white sm:text-xl">
@@ -154,7 +154,7 @@ export default function SkillFormModal({ teacher_id, editingSkill, onClose }: Pr
 
           <form onSubmit={onSubmit} className="flex-1 space-y-4 overflow-y-auto px-4 py-4 sm:px-6">
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-slate-200">
+              <label className="block text-xs uppercase tracking-[0.18em] text-slate-400">
                 Cover Image
               </label>
               <div
@@ -196,7 +196,7 @@ export default function SkillFormModal({ teacher_id, editingSkill, onClose }: Pr
             </div>
 
             <div className="space-y-1">
-              <label htmlFor="skl-title" className="block text-sm font-medium text-slate-200">
+              <label htmlFor="skl-title" className="block text-xs uppercase tracking-[0.18em] text-slate-400">
                 Title
               </label>
               <input
@@ -210,7 +210,7 @@ export default function SkillFormModal({ teacher_id, editingSkill, onClose }: Pr
             </div>
 
             <div className="space-y-1">
-              <label htmlFor="skl-desc" className="block text-sm font-medium text-slate-200">
+              <label htmlFor="skl-desc" className="block text-xs uppercase tracking-[0.18em] text-slate-400">
                 Description
               </label>
               <textarea
@@ -225,7 +225,7 @@ export default function SkillFormModal({ teacher_id, editingSkill, onClose }: Pr
             </div>
 
             <div className="space-y-1">
-              <label htmlFor="skl-dur" className="block text-sm font-medium text-slate-200">
+              <label htmlFor="skl-dur" className="block text-xs uppercase tracking-[0.18em] text-slate-400">
                 Duration (hours)
               </label>
               <input

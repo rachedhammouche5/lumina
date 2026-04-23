@@ -78,8 +78,8 @@ export const generateRoadmapElements = (
   root?: { id: string; title: string; subtitle?: string },
   isEnrolled = true,
   onAddChild?: (parentId: string | null) => void,
-  onPreviewTopic?: (topicId: string) => void,
-  onAddQuizTopic?: (topicId: string) => void,
+  onManageTopic?: (topicId: string) => void,
+  onModifyQuizTopic?: (topicId: string) => void,
   onRemoveTopic?: (topicId: string) => void,
   forceUnlocked = false,
 ): { nodes: Node<RoadmapNodeData>[]; edges: Edge[]; width: number; height: number } => {
@@ -116,7 +116,7 @@ export const generateRoadmapElements = (
     topics.filter(t => !t.parent_id).forEach(t => computeEffective(t.tpc_id, rootEffective));
 
     // Update passing based on effective degrees
-    const effectivePassingIds = new Set([...effectiveDegrees.entries()].filter(([_, d]) => d >= 50).map(([id]) => id));
+    const effectivePassingIds = new Set([...effectiveDegrees.entries()].filter(([, d]) => d >= 50).map(([id]) => id));
 
     // Update all topics completed
     const allTopicsEffectiveCompleted = rootEffective === 100;
@@ -178,7 +178,7 @@ export const generateRoadmapElements = (
                 degree: rootEffective,
                 id: root.id,
                 onAddChild: () => onAddChild?.(null),
-                onPreview: () => onPreviewTopic?.(root.id),
+                onManageTopic: () => onManageTopic?.(root.id),
                 onRemove: () => onRemoveTopic?.(root.id),
             },
         });
@@ -217,9 +217,9 @@ export const generateRoadmapElements = (
                 parentId: topic.parent_id ?? undefined,
                 learnHref: `/skills/${topic.skill_id}/${topic.tpc_id}`,
                 quizHref: `/skills/${topic.skill_id}/${topic.tpc_id}/quiz`,
-                        onAddChild: () => onAddChild?.(topic.tpc_id),
-                onPreview: () => onPreviewTopic?.(topic.tpc_id),
-                onAddQuiz: () => onAddQuizTopic?.(topic.tpc_id),
+                onAddChild: () => onAddChild?.(topic.tpc_id),
+                onManageTopic: () => onManageTopic?.(topic.tpc_id),
+                onModifyQuiz: () => onModifyQuizTopic?.(topic.tpc_id),
                 onRemove: () => onRemoveTopic?.(topic.tpc_id),
             },
         });
