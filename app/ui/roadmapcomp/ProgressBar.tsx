@@ -1,4 +1,4 @@
-import Button from "../Button";
+import { Trophy } from "lucide-react";
 
 interface Props {
   title: string;
@@ -6,25 +6,58 @@ interface Props {
 }
 
 function ProgressBar({ title, value = 0 }: Props) {
+  const clamped = Math.max(0, Math.min(100, value));
+  const isComplete = clamped === 100;
+
   return (
-    <div className="h-auto md:h-48 flex flex-col w-full border-2 border-slate-500/60 rounded-[32px] bg-linear-130 from-slate-300/20 to-slate-900/10 p-5 backdrop-blur-xl shadow-2xl shadow-slate-300/20">
-      <div className="flex flex-row w-full justify-between items-center">
-        <h3 className="text-sm md:text-base font-semibold">{title}</h3>
-        <h2 className="font-black italic text-xl md:text-2xl text-orange-300">{value}%</h2>
-      </div>
-      <div className="h-10 md:h-14 w-full flex flex-row items-center">
-        <div className="w-full h-1.5 rounded-full bg-slate-800 mb-3">
-          <div
-            className="w-full h-1.5 rounded-full bg-linear-90 from-orange-600 to-orange-300 mb-3"
-            style={{ width: `${value}%` }}
-          />
+    <div className="relative h-auto md:h-48 flex flex-col w-full border border-slate-700/40 rounded-[2rem] bg-gradient-to-br from-slate-800/40 to-slate-900/20 p-5 md:p-7 backdrop-blur-xl overflow-hidden shadow-[0_4px_24px_rgba(0,0,0,0.3)]">
+
+      {/* Subtle top glow when complete */}
+      {isComplete && (
+        <div className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 w-48 h-20 bg-orange-500/15 blur-[50px] rounded-full" />
+      )}
+
+      <div className="relative z-10 flex flex-col h-full justify-between gap-4">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Trophy
+              size={14}
+              className={isComplete ? "text-orange-400" : "text-slate-500"}
+            />
+            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              {title}
+            </span>
+          </div>
+          <span className={`font-black italic text-2xl md:text-3xl leading-none ${isComplete ? "text-orange-400" : "text-white"}`}>
+            {clamped}%
+          </span>
         </div>
-      </div>
-      <div className="mt-1">
-        <Button variant="primary" size="l" className="flex flex-col w-full h-14 items-start">
-          <h3 className="uppercase text-sm">next Progress</h3>
-          <p className="text-[11px] text-slate-950 font-bold">Content he will be in the roadmaop.</p>
-        </Button>
+
+        {/* Bar */}
+        <div className="flex-1 flex flex-col justify-center gap-2">
+          <div className="w-full h-2 rounded-full bg-slate-800/80">
+            <div
+              className="h-2 rounded-full bg-gradient-to-r from-orange-600 to-orange-400 transition-all duration-700 shadow-[0_0_8px_rgba(249,115,22,0.5)]"
+              style={{ width: `${clamped}%` }}
+            />
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] text-slate-600 font-medium">Start</span>
+            <span className="text-[10px] text-slate-600 font-medium">Complete</span>
+          </div>
+        </div>
+
+        {/* Status label */}
+        <div className="text-xs text-slate-500">
+          {isComplete ? (
+            <span className="text-orange-400 font-semibold">Course completed!</span>
+          ) : clamped > 0 ? (
+            <span>{clamped}% of topics passed — keep going!</span>
+          ) : (
+            <span>Start a quiz to track your progress.</span>
+          )}
+        </div>
       </div>
     </div>
   );
