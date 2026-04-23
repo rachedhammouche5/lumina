@@ -31,4 +31,9 @@ export async function completeSkill(topicId: string, skillId: string) {
     .update({ progress: 100 })
     .eq("skill_id", skillId)
     .eq("student_id", student.std_id);
+
+  await supabase
+    .from("Student")
+    .update({ std_last_activeDate: new Date().toISOString() })
+    .eq("std_id", student.std_id);
 }

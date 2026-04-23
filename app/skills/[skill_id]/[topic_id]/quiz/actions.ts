@@ -88,26 +88,15 @@ export async function saveQuizScore(
 
   if (saveError) return { error: saveError.message };
 
+  await supabase
+    .from("Student")
+    .update({ std_last_activeDate: new Date().toISOString() })
+    .eq("std_id", student.std_id);
+
   // If the score is passing (>=50), propagate to all child topics
   if (score >= 50) {
     // Get all child topics recursively
-    const { data: childTopics, error: childrenError } = await supabase
-      .from("Topic")
-      .select("tpc_id")
-      .eq("skill_id", skillId);
-
-    if (childrenError) {
-      console.error("Error fetching child topics:", childrenError);
-    } else {
-      // Build a map of parent relationships
-      const topicMap = new Map<string, string | null>();
-      childTopics?.forEach(t => {
-        // We need parent_id, but the select only has tpc_id
-        // Let's fetch with parent_id
-      });
-
-      // Better to fetch with parent_id
-      const { data: allTopics, error: allError } = await supabase
+    const { data: allTopics, error: allError } = await supabase
         .from("Topic")
         .select("tpc_id, parent_id")
         .eq("skill_id", skillId);
@@ -166,7 +155,6 @@ export async function saveQuizScore(
           }
         }
       }
-    }
   }
 
   revalidatePath(`/skills/${skillId}`);

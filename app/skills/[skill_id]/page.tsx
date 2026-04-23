@@ -45,7 +45,7 @@ export default async function RoadmapPage({
     const { data: student, error: studentError } = await supabase
       .from("Student")
       .select("std_id, std_fullname, std_pfp")
-      .eq("user_id", user.id)
+      .eq("std_id", user.id)
       .single();
 
     if (!studentError && student) {

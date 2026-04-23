@@ -48,7 +48,7 @@ export default async function TopicLearningPage({
   const { skill_id, topic_id } = await params;
   const supabase = await createClient();
 
-  const [{ data: skill }, { data: topic }, { data: contents }] =
+  const [{ data: skill }, { data: topic }, { data: contents }, { data: { user } }] =
     await Promise.all([
       supabase.from("Skill").select("*").eq("skl_id", skill_id).single(),
       supabase
@@ -58,9 +58,17 @@ export default async function TopicLearningPage({
         .eq("skill_id", skill_id)
         .single(),
       supabase.from("Content").select("*").eq("tpc_id", topic_id),
+      supabase.auth.getUser(),
     ]);
 
   if (!skill || !topic) notFound();
+
+  if (user) {
+    await supabase
+      .from("Student")
+      .update({ std_last_activeDate: new Date().toISOString() })
+      .eq("user_id", user.id);
+  }
 
   const topicContents: Content[] = contents ?? [];
   const videoContents = topicContents.filter((c) => c.cntnt_type === "video");

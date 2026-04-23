@@ -171,6 +171,25 @@ export async function GET(request: NextRequest) {
     role = "student";
   }
 
+  if (role === "student") {
+    const admin = getAdminClient();
+    if (admin) {
+      await syncRoleTables(
+        admin,
+        {
+          userId: user.id,
+          email: user.email ?? null,
+          fullName: (user.user_metadata?.full_name as string | undefined) ?? null,
+        },
+        "student",
+      );
+    }
+    await supabase
+      .from("Student")
+      .update({ std_last_activeDate: new Date().toISOString() })
+      .eq("std_id", user.id);
+  }
+
   const destination =
     role === "admin"
       ? "/admin"
