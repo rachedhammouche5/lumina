@@ -271,7 +271,7 @@ export default function CourseDetailView({
       </div>
 
       {deleteConfirmOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-sm">
           <div className="w-full max-w-md rounded-3xl border border-slate-700 bg-slate-900 p-5 shadow-2xl shadow-black/50">
             <p className="text-xs uppercase tracking-[0.24em] text-orange-300">Danger zone</p>
             <h3 className="mt-1 text-lg font-semibold text-white">Delete this skill?</h3>

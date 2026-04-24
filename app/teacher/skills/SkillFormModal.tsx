@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
 import { addSkill, updateSkill, uploadSkillImage } from "./actions";
 import { Skill } from "@/lib/database.types";
@@ -31,10 +32,12 @@ export default function SkillFormModal({ teacher_id, editingSkill, onClose }: Pr
   const [preview, setPreview] = useState<string | null>(() => editingSkill?.skl_picture ?? null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const previewUrlRef = useRef<string | null>(null);
 
   useEffect(() => {
+    setMounted(true);
     const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
@@ -119,9 +122,11 @@ export default function SkillFormModal({ teacher_id, editingSkill, onClose }: Pr
     setImageFile(null);
   };
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 bg-slate-950/80 p-3 backdrop-blur-sm sm:p-4"
+      className="fixed inset-0 z-[120] bg-slate-950/80 p-3 backdrop-blur-sm sm:p-4"
       onClick={onClose}
       role="presentation"
     >
@@ -152,7 +157,7 @@ export default function SkillFormModal({ teacher_id, editingSkill, onClose }: Pr
             </button>
           </div>
 
-          <form onSubmit={onSubmit} className="flex-1 space-y-4 overflow-y-auto px-4 py-4 sm:px-6">
+          <form onSubmit={onSubmit} className="pretty-scrollbar flex-1 space-y-4 overflow-y-scroll px-4 py-4 pr-2 sm:px-6 sm:pr-4">
             <div className="space-y-2">
               <label className="block text-xs uppercase tracking-[0.18em] text-slate-400">
                 Cover Image
@@ -265,6 +270,7 @@ export default function SkillFormModal({ teacher_id, editingSkill, onClose }: Pr
           </form>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

@@ -74,18 +74,20 @@ export default async function TeacherCoursesPage() {
           </div>
         </div>
 
-        <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {skills.length > 0 ? (
-            skills.map((skill) => (
-              <SkillCard key={skill.skl_id} skill={skill} teacher_id={teacher.tchr_id} />
-            ))
-          ) : (
-            <li className="col-span-full rounded-3xl border border-dashed border-slate-700 bg-slate-900/80 p-8 text-center text-slate-300 sm:p-10">
-              <p className="text-lg font-medium text-white">You don&apos;t have any skills yet.</p>
-              <p className="mt-2 text-sm text-slate-400">Use the Add Skill button above to create your first roadmap.</p>
-            </li>
-          )}
-        </ul>
+        <div className="pretty-scrollbar max-h-[calc(100vh-22rem)] overflow-y-scroll pr-1 sm:pr-2">
+          <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {skills.length > 0 ? (
+              skills.map((skill) => (
+                <SkillCard key={skill.skl_id} skill={skill} teacher_id={teacher.tchr_id} />
+              ))
+            ) : (
+              <li className="col-span-full rounded-3xl border border-dashed border-slate-700 bg-slate-900/80 p-8 text-center text-slate-300 sm:p-10">
+                <p className="text-lg font-medium text-white">You don&apos;t have any skills yet.</p>
+                <p className="mt-2 text-sm text-slate-400">Use the Add Skill button above to create your first roadmap.</p>
+              </li>
+            )}
+          </ul>
+        </div>
       </div>
     </section>
   );

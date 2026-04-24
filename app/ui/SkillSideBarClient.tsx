@@ -88,7 +88,7 @@ export default function SkillSideBarClient({
           </div>
         </div>
 
-        <div className="flex-1 space-y-2 overflow-y-auto p-4">
+        <div className="pretty-scrollbar flex-1 space-y-2 overflow-y-scroll p-4 pr-2">
           {skills.length === 0 ? (
             <p className="rounded-xl border border-dashed border-slate-700 bg-slate-900/60 p-3 text-sm text-slate-400">
               You have no skills yet. Use + to create your first one.
