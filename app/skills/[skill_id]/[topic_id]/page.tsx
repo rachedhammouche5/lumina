@@ -39,6 +39,11 @@ const contentTypeMeta: Record<
     icon: BookOpenText,
     tone: "border-violet-400/30 bg-violet-500/10 text-violet-100",
   },
+  mindmap: {
+    label: "Mind map",
+    icon: BookOpenText,
+    tone: "border-sky-400/30 bg-sky-500/10 text-sky-100",
+  },
 };
 
 export default async function TopicLearningPage({
