@@ -40,14 +40,63 @@ export default function QuizClient({ questions, topicTitle, topicId, skillId }: 
   // ── Per-question state ───────────────────────────────────────────────────
   const [selectedResponse, setSelectedResponse] = useState<QResponse | null>(null);
   const [timer, setTimer] = useState(0);
-  const [hintUsed, setHintUsed] = useState(false);
-  const [hintText, setHintText] = useState<string | null>(null);
+  
   const [hintLoading, setHintLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [childEstimates, setChildEstimates] = useState<ChildEstimateWithTitle[] | null>(null);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const questionStartTime = useRef(0);
+
+const [hintText, setHintText] = useState<string | null>(null);
+const [hintReady, setHintReady] = useState(false); // hint generated but hidden
+const [hintVisible, setHintVisible] = useState(false); // student clicked "show hint"
+const [hintUsed, setHintUsed] = useState(false);
+
+useEffect(() => {
+  if (!currentQuestion || phase !== "question") return;
+  console.log("1. useEffect fired for:", currentQuestion.question);
+
+  setHintText(null);
+  setHintReady(false);
+  setHintVisible(false);
+  setHintUsed(false);
+
+  let cancelled = false;
+
+  async function prefetch() {
+    console.log("2. prefetch started");
+    
+    const timeout = new Promise<null>((resolve) =>
+      setTimeout(() => resolve(null), 8000)
+    );
+
+    const result = await Promise.race([
+      generateHint(currentQuestion!.question),
+      timeout
+    ]);
+
+    console.log("3. result received:", result);
+    
+    if (cancelled) {
+      console.log("4. cancelled, ignoring");
+      return;
+    }
+
+    if (result && "hint" in result) {
+      console.log("5. hint set successfully");
+      setHintText(result.hint);
+      setHintReady(true);
+    } else {
+      console.log("5. failed or timed out, result was:", result);
+      setHintReady(false);
+      setHintText(null);
+    }
+  }
+
+  prefetch();
+  return () => { cancelled = true; };
+}, [currentQuestion?.qst_id]);
 
   // ── Timer ────────────────────────────────────────────────────────────────
 
@@ -75,6 +124,8 @@ export default function QuizClient({ questions, topicTitle, topicId, skillId }: 
     setSelectedResponse(null);
     setHintUsed(false);
     setHintText(null);
+    setHintReady(false);    
+    setHintVisible(false);  
     setPhase("question");
     startTimer();
   }
@@ -169,13 +220,11 @@ export default function QuizClient({ questions, topicTitle, topicId, skillId }: 
   }
 
   async function handleHint() {
-    if (hintUsed || hintLoading || !currentQuestion) return;
-    setHintUsed(true);
-    setHintLoading(true);
-    const result = await generateHint(currentQuestion.question);
-    setHintText("hint" in result ? result.hint : "Think about the core concept this question is testing.");
-    setHintLoading(false);
-  }
+  if (hintVisible || phase !== "question") return;
+  setHintVisible(true);
+  setHintUsed(true);
+ 
+}
 
   // ── Derived ──────────────────────────────────────────────────────────────
 
@@ -214,7 +263,8 @@ export default function QuizClient({ questions, topicTitle, topicId, skillId }: 
           timer={timer}
           selectedResponse={selectedResponse}
           hintUsed={hintUsed}
-          hintLoading={hintLoading}
+          hintReady={hintReady}       // ← changed
+          hintVisible={hintVisible} 
           hintText={hintText}
           onSelect={handleSelect}
           onHint={handleHint}

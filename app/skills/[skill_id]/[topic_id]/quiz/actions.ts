@@ -4,6 +4,57 @@ import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { updateStreak as updateStreakForUser } from "@/app/features/streak/updateStreak";
 import type { StreakUpdateResult } from "@/app/features/streak/types";
+import Groq from "groq-sdk";
+
+const hintCache = new Map<string, string>();
+
+export async function generateHint(question: string): Promise<{ hint: string } | { error: string }> {
+  if (hintCache.has(question)) {
+    console.log("SERVER: returning cached hint");
+    return { hint: hintCache.get(question)! };
+  }
+
+  try {
+    const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+
+    const completion = await groq.chat.completions.create({
+      model: "llama-3.1-8b-instant", // free, very fast
+      max_tokens: 150,
+      messages: [
+        {
+          role: "user",
+          content: `You are a helpful tutor. A student is stuck on this quiz question and needs a hint.
+
+Question: ${question}
+
+Write a hint that:
+- Briefly explains the concept being tested (1-2 sentences)
+- Subtly points toward the correct answer without stating it directly
+- Feels like a tutor whispering "remember that..." or "think about how..."
+- Is specific to this exact question, never generic
+- Never says phrases like "think about the core concept" or "consider eliminating options"
+
+Example of a GOOD hint for "What type of error occurs when the code violates language rules?":
+"Syntax errors are mistakes in the structure or grammar of your code — like missing a semicolon or a bracket. These are usually caught by the IDE before the program even runs."
+
+Return only the hint text, nothing else.`,
+        },
+      ],
+    });
+
+    const hint = completion.choices[0]?.message?.content?.trim() ?? "";
+    if (!hint) return { error: "Empty hint returned" };
+
+    hintCache.set(question, hint);
+    console.log("SERVER: hint generated via Groq:", hint);
+    return { hint };
+
+  } catch (error) {
+    console.error("SERVER generateHint error:", error);
+    return { error: "Failed to generate hint" };
+  }
+}
+
 import { fetchChunks } from "@/lib/ai/fetch-chunks";
 import { estimateChildScores, type SimplifiedAnswer, type ChildEstimateWithTitle } from "@/lib/ai/adaptive";
 
@@ -136,10 +187,7 @@ export async function adaptiveUnlock(
   return enriched;
 }
 
-export async function generateHint(question: string): Promise<{ hint: string } | { error: string }> {
-  void question;
-  return { hint: "Think carefully about the core concept this question is testing. Consider eliminating the options that are clearly unrelated first." };
-}
+
 
 export async function updateStreak(): Promise<StreakUpdateResult | null> {
   const supabase = await createClient();

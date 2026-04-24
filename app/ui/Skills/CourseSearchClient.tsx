@@ -24,7 +24,7 @@ export default function CourseSearchClient() {
     "Maintenance",
     "Testing"
 
-    
+
   ];
 
   const handleQuickSearch = (value: string) => {
