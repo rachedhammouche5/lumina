@@ -7,7 +7,6 @@ import {
   FileAudio2,
   FileText,
   PlayCircle,
-  LockIcon,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import type { Content, ContentType } from "@/lib/database.types";
@@ -93,93 +92,6 @@ export default async function TopicLearningPage({
         .select("tpc_id", { count: "exact", head: true })
         .eq("parent_id", topic_id);
 
-      const isLeaf = (childCount ?? 0) === 0;
-
-      if (!isLeaf) {
-        // Check own score
-        const { data: ownScore } = await supabase
-          .from("score")
-          .select("score")
-          .eq("studentId", student.std_id)
-          .eq("tpc_id", topic_id)
-          .maybeSingle();
-
-        let accessible = !!(ownScore && ownScore.score > 0);
-
-        // Check effective degree from parent (parent score ≥ 50 unlocks children)
-        if (!accessible && topic.parent_id) {
-          const { data: parentScore } = await supabase
-            .from("score")
-            .select("score")
-            .eq("studentId", student.std_id)
-            .eq("tpc_id", topic.parent_id)
-            .maybeSingle();
-          accessible = !!(parentScore && parentScore.score >= 50);
-        }
-
-        // Check if all direct children passed (bottom-up unlock)
-        if (!accessible) {
-          const { data: children } = await supabase
-            .from("Topic")
-            .select("tpc_id")
-            .eq("parent_id", topic_id);
-
-          if (children && children.length > 0) {
-            const { data: childScores } = await supabase
-              .from("score")
-              .select("tpc_id, score")
-              .eq("studentId", student.std_id)
-              .in("tpc_id", children.map(c => c.tpc_id));
-
-            const scoreMap = new Map((childScores ?? []).map(s => [s.tpc_id, s.score]));
-            accessible = children.every(c => (scoreMap.get(c.tpc_id) ?? 0) >= 50);
-          }
-        }
-
-        if (!accessible) {
-          return (
-            <main className="min-h-screen bg-slate-950 px-4 pb-16 pt-24 text-white sm:px-6 flex items-center justify-center">
-              <div className="mx-auto w-full max-w-md text-center">
-                <div className="relative overflow-hidden rounded-[32px] border border-white/10 bg-gradient-to-br from-slate-900 to-slate-950 p-10 shadow-[0_40px_100px_rgba(0,0,0,0.5)]">
-                  <div className="flex flex-col items-center gap-5">
-                    <div className="flex h-20 w-20 items-center justify-center rounded-2xl border border-white/10 bg-white/5">
-                      <LockIcon size={36} className="text-slate-400" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.28em] text-orange-300/80">
-                        Locked Topic
-                      </p>
-                      <h1 className="mt-2 text-2xl font-black tracking-tight text-white">
-                        {topic.tpc_title}
-                      </h1>
-                      <p className="mt-3 text-sm leading-relaxed text-slate-400">
-                        This topic is locked. Take the challenge quiz to prove your knowledge and unlock it.
-                      </p>
-                    </div>
-                    <div className="flex w-full flex-col gap-3">
-                      <Button
-                        variant="primary"
-                        href={`/skills/${skill_id}/${topic_id}/quiz`}
-                        className="w-full"
-                      >
-                        Take Quiz to Unlock
-                      </Button>
-                      <Button
-                        variant="outline"
-                        href={`/skills/${skill_id}`}
-                        className="inline-flex items-center justify-center gap-2 w-full"
-                      >
-                        <ArrowLeft size={16} />
-                        Back to Roadmap
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </main>
-          );
-        }
-      }
     }
   }
   // ── End access gate ─────────────────────────────────────────────────────────

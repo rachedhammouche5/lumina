@@ -156,7 +156,7 @@ export const generateRoadmapElements = (
             ? "locked"
             : allTopicsEffectiveCompleted
             ? "completed"
-            : "locked";
+            : "unlocked";
 
         nodes.push({
             id: root.id,
@@ -189,9 +189,7 @@ export const generateRoadmapElements = (
             currentStatus = "locked";
         } else if (hasEffectiveScore) {
             currentStatus = "completed";
-        } else if (children.length === 0) {
-            currentStatus = "unlocked";
-        } else if (areChildrenPassed) {
+        } else {
             currentStatus = "unlocked";
         }
 
