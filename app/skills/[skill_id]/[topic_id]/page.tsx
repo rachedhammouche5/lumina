@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import {
   ArrowLeft,
   type LucideIcon,
@@ -38,6 +38,11 @@ const contentTypeMeta: Record<
     icon: BookOpenText,
     tone: "border-violet-400/30 bg-violet-500/10 text-violet-100",
   },
+  mindmap: {
+    label: "Mind map",
+    icon: BookOpenText,
+    tone: "border-sky-400/30 bg-sky-500/10 text-sky-100",
+  },
 };
 
 export default async function TopicLearningPage({
@@ -61,6 +66,35 @@ export default async function TopicLearningPage({
     ]);
 
   if (!skill || !topic) notFound();
+
+  // ── Access gate ─────────────────────────────────────────────────────────────
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user) {
+    const { data: student } = await supabase
+      .from("Student")
+      .select("std_id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (student) {
+      const { data: enrollment } = await supabase
+        .from("enroll")
+        .select("student_id")
+        .eq("student_id", student.std_id)
+        .eq("skill_id", skill_id)
+        .maybeSingle();
+
+      if (!enrollment) redirect(`/skills/${skill_id}`);
+
+      // Check if this is a leaf topic (no children → always accessible)
+      const { count: childCount } = await supabase
+        .from("Topic")
+        .select("tpc_id", { count: "exact", head: true })
+        .eq("parent_id", topic_id);
+
+    }
+  }
+  // ── End access gate ─────────────────────────────────────────────────────────
 
   const topicContents: Content[] = contents ?? [];
   const videoContents = topicContents.filter((c) => c.cntnt_type === "video");

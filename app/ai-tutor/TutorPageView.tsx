@@ -530,3 +530,163 @@ export default function TutorPageView() {
               Ask about what is already in your system. Lumina searches stored chunks first and only then layers live AI on top when available.
             </p>
           </div>
+
+          <InsightCard
+            icon={modeCopy.tone === "success" ? ShieldCheck : modeCopy.tone === "warning" ? AlertTriangle : BrainCircuit}
+            label="Tutor mode"
+            value={modeCopy.label}
+            description={modeCopy.description}
+            tone={modeCopy.tone}
+          />
+
+          {lastSourceCount > 0 && (
+            <InsightCard
+              icon={ScanSearch}
+              label="Last retrieval"
+              value={`${lastSourceCount} chunk${lastSourceCount !== 1 ? "s" : ""}`}
+              description={activeModel ? `Model: ${activeModel}` : "Searched your uploaded material"}
+              tone="neutral"
+            />
+          )}
+
+          <InsightCard
+            icon={Flame}
+            label="Streak"
+            value={`${MOCK_PROFILE.streak} day${MOCK_PROFILE.streak !== 1 ? "s" : ""}`}
+            description={`Studying "${MOCK_PROFILE.currentSkill}"`}
+            tone="neutral"
+          />
+
+          <ProgressList title="Weak areas" items={MOCK_PROFILE.weakPoints} tone="warning" />
+          <ProgressList title="Strong areas" items={MOCK_PROFILE.strongPoints} tone="success" />
+
+          <div className={`${SURFACE} p-5`}>
+            <div className="text-[11px] uppercase tracking-[0.22em] text-sky-100/65 mb-3">
+              Resources
+            </div>
+            <div className="space-y-2">
+              {QUOTA_LINKS.map((link) => (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-sm text-sky-300/80 hover:text-sky-200 transition-colors"
+                >
+                  <BookOpenText size={14} />
+                  {link.label}
+                </a>
+              ))}
+            </div>
+          </div>
+        </aside>
+
+        <main className="flex flex-col gap-4">
+          {tutorNotice && (
+            <div className={`rounded-2xl border px-4 py-3 text-sm ${noticeClasses}`}>
+              <span className="font-semibold text-white">{tutorNotice.title}:</span>{" "}
+              <span className="text-slate-300">{tutorNotice.body}</span>
+            </div>
+          )}
+
+          <div className={`${SURFACE} flex flex-1 flex-col overflow-hidden`} style={{ minHeight: "60vh" }}>
+            <div
+              ref={bodyRef}
+              className="flex-1 overflow-y-auto px-5 py-5 space-y-5 no-scrollbar"
+              style={{ maxHeight: "calc(100vh - 280px)" }}
+            >
+              {messages.map((message) => (
+                <div
+                  key={message.id}
+                  className={`flex gap-3 ${message.role === "user" ? "flex-row-reverse" : "flex-row"}`}
+                >
+                  <div
+                    className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-2xl text-sm font-bold ${
+                      message.role === "user"
+                        ? "bg-gradient-to-br from-sky-400 to-blue-500 text-white"
+                        : "bg-gradient-to-br from-amber-300 to-orange-400 text-slate-950"
+                    }`}
+                  >
+                    {message.role === "user" ? "U" : <Sparkles size={14} />}
+                  </div>
+                  <div
+                    className={`max-w-[78%] rounded-2xl px-4 py-3 text-sm leading-7 ${
+                      message.role === "user"
+                        ? "bg-sky-900/40 border border-sky-400/20 text-sky-50"
+                        : "bg-white/5 border border-white/10 text-slate-200"
+                    }`}
+                  >
+                    {message.role === "assistant"
+                      ? formatContent(message.content)
+                      : message.content}
+                  </div>
+                </div>
+              ))}
+              {loading && (
+                <div className="flex gap-3">
+                  <div className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-300 to-orange-400 text-slate-950">
+                    <Sparkles size={14} />
+                  </div>
+                  <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                    <div className="flex gap-1.5 items-center h-5">
+                      <span className="h-1.5 w-1.5 rounded-full bg-slate-400 animate-bounce [animation-delay:0ms]" />
+                      <span className="h-1.5 w-1.5 rounded-full bg-slate-400 animate-bounce [animation-delay:150ms]" />
+                      <span className="h-1.5 w-1.5 rounded-full bg-slate-400 animate-bounce [animation-delay:300ms]" />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {chipsVisible && (
+              <div className="flex flex-wrap gap-2 px-5 pb-3">
+                {prompts.map((prompt) => (
+                  <button
+                    key={prompt}
+                    onClick={() => sendMessage(prompt)}
+                    className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-slate-300 hover:bg-white/10 hover:text-white transition-colors"
+                  >
+                    {prompt}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <div className="border-t border-white/10 px-4 py-4">
+              <div className="flex items-end gap-3">
+                <div className="flex-1 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                  <textarea
+                    ref={textareaRef}
+                    rows={1}
+                    value={input}
+                    onChange={(e) => { setInput(e.target.value); autoResize(); }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        sendMessage(input);
+                      }
+                    }}
+                    placeholder="Ask about your course material…"
+                    className="w-full resize-none bg-transparent text-sm text-slate-100 placeholder-slate-500 outline-none"
+                    style={{ maxHeight: 180 }}
+                  />
+                </div>
+                <button
+                  onClick={() => sendMessage(input)}
+                  disabled={loading || !input.trim()}
+                  className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-300 to-orange-400 text-slate-950 shadow-[0_8px_20px_rgba(245,158,11,0.3)] transition-opacity disabled:opacity-40"
+                >
+                  <SendHorizontal size={18} />
+                </button>
+              </div>
+              <p className="mt-2 text-[11px] text-slate-600">
+                <LibraryBig size={11} className="inline mr-1 relative -top-px" />
+                Answers are grounded in your uploaded course material.
+              </p>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+  );
+}

@@ -11,7 +11,7 @@ export default function SkillsHeader({ teacher_id }: { teacher_id: string }) {
 
   return (
     <>
-      <Button variant="secondary" className="gap-3" onClick={setModalOpen} >
+      <Button variant="secondary" className="gap-3" onClick={() => setModalOpen(true)} >
         <Plus size={20} />
         Add Skill
       </Button>
