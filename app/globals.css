@@ -86,6 +86,22 @@ body {
   margin-top: 6px;
 }
 
+@media (max-width: 640px) {
+  .roadmap-controls {
+    padding: 4px;
+    border-radius: 10px;
+  }
+
+  .roadmap-controls .react-flow__controls-button {
+    width: 26px;
+    height: 26px;
+  }
+
+  .roadmap-controls .react-flow__controls-button + .react-flow__controls-button {
+    margin-top: 4px;
+  }
+}
+
 .no-scrollbar {
   scrollbar-width: none;
   -ms-overflow-style: none;

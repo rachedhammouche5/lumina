@@ -15,10 +15,10 @@ export default function SkillHeader({
   if (!skill) return null;
 
   return (
-    <section className="rounded-3xl border border-slate-700/70 bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 p-4 shadow-xl shadow-black/30 sm:p-6">
+    <section className="rounded-3xl border border-slate-700/70 bg-gradient-to-br from-slate-700 via-slate-950 to-transparent p-4 shadow-xl shadow-black/30 sm:p-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start">
-          <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl border border-slate-700 bg-slate-800 sm:h-24 sm:w-24">
+          <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl border border-slate-700 bg-slate-800 sm:h-24 sm:w-24">
             {skill.skl_picture ? (
               <Image src={skill.skl_picture} alt={skill.skl_title} fill className="object-cover" />
             ) : (
@@ -34,11 +34,11 @@ export default function SkillHeader({
               {skill.skl_dscrptn || "No description provided yet."}
             </p>
             <div className="mt-3 flex flex-wrap items-center gap-2">
-              <div className="inline-flex items-center gap-2 rounded-full border border-orange-400/40 bg-orange-500/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-orange-200">
+              <div className="inline-flex items-center gap-2 rounded-full border border-orange-400/40 bg-orange-500/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-orange-200 sm:px-3 sm:py-1.5 sm:text-xs">
                 <Clock3 size={14} />
                 {skill.skl_duration || "N/A"}h duration
               </div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/40 bg-amber-500/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-amber-100">
+              <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/40 bg-amber-500/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-amber-100 sm:px-3 sm:py-1.5 sm:text-xs">
                 <Star size={14} />
                 N/A rating
               </div>
@@ -46,7 +46,7 @@ export default function SkillHeader({
           </div>
         </div>
 
-        {actions ? <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div> : null}
+        {actions ? <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">{actions}</div> : null}
       </div>
     </section>
   );

@@ -132,36 +132,41 @@ export default function AddQuizForm({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/70 p-4">
-      <div className="flex min-h-full items-start justify-center py-6">
-        <div className="w-full my-6 max-w-3xl max-h-[calc(90vh-1rem)] overflow-y-auto no-scrollbar rounded-lg border border-slate-700 bg-slate-900 p-5">
-          <div className="mb-4 flex items-center justify-between">
-            <h4 className="text-lg font-semibold text-white">
-              Add Quiz to {topic.tpc_title}
-            </h4>
+    <div className="fixed inset-0 z-50 bg-slate-950/80 p-3 backdrop-blur-sm sm:p-4">
+      <div className="flex min-h-full items-end justify-center sm:items-center">
+        <div className="no-scrollbar flex max-h-[calc(100dvh-1.5rem)] w-full max-w-2xl flex-col overflow-y-auto rounded-3xl border border-slate-700 bg-slate-900 shadow-2xl shadow-black/40">
+          <div className="flex items-start justify-between gap-3 border-b border-slate-700 px-4 py-4 sm:px-5">
+            <div className="min-w-0">
+              <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500 sm:text-xs">New quiz</p>
+              <h4 className="mt-1 truncate text-base font-semibold text-white sm:text-lg">
+                Add Quiz to {topic.tpc_title}
+              </h4>
+            </div>
             <button
               type="button"
               onClick={onClose}
-              className="text-slate-300 transition hover:text-white"
+              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-700 bg-slate-800/80 text-slate-300 transition hover:border-slate-500 hover:text-white"
+              aria-label="Close quiz form"
             >
-              Close
+              ✕
             </button>
           </div>
 
-          <form className="space-y-4" onSubmit={onSubmit}>
+          <form className="space-y-4 px-4 py-4 sm:px-5 sm:py-5" onSubmit={onSubmit}>
             {questions.map((question, qIndex) => (
               <div
                 key={question.id}
-                className="space-y-3 rounded-lg border border-slate-700 p-4"
+                className="space-y-4 rounded-2xl border border-orange-500/10 bg-slate-950/60 p-3 shadow-inner shadow-black/10 sm:p-4"
               >
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold text-white">
-                    Question {qIndex + 1}
-                  </p>
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="text-sm font-semibold text-white">Question {qIndex + 1}</p>
+                  <span className="w-fit rounded-full border border-orange-400/20 bg-orange-500/10 px-2.5 py-1 text-[11px] uppercase tracking-[0.16em] text-orange-200">
+                    {question.difficulty}
+                  </span>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div>
-                    <label className="mb-1 block text-xs text-slate-300">
+                    <label className="mb-1 block text-[11px] uppercase tracking-[0.16em] text-slate-400 sm:text-xs">
                       Question Text
                     </label>
                     <input
@@ -175,12 +180,12 @@ export default function AddQuizForm({
                           ),
                         )
                       }
-                      className="w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-white"
+                      className="w-full rounded-xl border border-slate-600 bg-slate-800 px-3 py-2.5 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-orange-400"
                       required
                     />
                   </div>
                   <div>
-                    <label className="mb-1 block text-xs text-slate-300">
+                    <label className="mb-1 block text-[11px] uppercase tracking-[0.16em] text-slate-400 sm:text-xs">
                       Difficulty
                     </label>
 
@@ -199,7 +204,7 @@ export default function AddQuizForm({
                           ),
                         )
                       }
-                      className="w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-white"
+                      className="w-full rounded-xl border border-slate-600 bg-slate-800 px-3 py-2.5 text-sm text-white outline-none transition focus:border-orange-400"
                     >
                       <option value="easy">Easy</option>
                       <option value="medium">Medium</option>
@@ -210,13 +215,13 @@ export default function AddQuizForm({
                 </div>
 
                 <div className="space-y-2">
-                  <p className="text-xs uppercase tracking-wide text-slate-400">
+                  <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400 sm:text-xs">
                     Answers (mark the correct one)
                   </p>
                   {question.answers.map((answer, aIndex) => (
                     <div
                       key={answer.id}
-                      className="flex items-center gap-3 rounded-md border border-slate-700 bg-slate-800 px-3 py-2"
+                      className="flex flex-col gap-3 rounded-xl border border-slate-700 bg-slate-800 px-3 py-3 sm:flex-row sm:items-center"
                     >
                       <input
                         type="radio"
@@ -225,7 +230,7 @@ export default function AddQuizForm({
                         onChange={() =>
                           setCorrectAnswer(question.id, answer.id)
                         }
-                        className="h-4 w-4 accent-emerald-400"
+                        className="h-4 w-4 shrink-0 accent-orange-400"
                       />
                       <input
                         type="text"
@@ -238,7 +243,7 @@ export default function AddQuizForm({
                             e.target.value,
                           )
                         }
-                        className="flex-1 rounded-md border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-white"
+                        className="min-w-0 flex-1 rounded-xl border border-slate-600 bg-slate-900 px-3 py-2.5 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-orange-400"
                         required
                       />
                     </div>
@@ -247,11 +252,11 @@ export default function AddQuizForm({
               </div>
             ))}
 
-            <div className="flex gap-3">
+            <div className="flex flex-col gap-2 sm:flex-row">
               <button
                 type="button"
                 onClick={addQuestion}
-                className="rounded-md border border-indigo-400 px-3 py-2 text-sm font-semibold text-indigo-200 transition hover:bg-indigo-500/20"
+                className="inline-flex h-11 w-full items-center justify-center rounded-xl border border-orange-400 px-3 text-sm font-semibold text-orange-200 transition hover:bg-orange-500/20 sm:w-auto"
               >
                 + Add Question
               </button>
@@ -259,18 +264,18 @@ export default function AddQuizForm({
 
             {error ? <p className="text-sm text-red-400">{error}</p> : null}
 
-            <div className="flex justify-end gap-2">
+            <div className="flex flex-col-reverse gap-2 border-t border-slate-700 pt-4 sm:flex-row sm:justify-end">
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-md border border-slate-500 px-4 py-2 text-sm text-slate-200"
+                className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-500 px-4 text-sm text-slate-200 transition hover:border-slate-400 hover:bg-slate-800"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={submitting}
-                className="rounded-md bg-emerald-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-400 disabled:opacity-60"
+                className="inline-flex h-11 items-center justify-center rounded-xl bg-linear-to-r from-orange-500 to-amber-400 px-4 text-sm font-semibold text-white transition hover:from-orange-400 hover:to-amber-300 disabled:opacity-60"
               >
                 {submitting ? "Saving..." : "Save Quiz"}
               </button>

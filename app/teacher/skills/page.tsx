@@ -35,53 +35,59 @@ export default async function TeacherCoursesPage() {
   const totalDuration = skills.reduce((sum, skill) => sum + (skill.skl_duration ?? 0), 0);
 
   return (
-    <div className="min-h-screen w-full bg-linear-to-br from-slate-950 to-transparent px-4 py-6 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-7xl space-y-6">
-        <div className="rounded-3xl border border-slate-700 bg-gradient-to-br from-slate-800 via-slate-950 to-slate-950 p-5 shadow-2xl shadow-slate-800/40 sm:p-7">
-          <div className="flex flex-col gap-6">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-              <div>
-                <h1 className="text-3xl font-bold text-white sm:text-4xl">Teacher Skills Studio</h1>
-                <p className="mt-2 max-w-2xl text-sm text-slate-400 sm:text-base">
-                  Build modern learning paths, switch to quiz management quickly, and keep every skill organized.
-                </p>
-              </div>
-              <SkillsHeader teacher_id={teacher.tchr_id} />
+    <section className="mx-auto max-w-7xl px-4 pt-12 pb-28 sm:px-6 lg:px-8 lg:pb-8">
+      <div className="space-y-6">
+        <div className="rounded-3xl border border-slate-700 bg-gradient-to-br from-slate-700 via-slate-950 to-transparent p-6 shadow-2xl shadow-slate-700/60 sm:p-8">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="inline-flex items-center gap-2 rounded-full border border-orange-500/30 bg-orange-600/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-orange-500">
+                Teacher Skills
+              </p>
+              <h1 className="mt-3 text-3xl font-bold leading-tight text-white sm:text-4xl">
+                Manage your{" "}
+                <span className="block bg-linear-to-br from-orange-300 to-orange-600 bg-clip-text text-4xl uppercase text-transparent sm:inline sm:text-5xl">
+                  skills library
+                </span>
+              </h1>
+              <p className="mt-2 max-w-2xl text-sm text-slate-400 sm:text-base">
+                Build clean roadmaps, keep quizzes close to each skill, and stay organized on mobile or desktop.
+              </p>
             </div>
+            <SkillsHeader teacher_id={teacher.tchr_id} />
+          </div>
 
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-              <div className="rounded-2xl border border-slate-700 bg-linear-to-br from-slate-900 via-slate-800 to-transparent shadow-2xl shadow-black/70 p-4">
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Skills</p>
-                <p className="mt-1 text-2xl font-semibold text-white">{skills.length}</p>
-              </div>
-              <div className="rounded-2xl border border-slate-700 bg-linear-to-br from-slate-900 via-slate-800 to-transparent shadow-2xl shadow-black/70 p-4">
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Hours</p>
-                <p className="mt-1 text-2xl font-semibold text-white">{totalDuration}</p>
-              </div>
-              <div className="rounded-2xl border border-slate-700 bg-linear-to-br from-slate-900 via-slate-800 to-transparent shadow-2xl shadow-black/70 p-4">
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Avg Duration</p>
-                <p className="mt-1 text-2xl font-semibold text-white">
-                  {skills.length > 0 ? Math.round(totalDuration / skills.length) : 0}h
-                </p>
-              </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div className="rounded-2xl border border-slate-700 bg-linear-to-br from-slate-600 via-slate-950 to-transparent p-4 shadow-2xl shadow-slate-900/30">
+              <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Skills</p>
+              <p className="mt-2 text-3xl font-bold text-white sm:text-4xl">{skills.length}</p>
+            </div>
+            <div className="rounded-2xl border border-slate-700 bg-linear-to-br from-slate-600 via-slate-950 to-transparent p-4 shadow-2xl shadow-slate-900/30">
+              <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Hours</p>
+              <p className="mt-2 text-3xl font-bold text-white sm:text-4xl">{totalDuration}</p>
+            </div>
+            <div className="rounded-2xl border border-slate-700 bg-linear-to-br from-slate-600 via-slate-950 to-transparent p-4 shadow-2xl shadow-slate-900/30">
+              <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Avg Duration</p>
+              <p className="mt-2 text-3xl font-bold text-white sm:text-4xl">
+                {skills.length > 0 ? Math.round(totalDuration / skills.length) : 0}h
+              </p>
             </div>
           </div>
         </div>
 
-        <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {skills.length > 0 ? (
             skills.map((skill) => (
               <SkillCard key={skill.skl_id} skill={skill} teacher_id={teacher.tchr_id} />
             ))
           ) : (
-            <li className="col-span-full rounded-3xl border border-dashed border-slate-700 bg-slate-900 p-10 text-center text-slate-300">
-              <p className="text-lg font-medium text-white">You don't have any skills yet.</p>
+            <li className="col-span-full rounded-3xl border border-dashed border-slate-700 bg-slate-900/80 p-8 text-center text-slate-300 sm:p-10">
+              <p className="text-lg font-medium text-white">You don&apos;t have any skills yet.</p>
               <p className="mt-2 text-sm text-slate-400">Use the Add Skill button above to create your first roadmap.</p>
             </li>
           )}
         </ul>
       </div>
-    </div>
+    </section>
   );
 }
 

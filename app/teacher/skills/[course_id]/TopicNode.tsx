@@ -34,34 +34,28 @@ export default function TopicNode({
   return (
     <li>
       <div
-        className="space-y-1 rounded-md border border-slate-700 bg-slate-800 p-3"
+        className="space-y-3 rounded-2xl border border-slate-700 bg-slate-900/80 p-4 shadow-sm shadow-black/20"
         style={{ marginLeft: `${level * 20}px` }}
       >
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex">
-            <p className="font-semibold text-white">{topic.tpc_title}</p>
-            <button
-              type="button"
-              onClick={() => onAddTopic(topic, true)}
-              className="rounded-md underline px-2 py-1 text-xs text-slate-200 transition hover:bg-slate-700"
-            >
-              edit Topic
-            </button>
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="min-w-0">
+            <p className="truncate text-base font-semibold text-white">{topic.tpc_title}</p>
+            <p className="mt-1 text-xs text-slate-400">Topic node at level {level + 1}</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
               onClick={() => onAddQuiz(topic)}
-              className="rounded-md border border-amber-400/60 px-2 py-1 text-xs text-amber-200 transition hover:bg-amber-500/20"
+              className="inline-flex items-center justify-center rounded-xl border border-orange-400/40 bg-orange-500/10 px-3 py-2 text-xs font-semibold text-orange-100 transition hover:bg-orange-500/20"
             >
-              Add Quiz
+              Modify quiz
             </button>
             <button
               type="button"
               onClick={() => onAddTopic(topic, false)}
-              className="rounded-md border border-slate-500 px-2 py-1 text-xs text-slate-200 transition hover:bg-slate-700"
+              className="inline-flex items-center justify-center rounded-xl border border-slate-600 bg-slate-800 px-3 py-2 text-xs font-semibold text-slate-100 transition hover:bg-slate-700"
             >
-              Add Topic
+              Manage topic
             </button>
 
             {/* Delete with inline confirm */}
@@ -72,14 +66,14 @@ export default function TopicNode({
                   type="button"
                   onClick={handleDelete}
                   disabled={loading}
-                  className="rounded px-2 py-0.5 text-xs font-medium bg-red-600 text-white hover:bg-red-500 disabled:opacity-50 transition"
+                  className="rounded-lg bg-red-600 px-2 py-1 text-xs font-medium text-white transition hover:bg-red-500 disabled:opacity-50"
                 >
                   {loading ? "…" : "Yes"}
                 </button>
                 <button
                   type="button"
                   onClick={() => setConfirm(false)}
-                  className="rounded px-2 py-0.5 text-xs font-medium bg-slate-600 text-white hover:bg-slate-500 transition"
+                  className="rounded-lg bg-slate-600 px-2 py-1 text-xs font-medium text-white transition hover:bg-slate-500"
                 >
                   No
                 </button>
@@ -88,9 +82,9 @@ export default function TopicNode({
               <button
                 type="button"
                 onClick={handleDelete}
-                className="p-1 text-xs text-red-400 transition hover:bg-red-900/40"
+                className="inline-flex items-center justify-center rounded-lg border border-red-500/30 bg-red-500/10 p-2 text-red-300 transition hover:bg-red-500/20"
               >
-                <Trash2 size={20}/>
+                <Trash2 size={18}/>
               </button>
             )}
           </div>

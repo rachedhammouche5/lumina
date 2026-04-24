@@ -13,8 +13,8 @@ export type RoadmapNodeData = {
   learnHref?: string;
   quizHref?: string;
   onAddChild?: () => void;
-  onPreview?: () => void;
-  onAddQuiz?: () => void;
+  onManageTopic?: () => void;
+  onModifyQuiz?: () => void;
   onRemove?: () => void;
 };
 

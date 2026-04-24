@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Topic, Skill, Content, ContentType } from "@/lib/database.types";
 import { addTopic, updateTopic, uploadContentFile, deleteContent } from "./actions";
@@ -40,20 +40,40 @@ export default function AddTopicForm({
     isExisting: false,
   });
 
-  const [form, setForm] = useState<TopicFormState>({
-    title: "",
-    description: "",
-    contents: [buildContentInput()],
-  });
+  const getContentByTpcId = (topicId: string) =>
+    contents.filter((c) => c.tpc_id === topicId);
+
+  const createInitialForm = (): TopicFormState => {
+    if (prefillTopic != null) {
+      const topicContents: ContentInput[] = getContentByTpcId(prefillTopic.tpc_id).map((c) => ({
+        id: c.cntnt_id,
+        title: c.cntnt_title,
+        type: c.cntnt_type,
+        value: c.cntnt_value,
+        isExisting: true,
+      }));
+
+      return {
+        title: prefillTopic.tpc_title,
+        description: prefillTopic.tpc_description ?? "",
+        contents: topicContents.length > 0 ? topicContents : [buildContentInput()],
+      };
+    }
+
+    return {
+      title: "",
+      description: "",
+      contents: [buildContentInput()],
+    };
+  };
+
+  const [form, setForm] = useState<TopicFormState>(() => createInitialForm());
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const onClose = () => {
     closeTopicModal();
-    setForm({ title: "", description: "", contents: [buildContentInput()] });
+    setForm(createInitialForm());
   };
-
-  const getContentByTpcId = (topicId: string) =>
-    contents.filter((c) => c.tpc_id === topicId);
 
   const hasContentChanged = (
     original: Content | undefined,
@@ -66,25 +86,6 @@ export default function AddTopicForm({
       (original.cntnt_value ?? "") !== (current.value ?? "")
     );
   };
-
-  useEffect(() => {
-    if (prefillTopic != null) {
-      const topicContents: ContentInput[] = getContentByTpcId(
-        prefillTopic.tpc_id,
-      ).map((c) => ({
-        id: c.cntnt_id,
-        title: c.cntnt_title,
-        type: c.cntnt_type,
-        value: c.cntnt_value,
-        isExisting: true,
-      }));
-      setForm({
-        title: prefillTopic.tpc_title,
-        description: prefillTopic.tpc_description ?? "",
-        contents: topicContents.length > 0 ? topicContents : [buildContentInput()],
-      });
-    }
-  }, []);
 
   // Delete an existing DB content row immediately
   async function handleDeleteContent(contentId: string) {
@@ -169,87 +170,106 @@ export default function AddTopicForm({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/70 p-4">
-      <div className="flex min-h-full items-start justify-center py-6">
-        <div className="w-full my-6 max-w-2xl max-h-[calc(90vh-1rem)] overflow-y-auto no-scrollbar rounded-lg border border-slate-700 bg-slate-900 p-5">
-          <div className="mb-4 flex items-center justify-between">
-            <h4 className="text-lg font-semibold text-white">
-              {prefillTopic ? "Edit Topic" : "Add Topic"}
-            </h4>
-            <button type="button" onClick={onClose} className="text-slate-300 transition hover:text-white">
-              Close
+    <div className="fixed inset-0 z-50 bg-slate-950/80 p-3 backdrop-blur-sm sm:p-4">
+      <div className="flex min-h-full items-end justify-center sm:items-center">
+        <div className="no-scrollbar flex max-h-[calc(100dvh-1.5rem)] w-full max-w-xl flex-col overflow-y-auto rounded-3xl border border-slate-700 bg-slate-900 shadow-2xl shadow-black/40">
+          <div className="flex items-start justify-between gap-3 border-b border-slate-700 px-4 py-4 sm:px-5">
+            <div className="min-w-0">
+              <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500 sm:text-xs">
+                {prefillTopic ? "Update topic" : "New topic"}
+              </p>
+              <h4 className="mt-1 text-base font-semibold text-white sm:text-lg">
+                {prefillTopic ? "Edit Topic" : "Add Topic"}
+              </h4>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-700 bg-slate-800/80 text-slate-300 transition hover:border-slate-500 hover:text-white"
+              aria-label="Close topic form"
+            >
+              ✕
             </button>
           </div>
 
-          <form className="space-y-4" onSubmit={onSubmit}>
-            <div>
-              <label htmlFor="topicTitle" className="mb-1 block text-sm text-slate-200">Title</label>
+          <form className="space-y-4 px-4 py-4 sm:px-5 sm:py-5" onSubmit={onSubmit}>
+            <div className="space-y-1">
+              <label htmlFor="topicTitle" className="block text-[11px] uppercase tracking-[0.16em] text-slate-400 sm:text-xs">
+                Title
+              </label>
               <input
                 id="topicTitle"
                 value={form.title}
                 onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
-                className="w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-white"
+                className="w-full rounded-xl border border-slate-600 bg-slate-800 px-3 py-2.5 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-orange-400"
+                placeholder="Enter topic title"
                 required
               />
             </div>
 
-            <div>
-              <label htmlFor="topicDescription" className="mb-1 block text-sm text-slate-200">Description</label>
+            <div className="space-y-1">
+              <label htmlFor="topicDescription" className="block text-[11px] uppercase tracking-[0.16em] text-slate-400 sm:text-xs">
+                Description
+              </label>
               <textarea
                 id="topicDescription"
                 value={form.description}
                 onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
-                className="w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-white"
+                className="w-full rounded-xl border border-slate-600 bg-slate-800 px-3 py-2.5 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-orange-400"
+                placeholder="Short description of the topic"
                 rows={3}
                 required
               />
             </div>
 
             <div className="space-y-3">
-              <p className="text-sm font-medium text-slate-200">Topic Contents</p>
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm font-semibold text-white">Topic contents</p>
+                <span className="text-[11px] uppercase tracking-[0.18em] text-slate-500 sm:text-xs">
+                  {form.contents.length} item{form.contents.length === 1 ? "" : "s"}
+                </span>
+              </div>
 
               {form.contents.map((content, index) => (
                 <div
                   key={content.id}
-                  className="rounded-md border border-slate-700 p-3 space-y-3"
+                  className="space-y-4 rounded-2xl border border-slate-700 bg-slate-950/60 p-3 sm:p-4"
                 >
-                  {/* Content row header */}
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-slate-400">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <span className="text-[11px] uppercase tracking-[0.18em] text-slate-400 sm:text-xs">
                       Content {index + 1}
                       {content.isExisting && (
-                        <span className="ml-2 rounded bg-slate-700 px-1.5 py-0.5 text-slate-300">
+                        <span className="ml-2 rounded-full border border-slate-700 bg-slate-900 px-2 py-1 text-[10px] text-slate-300">
                           saved
                         </span>
                       )}
                     </span>
 
-                    {/* Delete existing vs remove new */}
                     {content.isExisting ? (
                       <button
                         type="button"
                         disabled={deletingId === content.id}
                         onClick={() => handleDeleteContent(content.id)}
-                        className="rounded border border-red-800 px-2 py-0.5 text-xs text-red-400 transition hover:bg-red-900/40 disabled:opacity-50"
+                        className="inline-flex h-10 w-fit items-center justify-center rounded-xl border border-red-500/30 bg-red-500/10 px-3 text-xs font-semibold text-red-200 transition hover:bg-red-500/20 disabled:opacity-50"
                       >
-                        {deletingId === content.id ? "Deleting…" : "Delete"}
+                        {deletingId === content.id ? "Deleting..." : "Delete"}
                       </button>
                     ) : (
-                      // Always show Remove on new rows, but only if there's more than 1 content
                       form.contents.length > 1 && (
                         <button
                           type="button"
                           onClick={() => handleRemoveNewContent(content.id)}
-                          className="text-xs text-slate-400 transition hover:text-red-400 p-2"
+                          className="inline-flex h-10 w-fit items-center justify-center rounded-xl border border-slate-600 bg-slate-900 px-3 text-xs font-semibold text-slate-300 transition hover:border-red-500/40 hover:text-red-300"
+                          aria-label="Remove content row"
                         >
-                          <Trash2 size={20}/>
+                          <Trash2 size={16} />
                         </button>
                       )
                     )}
                   </div>
 
-                  <div>
-                    <label className="mb-1 block text-xs text-slate-300">Content Title</label>
+                  <div className="space-y-1">
+                    <label className="block text-[11px] uppercase tracking-[0.16em] text-slate-400 sm:text-xs">Content title</label>
                     <input
                       type="text"
                       placeholder="e.g. Introduction Video"
@@ -262,14 +282,14 @@ export default function AddTopicForm({
                           ),
                         }))
                       }
-                      className="w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-white"
+                      className="w-full rounded-xl border border-slate-600 bg-slate-800 px-3 py-2.5 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-orange-400"
                       required
                     />
                   </div>
 
                   <div className="grid gap-3 sm:grid-cols-2">
-                    <div>
-                      <label className="mb-1 block text-xs text-slate-300">Type</label>
+                    <div className="space-y-1">
+                      <label className="block text-[11px] uppercase tracking-[0.16em] text-slate-400 sm:text-xs">Type</label>
                       <select
                         value={content.type}
                         onChange={(e) => {
@@ -281,7 +301,7 @@ export default function AddTopicForm({
                             ),
                           }));
                         }}
-                        className="w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-white"
+                        className="w-full rounded-xl border border-slate-600 bg-slate-800 px-3 py-2.5 text-sm text-white outline-none transition focus:border-orange-400"
                       >
                         <option value="video">Video URL</option>
                         <option value="audio">Audio file</option>
@@ -290,8 +310,8 @@ export default function AddTopicForm({
                       </select>
                     </div>
 
-                    <div>
-                      <label className="mb-1 block text-xs text-slate-300">
+                    <div className="space-y-1">
+                      <label className="block text-[11px] uppercase tracking-[0.16em] text-slate-400 sm:text-xs">
                         {content.type === "video" && "Video URL"}
                         {content.type === "audio" && "Audio file"}
                         {content.type === "pdf" && "PDF file"}
@@ -312,7 +332,7 @@ export default function AddTopicForm({
                             }));
                           }}
                           required={!content.value}
-                          className="w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-white"
+                          className="w-full rounded-xl border border-slate-600 bg-slate-800 px-3 py-2.5 text-sm text-white outline-none transition file:mr-3 file:rounded-lg file:border-0 file:bg-orange-500/20 file:px-3 file:py-2 file:text-xs file:font-semibold file:text-orange-100 hover:border-orange-400"
                         />
                       ) : (
                         <input
@@ -329,7 +349,7 @@ export default function AddTopicForm({
                             }))
                           }
                           required
-                          className="w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-white"
+                          className="w-full rounded-xl border border-slate-600 bg-slate-800 px-3 py-2.5 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-orange-400"
                         />
                       )}
                     </div>
@@ -340,23 +360,23 @@ export default function AddTopicForm({
               <button
                 type="button"
                 onClick={() => setForm((prev) => ({ ...prev, contents: [...prev.contents, buildContentInput()] }))}
-                className="rounded-md border border-indigo-400 px-3 py-2 text-sm text-indigo-200 transition hover:bg-indigo-500/20"
+                className="inline-flex h-11 w-full items-center justify-center rounded-xl border border-orange-400/40 bg-orange-500/10 px-3 text-sm font-semibold text-orange-100 transition hover:bg-orange-500/20 sm:w-auto"
               >
                 Add New Content
               </button>
             </div>
 
-            <div className="flex justify-end gap-2">
+            <div className="flex flex-col-reverse gap-2 border-t border-slate-700 pt-4 sm:flex-row sm:justify-end">
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-md border border-slate-500 px-4 py-2 text-sm text-slate-200"
+                className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-600 px-4 text-sm font-medium text-slate-200 transition hover:border-slate-500 hover:bg-slate-800"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="rounded-md bg-emerald-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-400"
+                className="inline-flex h-11 items-center justify-center rounded-xl bg-linear-to-r from-orange-500 to-amber-400 px-5 text-sm font-semibold text-white transition hover:from-orange-400 hover:to-amber-300"
               >
                 Save Topic
               </button>
