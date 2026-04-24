@@ -69,6 +69,7 @@ export default function LoginPageView() {
     } else if (role === "admin") router.replace("/admin");
     else router.replace("/");
 
+    router.refresh();
     setLoading(false);
   }
 

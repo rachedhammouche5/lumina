@@ -55,6 +55,11 @@ body {
   background: linear-gradient(90deg, rgba(251, 146, 60, 0.95), rgba(252, 211, 77, 0.95));
 }
 
+/* Elevate any hovered ReactFlow node above all siblings so popups are never clipped */
+.react-flow__node:hover {
+  z-index: 9999 !important;
+}
+
 /* ReactFlow controls theming for dark background */
 .roadmap-controls {
   background: rgba(15, 23, 42, 0.85);

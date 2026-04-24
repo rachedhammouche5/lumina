@@ -2,10 +2,11 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { saveQuizScore, generateHint, updateStreak } from "./actions";
+import { saveQuizScore, generateHint, updateStreak, adaptiveUnlock } from "./actions";
+import type { ChildEstimateWithTitle } from "@/lib/ai/adaptive";
 import {
   buildPool, removeFromPool, pickQuestion,
-  nextDifficulty, calcPoints, calcSessionStats,
+  nextDifficulty, calcPoints, calcSessionStats, maxPossiblePoints,
   SESSION_LENGTH, TIME_LIMIT,
 } from "./quiz.lib";
 import type { QuizWithResponses, AnswerRecord, QuestionPool, QuizPhase, QResponse, Difficulty } from "./quiz.types";
@@ -43,6 +44,7 @@ export default function QuizClient({ questions, topicTitle, topicId, skillId }: 
   const [hintText, setHintText] = useState<string | null>(null);
   const [hintLoading, setHintLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [childEstimates, setChildEstimates] = useState<ChildEstimateWithTitle[] | null>(null);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const questionStartTime = useRef(0);
@@ -80,17 +82,32 @@ export default function QuizClient({ questions, topicTitle, topicId, skillId }: 
   async function finishSession(finalAnswers: AnswerRecord[]) {
     setSaving(true);
     const { totalPoints, totalTime } = calcSessionStats(finalAnswers);
-    await saveQuizScore(topicId, skillId, totalPoints, totalTime);
-    const streakResult = await updateStreak();
-    if (streakResult) {
-      triggerStreakCelebration({
-        previous: streakResult.previous,
-        current: streakResult.current,
-      });
-    }
-    await completeSkill(topicId, skillId);
+    const max = maxPossiblePoints(finalAnswers.map(a => a.question));
+    const percentage = max > 0 ? Math.round((totalPoints / max) * 100) : 0;
+
+    const simplifiedAnswers = finalAnswers.map(a => ({
+      question: a.question.question,
+      difficulty: a.question.difficulty,
+      chosenAnswer: a.chosen?.response ?? "",
+      correctAnswer: a.question.responses.find(r => r.isCorrect)?.response ?? "",
+      isCorrect: a.chosen?.isCorrect ?? false,
+    }));
+
+    await saveQuizScore(topicId, skillId, percentage, totalTime);
+
     setSaving(false);
+    setChildEstimates(null);
     setPhase("results");
+
+    const [estimates] = await Promise.all([
+      adaptiveUnlock(topicId, skillId, percentage, simplifiedAnswers),
+      updateStreak().then(result => {
+        if (result) triggerStreakCelebration({ previous: result.previous, current: result.current });
+      }),
+      completeSkill(topicId, skillId),
+    ]);
+
+    setChildEstimates(estimates);
   }
 
   // ── Handlers ─────────────────────────────────────────────────────────────
@@ -174,6 +191,7 @@ export default function QuizClient({ questions, topicTitle, topicId, skillId }: 
       <ResultsScreen
         answers={answers}
         skillId={skillId}
+        childEstimates={childEstimates}
         onGoRoadmap={() => router.push(`/skills/${skillId}`)}
         onGoDashboard={() => router.push("/student/dashboard")}
       />
