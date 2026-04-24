@@ -9,8 +9,10 @@ import type { ScoreRow, TopicRow } from "../types";
 import type { RoadmapNodeData } from "../types";
 import { generateRoadmapElements } from "../actions";
 
+import type { RoadmapNode } from "../types";
+
 const nodeTypes: NodeTypes = {
-  roadmap: TRoadmapNode as ComponentType<NodeProps<RoadmapNodeData>>,
+  roadmap: TRoadmapNode as ComponentType<NodeProps<RoadmapNode>>,
 };
 
 export default function RoadmapFlow({

@@ -4,8 +4,10 @@ import { useRouter } from "next/navigation";
 import { getNodeStyles, type RoadmapNodeData } from "@/app/ui/roadmapcomp/types";
 import { getGlowClass, getHoverClass } from "../actions";
 import Button from "../../Button";
+import type { RoadmapNode } from "@/app/ui/roadmapcomp/types";
 
-export default function TRoadmapNode({ data }: NodeProps) {
+export default function TRoadmapNode({ data }: NodeProps<RoadmapNode>) {
+
   const {
     title,
     subtitle,

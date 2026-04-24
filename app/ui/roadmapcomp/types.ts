@@ -1,5 +1,7 @@
 import { LucideIcon } from "lucide-react";
+import type { Node } from "@xyflow/react";
 
+export type RoadmapNode = Node<RoadmapNodeData, "roadmap">;
 export type RoadmapStatus = "completed" | "locked" | "unlocked";
 
 export type RoadmapNodeData = {
