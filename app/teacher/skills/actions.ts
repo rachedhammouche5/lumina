@@ -1,5 +1,5 @@
 "use server";
-
+import { notifyStudents } from '@/lib/notify-students';
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
@@ -41,6 +41,19 @@ export async function addSkill(formData: {
     .single();
 
   if (error) return { error: error.message };
+
+ const { data: teacher } = await supabase
+    .from('Teacher')
+    .select('tchr_fullname')
+    .eq('tchr_id', formData.teacher_id)
+    .single();
+
+  // Fire and forget — don't block the response
+  notifyStudents({
+    skl_id: data.skl_id,
+    skl_title: data.skl_title,
+    teacher_name: teacher?.tchr_fullname ?? 'A teacher',
+  }).catch((err) => console.error('[addSkill] notify failed:', err));
 
   revalidatePath(`/teacher/skills`);
   return { data };

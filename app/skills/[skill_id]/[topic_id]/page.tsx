@@ -10,7 +10,12 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import type { Content, ContentType } from "@/lib/database.types";
-import { AudioSection, PdfSection, DocsSection, VideoSection } from "./content-sections";
+import {
+  AudioSection,
+  PdfSection,
+  DocsSection,
+  VideoSection,
+} from "./content-sections";
 import Button from "@/app/ui/Button";
 import StreakCelebration from "@/app/features/streak/StreakCelebration";
 
@@ -53,22 +58,34 @@ export default async function TopicLearningPage({
   const { skill_id, topic_id } = await params;
   const supabase = await createClient();
 
-  const [{ data: skill }, { data: topic }, { data: contents }] =
-    await Promise.all([
-      supabase.from("Skill").select("*").eq("skl_id", skill_id).single(),
-      supabase
-        .from("Topic")
-        .select("*")
-        .eq("tpc_id", topic_id)
-        .eq("skill_id", skill_id)
-        .single(),
-      supabase.from("Content").select("*").eq("tpc_id", topic_id),
-    ]);
+  const [
+    { data: skill },
+    { data: topic },
+    { data: contents },
+    {
+      data: { user },
+    },
+  ] = await Promise.all([
+    supabase.from("Skill").select("*").eq("skl_id", skill_id).single(),
+    supabase
+      .from("Topic")
+      .select("*")
+      .eq("tpc_id", topic_id)
+      .eq("skill_id", skill_id)
+      .single(),
+    supabase.from("Content").select("*").eq("tpc_id", topic_id),
+    supabase.auth.getUser(),
+  ]);
 
   if (!skill || !topic) notFound();
 
+  if (user) {
+    await supabase
+      .from("Student")
+      .update({ std_last_activeDate: new Date().toISOString() })
+      .eq("user_id", user.id);
+  }
   // ── Access gate ─────────────────────────────────────────────────────────────
-  const { data: { user } } = await supabase.auth.getUser();
   if (user) {
     const { data: student } = await supabase
       .from("Student")
@@ -91,7 +108,6 @@ export default async function TopicLearningPage({
         .from("Topic")
         .select("tpc_id", { count: "exact", head: true })
         .eq("parent_id", topic_id);
-
     }
   }
   // ── End access gate ─────────────────────────────────────────────────────────
@@ -99,9 +115,9 @@ export default async function TopicLearningPage({
   const topicContents: Content[] = contents ?? [];
   const videoContents = topicContents.filter((c) => c.cntnt_type === "video");
   const audioContents = topicContents.filter((c) => c.cntnt_type === "audio");
-  const pdfContents   = topicContents.filter((c) => c.cntnt_type === "pdf");
-  const docsContents  = topicContents.filter((c) => c.cntnt_type === "docs");
-  
+  const pdfContents = topicContents.filter((c) => c.cntnt_type === "pdf");
+  const docsContents = topicContents.filter((c) => c.cntnt_type === "docs");
+
   const description =
     topic.tpc_description ??
     "This topic brings together lesson media, downloadable material, and official references in one place.";
@@ -109,10 +125,8 @@ export default async function TopicLearningPage({
     <main className="min-h-screen bg-slate-950 px-4 pb-16 pt-24 text-white sm:px-6">
       <StreakCelebration />
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-8">
-        
         <section className="relative overflow-hidden rounded-[32px] border border-slate-500 bg-gradient-to-br from-slate-700 to-transparent p-6 shadow-slate-500/40 shadow-[0_20px_60px]">
           <div className="flex flex-col lg:flex-row gap-10 items-start justify-between">
-            
             <div className="flex-1 min-w-0">
               <Button
                 variant="outline"
@@ -122,11 +136,11 @@ export default async function TopicLearningPage({
                 <ArrowLeft size={16} />
                 Back to roadmap
               </Button>
-              
+
               <p className="mt-5 text-xs font-semibold uppercase tracking-[0.32em] text-orange-300/90">
                 Learning Content
               </p>
-              
+
               <h1 className="mt-3 text-3xl font-black tracking-tight text-white md:text-5xl">
                 {topic.tpc_title}
               </h1>
@@ -152,25 +166,38 @@ export default async function TopicLearningPage({
                   QUIZ ME
                 </Button>
               </div>
-              
+
               <div className="grid gap-3 grid-cols-1 sm:grid-cols-3">
                 <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-sm">
-                  <p className="text-[10px] uppercase tracking-[0.24em] text-white/45">Skill</p>
-                  <p className="mt-1 text-xs font-semibold text-white ">{skill.skl_title}</p>
+                  <p className="text-[10px] uppercase tracking-[0.24em] text-white/45">
+                    Skill
+                  </p>
+                  <p className="mt-1 text-xs font-semibold text-white ">
+                    {skill.skl_title}
+                  </p>
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-sm">
-                  <p className="text-[10px] uppercase tracking-[0.24em] text-white/45">Resources</p>
-                  <p className="mt-1 text-xl font-black text-white">{topicContents.length}</p>
+                  <p className="text-[10px] uppercase tracking-[0.24em] text-white/45">
+                    Resources
+                  </p>
+                  <p className="mt-1 text-xl font-black text-white">
+                    {topicContents.length}
+                  </p>
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-sm">
-                  <p className="text-[10px] uppercase tracking-[0.24em] text-white/45">Mode</p>
+                  <p className="text-[10px] uppercase tracking-[0.24em] text-white/45">
+                    Mode
+                  </p>
                   <p className="mt-1 text-xs font-semibold text-white truncate">
-                    {videoContents.length ? "Video" : audioContents.length ? "Audio" : "Mixed"}
+                    {videoContents.length
+                      ? "Video"
+                      : audioContents.length
+                        ? "Audio"
+                        : "Mixed"}
                   </p>
                 </div>
               </div>
             </div>
-
           </div>
         </section>
 
@@ -192,8 +219,9 @@ export default async function TopicLearningPage({
                   No learning resources yet
                 </h2>
                 <p className="mx-auto mt-3 max-w-2xl text-sm leading-7 text-slate-400">
-                  The page structure is ready. As soon as this topic gets videos, audio, PDFs, or
-                  official docs, they will appear here automatically.
+                  The page structure is ready. As soon as this topic gets
+                  videos, audio, PDFs, or official docs, they will appear here
+                  automatically.
                 </p>
               </article>
             )}
@@ -217,7 +245,10 @@ export default async function TopicLearningPage({
                     const meta = contentTypeMeta[content.cntnt_type];
                     const Icon = meta.icon;
                     return (
-                      <div key={content.cntnt_id} className={`rounded-2xl border p-4 ${meta.tone}`}>
+                      <div
+                        key={content.cntnt_id}
+                        className={`rounded-2xl border p-4 ${meta.tone}`}
+                      >
                         <div className="flex items-start gap-3">
                           <div className="mt-0.5">
                             <Icon size={18} />
@@ -226,9 +257,12 @@ export default async function TopicLearningPage({
                             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">
                               {meta.label}
                             </p>
-                            <p className="mt-1 font-semibold text-white">{content.cntnt_title}</p>
+                            <p className="mt-1 font-semibold text-white">
+                              {content.cntnt_title}
+                            </p>
                             <p className="mt-2 break-all text-sm text-white/70">
-                              {content.cntnt_value ?? "Content source will be attached later."}
+                              {content.cntnt_value ??
+                                "Content source will be attached later."}
                             </p>
                           </div>
                         </div>
