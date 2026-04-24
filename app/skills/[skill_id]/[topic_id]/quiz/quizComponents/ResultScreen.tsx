@@ -1,20 +1,26 @@
-import { Trophy, TrendingUp, TrendingDown, CheckCircle2, XCircle, ArrowRight, LayoutDashboard, Star } from "lucide-react";
-import { DIFFICULTY_STYLE, formatTime, maxPossiblePoints, calcSessionStats } from "../quiz.lib";
+import { Trophy, TrendingUp, TrendingDown, CheckCircle2, XCircle, ArrowRight, LayoutDashboard } from "lucide-react";
+import { formatTime, maxPossiblePoints, calcSessionStats } from "../quiz.lib";
 import type { AnswerRecord } from "../quiz.types";
+import type { ChildEstimateWithTitle } from "@/lib/ai/adaptive";
 
 type Props = {
   answers: AnswerRecord[];
   skillId: string;
+  childEstimates: ChildEstimateWithTitle[] | null;
   onGoRoadmap: () => void;
   onGoDashboard: () => void;
 };
 
-export default function ResultsScreen({ answers, onGoRoadmap, onGoDashboard }: Props) {
-  const { totalPoints, totalTime, correctAnswers, wrongAnswers, hintsUsed, accuracy, avgTime } =
+export default function ResultsScreen({ answers, childEstimates, onGoRoadmap, onGoDashboard }: Props) {
+  const { totalPoints, totalTime, correctAnswers, hintsUsed, accuracy, avgTime } =
     calcSessionStats(answers);
 
   const max = maxPossiblePoints(answers.map((a) => a.question));
   const percentage = max > 0 ? Math.round((totalPoints / max) * 100) : 0;
+
+  const strongTopics = (childEstimates ?? []).filter(e => e.estimated_score >= 50);
+  const weakTopics   = (childEstimates ?? []).filter(e => e.estimated_score < 50);
+  const hasChildren  = childEstimates !== null && childEstimates.length > 0;
 
   return (
     <div className="flex min-h-[70vh] items-center justify-center px-4 py-12">
@@ -68,70 +74,63 @@ export default function ResultsScreen({ answers, onGoRoadmap, onGoDashboard }: P
               </div>
             </div>
 
-            {/* Strong / Weak */}
-            <div className="mt-5 grid gap-4 sm:grid-cols-2">
-              <div className="rounded-2xl border border-emerald-400/20 bg-emerald-500/10 p-4">
-                <div className="flex items-center gap-2 text-emerald-400">
-                  <TrendingUp size={15} />
-                  <p className="text-xs font-bold uppercase tracking-widest">Strong points</p>
-                </div>
-                {correctAnswers.length === 0 ? (
-                  <p className="mt-2 text-xs text-slate-400">No correct answers this session.</p>
-                ) : (
-                  <ul className="mt-3 space-y-2">
-                    {correctAnswers.map((a) => (
-                      <li key={a.question.qst_id} className="flex items-start gap-2">
-                        <CheckCircle2 size={13} className="mt-0.5 shrink-0 text-emerald-400" />
-                        <div>
-                          <p className="text-xs leading-relaxed text-white/80">
-                            {a.question.question}
-                          </p>
-                          <div className="mt-1 flex items-center gap-1">
-                            <Star size={10} className="text-orange-400" />
-                            <span className="text-[10px] font-semibold text-orange-300">
-                              {a.pointsEarned} pts
-                            </span>
-                            <span
-                              className={`ml-1 rounded px-1 text-[10px] font-bold ${DIFFICULTY_STYLE[a.question.difficulty]}`}
-                            >
-                              {a.question.difficulty}
-                            </span>
+            {/* AI knowledge map */}
+            {childEstimates === null ? (
+              <div className="mt-5 rounded-2xl border border-white/10 bg-white/5 p-6 flex flex-col items-center gap-3">
+                <div className="animate-spin rounded-full h-6 w-6 border-2 border-orange-400 border-t-transparent" />
+                <p className="text-xs text-slate-400">Analysing your knowledge map…</p>
+              </div>
+            ) : hasChildren ? (
+              <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                <div className="rounded-2xl border border-emerald-400/20 bg-emerald-500/10 p-4">
+                  <div className="flex items-center gap-2 text-emerald-400 mb-3">
+                    <TrendingUp size={15} />
+                    <p className="text-xs font-bold uppercase tracking-widest">Strong topics</p>
+                  </div>
+                  {strongTopics.length === 0 ? (
+                    <p className="text-xs text-slate-400">No strong sub-topics detected.</p>
+                  ) : (
+                    <ul className="space-y-2">
+                      {strongTopics.map(e => (
+                        <li key={e.tpc_id} className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <CheckCircle2 size={13} className="shrink-0 text-emerald-400" />
+                            <p className="text-xs text-white/80 truncate">{e.tpc_title}</p>
                           </div>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-
-              <div className="rounded-2xl border border-rose-400/20 bg-rose-500/10 p-4">
-                <div className="flex items-center gap-2 text-rose-400">
-                  <TrendingDown size={15} />
-                  <p className="text-xs font-bold uppercase tracking-widest">Weak points</p>
-                </div>
-                {wrongAnswers.length === 0 ? (
-                  <p className="mt-2 text-xs text-slate-400">No wrong answers — perfect!</p>
-                ) : (
-                  <ul className="mt-3 space-y-2">
-                    {wrongAnswers.map((a) => (
-                      <li key={a.question.qst_id} className="flex items-start gap-2">
-                        <XCircle size={13} className="mt-0.5 shrink-0 text-rose-400" />
-                        <div>
-                          <p className="text-xs leading-relaxed text-white/80">
-                            {a.question.question}
-                          </p>
-                          <span
-                            className={`mt-1 inline-block rounded px-1 text-[10px] font-bold ${DIFFICULTY_STYLE[a.question.difficulty]}`}
-                          >
-                            {a.question.difficulty}
+                          <span className="shrink-0 text-[10px] font-bold text-emerald-300 bg-emerald-500/15 px-2 py-0.5 rounded-full">
+                            {e.estimated_score}%
                           </span>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                )}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+                <div className="rounded-2xl border border-rose-400/20 bg-rose-500/10 p-4">
+                  <div className="flex items-center gap-2 text-rose-400 mb-3">
+                    <TrendingDown size={15} />
+                    <p className="text-xs font-bold uppercase tracking-widest">Weak topics</p>
+                  </div>
+                  {weakTopics.length === 0 ? (
+                    <p className="text-xs text-slate-400">No weak sub-topics — great coverage!</p>
+                  ) : (
+                    <ul className="space-y-2">
+                      {weakTopics.map(e => (
+                        <li key={e.tpc_id} className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <XCircle size={13} className="shrink-0 text-rose-400" />
+                            <p className="text-xs text-white/80 truncate">{e.tpc_title}</p>
+                          </div>
+                          <span className="shrink-0 text-[10px] font-bold text-rose-300 bg-rose-500/15 px-2 py-0.5 rounded-full">
+                            {e.estimated_score}%
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
               </div>
-            </div>
+            ) : null}
 
             {/* CTAs */}
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">

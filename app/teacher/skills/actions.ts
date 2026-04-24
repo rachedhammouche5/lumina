@@ -1,9 +1,8 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
 
 export async function uploadSkillImage(formData: FormData) {
   const file = formData.get("file") as File;
@@ -12,13 +11,18 @@ export async function uploadSkillImage(formData: FormData) {
   const bytes = await file.arrayBuffer();
   const buffer = Buffer.from(bytes);
 
-  const folder = path.join(process.cwd(), "public", "uploads", "skills");
-  await mkdir(folder, { recursive: true });
+  const ext = file.name.split(".").pop() ?? "jpg";
+  const filename = `${Date.now()}.${ext}`;
 
-  const filename = `${Date.now()}-${file.name}`;
-  await writeFile(path.join(folder, filename), buffer);
+  const supabase = createAdminClient();
+  const { error: uploadError } = await supabase.storage
+    .from("skills-pictures")
+    .upload(filename, buffer, { contentType: file.type, upsert: false });
 
-  return { url: `/uploads/skills/${filename}` };
+  if (uploadError) return { error: uploadError.message };
+
+  const { data } = supabase.storage.from("skills-pictures").getPublicUrl(filename);
+  return { url: data.publicUrl };
 }
 
 export async function addSkill(formData: {

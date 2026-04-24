@@ -66,11 +66,7 @@ export const getIconColorClass = (status: RoadmapStatus, degree?: number) => {
     return "text-[#a855f7]";
 };
 
-const getNodeZIndex = (status: RoadmapStatus) => {
-    if (status === "locked") return 100;
-    if (status === "completed") return 30;
-    return 20;
-};
+const getNodeZIndex = (_status: RoadmapStatus) => 5;
 
 export const generateRoadmapElements = (
   topics: TopicRow[] = [],
@@ -101,19 +97,15 @@ export const generateRoadmapElements = (
     if (root) effectiveDegrees.set(root.id, rootEffective);
 
     // Recursive function to compute effective degrees
-    function computeEffective(topicId: string, parentEffective: number) {
+    function computeEffective(topicId: string) {
         const ownDegree = scoreamap.get(topicId) || 0;
-        let effective = ownDegree;
-        if (effective < 50 && parentEffective >= 50) {
-            effective = parentEffective;
-        }
-        effectiveDegrees.set(topicId, effective);
+        effectiveDegrees.set(topicId, ownDegree);
         const children = childrenMap.get(topicId) || [];
-        children.forEach(child => computeEffective(child.tpc_id, effective));
+        children.forEach(child => computeEffective(child.tpc_id));
     }
 
     // Compute for root-level topics
-    topics.filter(t => !t.parent_id).forEach(t => computeEffective(t.tpc_id, rootEffective));
+    topics.filter(t => !t.parent_id).forEach(t => computeEffective(t.tpc_id));
 
     // Update passing based on effective degrees
     const effectivePassingIds = new Set([...effectiveDegrees.entries()].filter(([, d]) => d >= 50).map(([id]) => id));
@@ -164,7 +156,7 @@ export const generateRoadmapElements = (
             ? "locked"
             : allTopicsEffectiveCompleted
             ? "completed"
-            : "locked";
+            : "unlocked";
 
         nodes.push({
             id: root.id,
@@ -186,7 +178,7 @@ export const generateRoadmapElements = (
 
     topics.forEach((topic) => {
         const effectiveDegree = effectiveDegrees.get(topic.tpc_id) || 0;
-        const hasEffectiveScore = effectiveDegree > 0;
+        const hasEffectiveScore = effectiveDegree >= 50;
         const children = childrenMap.get(topic.tpc_id) ?? [];
         const areChildrenPassed = children.length > 0 && children.every((c) => (effectiveDegrees.get(c.tpc_id) || 0) >= 50);
 
@@ -197,9 +189,7 @@ export const generateRoadmapElements = (
             currentStatus = "locked";
         } else if (hasEffectiveScore) {
             currentStatus = "completed";
-        } else if (children.length === 0) {
-            currentStatus = "unlocked";
-        } else if (areChildrenPassed) {
+        } else {
             currentStatus = "unlocked";
         }
 

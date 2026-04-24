@@ -1,7 +1,7 @@
 "use client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import clsx from "clsx";
 import Link from "next/link";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react";
@@ -9,6 +9,14 @@ import Input from "@/app/ui/Input";
 import Button from "@/app/ui/Button";
 
 export default function LoginPageView() {
+  return (
+    <Suspense>
+      <LoginPageViewContent />
+    </Suspense>
+  );
+}
+
+function LoginPageViewContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const supabase = createClient();
@@ -69,6 +77,7 @@ export default function LoginPageView() {
     } else if (role === "admin") router.replace("/admin");
     else router.replace("/");
 
+    router.refresh();
     setLoading(false);
   }
 

@@ -40,7 +40,7 @@ export default function SkillHeader({
               </div>
               <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/40 bg-amber-500/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-amber-100 sm:px-3 sm:py-1.5 sm:text-xs">
                 <Star size={14} />
-                {skill.rating ?? 0} rating
+                N/A rating
               </div>
             </div>
           </div>
