@@ -1,8 +1,15 @@
 "use client";
-import { useState, useRef } from "react";
+
+import { useState, useRef, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import { useProfile } from "./hooks/useProfile";
 import { useChat } from "./hooks/useChat";
 import MessageList from "@/app/ui/ai-tutor/MessageList";
+
+const QUICK_PROMPTS = [
+  "Summarize my weak areas.",
+  "Give me a short practice quiz.",
+  "Explain what I should revise next.",
+];
 
 export default function AITutorPage() {
   const { profile } = useProfile();
@@ -12,9 +19,10 @@ export default function AITutorPage() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleSend = (text: string) => {
-    if (!text.trim()) return;
+    const next = text.trim();
+    if (!next) return;
     setChipsVisible(false);
-    sendMessage(text);
+    sendMessage(next);
     setInput("");
     if (textareaRef.current) textareaRef.current.style.height = "auto";
   };
@@ -23,99 +31,102 @@ export default function AITutorPage() {
     const el = textareaRef.current;
     if (!el) return;
     el.style.height = "auto";
-    el.style.height = Math.min(el.scrollHeight, 120) + "px";
+    el.style.height = `${Math.min(el.scrollHeight, 140)}px`;
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
+  const handleKeyDown = (event: ReactKeyboardEvent<HTMLTextAreaElement>) => {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
       handleSend(input);
     }
   };
 
   return (
-    <div className="relative min-h-screen bg-[#080c18] overflow-hidden font-[DM_Sans,system-ui,sans-serif]">
-      {/* Ambient orbs */}
-      <div className="fixed -top-30 -left-30 w-[500px] h-[500px] rounded-full pointer-events-none z-0 animate-[float_8s_ease-in-out_infinite] bg-[radial-gradient(circle,rgba(232,114,12,0.12)_0%,transparent_70%)]" />
-      <div className="fixed -bottom-20 -right-20 w-[400px] h-[400px] rounded-full pointer-events-none z-0 animate-[float_10s_ease-in-out_infinite_reverse] bg-[radial-gradient(circle,rgba(99,102,241,0.1)_0%,transparent_70%)]" />
-      <div className="fixed top-[40%] left-[35%] w-[300px] h-[300px] rounded-full pointer-events-none z-0 animate-[float_12s_ease-in-out_2s_infinite] bg-[radial-gradient(circle,rgba(14,165,233,0.06)_0%,transparent_70%)]" />
+    <div className="relative min-h-screen overflow-hidden bg-[linear-gradient(180deg,#06101d_0%,#091525_48%,#040913_100%)] text-slate-50">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_15%,rgba(245,158,11,0.16),transparent_28%),radial-gradient(circle_at_88%_18%,rgba(34,197,94,0.14),transparent_24%),radial-gradient(circle_at_74%_78%,rgba(14,165,233,0.12),transparent_30%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(148,163,184,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.06)_1px,transparent_1px)] bg-[size:72px_72px] opacity-30" />
 
-      <div className="relative z-10 flex h-screen">
-        <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
-
-          {/* Header */}
-          <div className="flex items-center justify-between px-7 py-4 border-b border-white/[0.07] bg-[rgba(10,14,26,0.6)] backdrop-blur-xl flex-shrink-0">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#e8720c] to-[#f4a435] flex items-center justify-center text-lg flex-shrink-0 shadow-[0_4px_20px_rgba(232,114,12,0.35)]">
-                ✦
+      <div className="relative z-10 mx-auto flex max-w-[1240px] flex-col gap-4 px-3 py-4 sm:px-4 sm:py-6 lg:px-6">
+        <header className="rounded-[24px] border border-white/10 bg-slate-950/70 px-4 py-4 shadow-[0_24px_80px_rgba(2,6,23,0.34)] backdrop-blur-xl sm:rounded-[30px] sm:px-5 sm:py-5 sm:px-6">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <div className="text-[11px] uppercase tracking-[0.24em] text-sky-100/60">
+                AI Tutor
               </div>
-              <div>
-                <div className="text-base font-semibold text-white font-[Syne,sans-serif]">
-                  AI Tutor
-                </div>
-                <div className="flex items-center gap-1.5 text-xs text-[#7c83a0] mt-0.5">
-                  <span className="w-[7px] h-[7px] rounded-full bg-[#2ecc71] shadow-[0_0_6px_rgba(46,204,113,0.6)]" />
-                  Personalized to {profile.name}
-                </div>
-              </div>
+              <h1 className="mt-2 text-xl font-black tracking-tight text-white sm:text-2xl sm:text-3xl">
+                Ask while you study.
+              </h1>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-300/80">
+                Use the chat to get explanations, examples, practice questions, or a quick recap of your weak areas without leaving this workspace.
+              </p>
             </div>
-            <span className="bg-[rgba(232,114,12,0.1)] border border-[rgba(232,114,12,0.3)] text-[#e8720c] text-xs font-medium px-3.5 py-1.5 rounded-full">
-              {profile.currentSkill}
-            </span>
           </div>
+        </header>
 
-          {/* Messages */}
-          <MessageList messages={messages} loading={loading} profile={profile} />
-
-          {/* Input area */}
-          <div className="px-7 pb-6 pt-3 border-t border-white/[0.07] bg-[rgba(10,14,26,0.6)] backdrop-blur-xl flex-shrink-0">
-            <div className="flex gap-2.5 items-end bg-[rgba(21,28,48,0.9)] border border-white/10 rounded-2xl px-3 py-2.5 focus-within:border-[rgba(232,114,12,0.4)] transition-colors">
-              <textarea
-                ref={textareaRef}
-                value={input}
-                onChange={(e) => { setInput(e.target.value); autoResize(); }}
-                onKeyDown={handleKeyDown}
-                placeholder="Ask anything about your course…"
-                rows={1}
-                className="flex-1 bg-transparent border-none outline-none text-[#c8d4e8] text-sm font-[DM_Sans,sans-serif] resize-none min-h-[22px] max-h-[120px] leading-snug caret-[#e8720c] placeholder:text-[#3d4560]"
-              />
-              <button
-                onClick={() => handleSend(input)}
-                disabled={!input.trim() || loading}
-                className="w-9 h-9 bg-gradient-to-br from-[#e8720c] to-[#f4a435] border-none rounded-xl cursor-pointer flex items-center justify-center flex-shrink-0 transition-opacity duration-150 shadow-[0_2px_12px_rgba(232,114,12,0.4)] disabled:opacity-40 disabled:cursor-default"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
-                  <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
-                </svg>
-              </button>
+        <section
+          id="chat"
+          className="flex min-h-[72vh] flex-1 flex-col overflow-hidden rounded-[24px] border border-white/10 bg-slate-950/70 shadow-[0_24px_80px_rgba(2,6,23,0.34)] backdrop-blur-xl sm:rounded-[30px]"
+        >
+          <div className="flex items-center justify-between gap-4 border-b border-white/10 px-4 py-3 sm:px-6">
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.22em] text-sky-100/60">Quick chat</p>
+              <h2 className="text-base font-bold text-white">Study companion</h2>
             </div>
-            <div className="text-[11px] text-[#2a3050] mt-2 text-center">
-              Press Enter to send · Shift+Enter for new line
+            <div className="text-xs text-slate-400">
+              {loading ? "Thinking..." : "Ready"}
             </div>
           </div>
 
-        </main>
+          <div className="flex min-h-0 flex-1 flex-col">
+            <MessageList messages={messages} loading={loading} profile={profile} />
+
+            <div className="border-t border-white/10 bg-[rgba(10,14,26,0.72)] px-3 py-3 backdrop-blur-xl sm:px-6 sm:py-4">
+              {chipsVisible && (
+                <div className="mb-3 flex flex-wrap gap-2">
+                  {QUICK_PROMPTS.map((prompt) => (
+                    <button
+                      key={prompt}
+                      type="button"
+                      onClick={() => handleSend(prompt)}
+                      className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-[11px] font-medium text-slate-200 transition hover:border-orange-400/30 hover:bg-orange-500/10"
+                    >
+                      {prompt}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              <div className="flex items-end gap-2.5 rounded-2xl border border-white/10 bg-[rgba(21,28,48,0.9)] px-3 py-2.5 focus-within:border-[rgba(232,114,12,0.4)] transition-colors">
+                <textarea
+                  ref={textareaRef}
+                  value={input}
+                  onChange={(event) => {
+                    setInput(event.target.value);
+                    autoResize();
+                  }}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Ask anything about your course..."
+                  rows={1}
+                  className="flex-1 min-h-[22px] max-h-[140px] resize-none border-none bg-transparent text-sm leading-snug text-[#c8d4e8] outline-none caret-[#e8720c] placeholder:text-[#3d4560]"
+                />
+                <button
+                  type="button"
+                  onClick={() => handleSend(input)}
+                  disabled={!input.trim() || loading}
+                  className="inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#e8720c] to-[#f4a435] text-white shadow-[0_2px_12px_rgba(232,114,12,0.4)] transition-opacity duration-150 disabled:cursor-default disabled:opacity-40"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="white" aria-hidden="true">
+                    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+                  </svg>
+                </button>
+              </div>
+              <p className="mt-2 text-center text-[10px] text-[#2a3050] sm:text-[11px]">
+                Press Enter to send · Shift+Enter for new line
+              </p>
+            </div>
+          </div>
+        </section>
       </div>
-
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap');
-        * { box-sizing: border-box; }
-        @keyframes bounce {
-          0%, 60%, 100% { transform: translateY(0); opacity: 0.35; }
-          30% { transform: translateY(-6px); opacity: 1; }
-        }
-        @keyframes float {
-          0%, 100% { transform: translateY(0px) scale(1); }
-          50% { transform: translateY(-20px) scale(1.04); }
-        }
-        @keyframes fadeSlideUp {
-          from { opacity: 0; transform: translateY(12px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
-      `}</style>
     </div>
   );
 }

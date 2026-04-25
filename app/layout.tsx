@@ -19,10 +19,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={jakarta.className}>
+      <body className={`${jakarta.className} overflow-x-hidden`}>
         <NavBar />
         
-        <main className="relative">
+        <main className="relative overflow-x-hidden">
           {children}
           
         </main>

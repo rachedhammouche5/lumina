@@ -6,7 +6,6 @@ import { useEffect, useState } from "react";
 import type { ComponentType } from "react";
 import TRoadmapNode from "./Tnode";
 import type { ScoreRow, TopicRow } from "../types";
-import type { RoadmapNodeData } from "../types";
 import { generateRoadmapElements } from "../actions";
 
 import type { RoadmapNode } from "../types";
@@ -70,8 +69,12 @@ export default function RoadmapFlow({
   return (
     <div className="w-full overflow-hidden border-2 border-slate-400/40 rounded-4xl shadow-2xl shadow-slate-400/40 mb-5 bg-linear-to-br from-slate-900 to-transparent">
       <div
-        className="relative mx-auto max-w-full overflow-hidden"
-        style={{ width: `${width}px`, height: `${clampedHeight}px` }}
+        className="relative mx-auto w-full max-w-full overflow-hidden"
+        style={{
+          width: "100%",
+          maxWidth: "100vw",
+          height: `${clampedHeight}px`,
+        }}
       >
         <ReactFlow
           nodes={nodes}
