@@ -17,7 +17,7 @@ const getNavLinks = (role: Role) => {
   if (role === "student") return [
     { name: "AI Tutor", href: "/ai-tutor", icon: Bot },
     { name: "Home", href: "/student", icon: House },
-    { name: "My Learning", href: "/student/dashboard", icon: LibraryBig },
+    { name: "Dashboard", href: "/student/dashboard", icon: LibraryBig },
     { name: "Explore", href: "/skills", icon: Blocks },
   ];
   if (role === "admin") return [
