@@ -56,28 +56,28 @@ export default function LeaderboardPanel({ entries, currentStudentId }: Props) {
   const currentEntry = entries.find((entry) => entry.id === currentStudentId) ?? entries[0];
 
   return (
-    <aside className="relative overflow-hidden rounded-3xl border border-slate-800 bg-slate-900/90 p-5 shadow-[0_24px_80px_rgba(0,0,0,0.35)] backdrop-blur">
+    <aside className="relative overflow-hidden rounded-3xl border border-slate-800 bg-slate-900/90 p-4 shadow-[0_24px_80px_rgba(0,0,0,0.35)] backdrop-blur sm:p-5">
       <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 via-transparent to-sky-500/5 pointer-events-none" />
       <div className="relative">
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex items-start justify-between gap-3 sm:gap-4">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-orange-300/80">Leaderboard</p>
-            <h2 className="mt-1 text-xl font-black text-white">Quiz points</h2>
-            <p className="mt-1 text-sm text-slate-400">
+            <p className="text-[9px] font-bold uppercase tracking-[0.28em] text-orange-300/80 sm:text-[10px]">Leaderboard</p>
+            <h2 className="mt-1 text-lg font-black text-white sm:text-xl">Quiz points</h2>
+            <p className="mt-1 text-xs text-slate-400 sm:text-sm">
               Ranked by total points earned across all quizzes.
             </p>
           </div>
           <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-right">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-500">Students</p>
-            <p className="text-lg font-black text-white">{entries.length}</p>
+            <p className="text-[9px] font-semibold uppercase tracking-[0.24em] text-slate-500 sm:text-[10px]">Students</p>
+            <p className="text-base font-black text-white sm:text-lg">{entries.length}</p>
           </div>
         </div>
 
-        <div className="mt-5 grid grid-cols-3 gap-2">
+        <div className="mt-4 grid grid-cols-1 gap-2 sm:mt-5 sm:grid-cols-3">
           <button
             type="button"
             onClick={scrollToTop}
-            className="inline-flex items-center justify-center gap-1.5 rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-slate-200 transition hover:border-orange-400/30 hover:bg-orange-500/10"
+            className="inline-flex items-center justify-center gap-1.5 rounded-2xl border border-white/10 bg-white/5 px-3 py-3 text-xs font-semibold text-slate-200 transition hover:border-orange-400/30 hover:bg-orange-500/10 sm:py-2"
           >
             <ArrowUp size={14} />
             Top
@@ -85,7 +85,7 @@ export default function LeaderboardPanel({ entries, currentStudentId }: Props) {
           <button
             type="button"
             onClick={scrollToMe}
-            className="inline-flex items-center justify-center gap-1.5 rounded-2xl border border-orange-400/30 bg-orange-500/15 px-3 py-2 text-xs font-semibold text-orange-200 transition hover:bg-orange-500/20"
+            className="inline-flex items-center justify-center gap-1.5 rounded-2xl border border-orange-400/30 bg-orange-500/15 px-3 py-3 text-xs font-semibold text-orange-200 transition hover:bg-orange-500/20 sm:py-2"
           >
             <LocateFixed size={14} />
             Where am I?
@@ -93,7 +93,7 @@ export default function LeaderboardPanel({ entries, currentStudentId }: Props) {
           <button
             type="button"
             onClick={scrollToBottom}
-            className="inline-flex items-center justify-center gap-1.5 rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-slate-200 transition hover:border-orange-400/30 hover:bg-orange-500/10"
+            className="inline-flex items-center justify-center gap-1.5 rounded-2xl border border-white/10 bg-white/5 px-3 py-3 text-xs font-semibold text-slate-200 transition hover:border-orange-400/30 hover:bg-orange-500/10 sm:py-2"
           >
             <ArrowDown size={14} />
             Bottom
@@ -101,10 +101,10 @@ export default function LeaderboardPanel({ entries, currentStudentId }: Props) {
         </div>
 
         {currentEntry ? (
-          <div className="mt-5 rounded-3xl border border-orange-400/20 bg-orange-500/10 p-4">
-            <div className="flex items-center justify-between gap-4">
+          <div className="mt-4 rounded-3xl border border-orange-400/20 bg-orange-500/10 p-3 sm:mt-5 sm:p-4">
+            <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl border border-orange-400/20 bg-slate-950 text-sm font-black text-orange-200">
+                <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl border border-orange-400/20 bg-slate-950 text-sm font-black text-orange-200 sm:h-12 sm:w-12">
                   {currentEntry.pfp ? (
                     <img
                       src={currentEntry.pfp}
@@ -121,7 +121,7 @@ export default function LeaderboardPanel({ entries, currentStudentId }: Props) {
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-lg font-black text-orange-200 tabular-nums">
+                <p className="text-base font-black text-orange-200 tabular-nums sm:text-lg">
                   {currentEntry.points.toLocaleString()}
                 </p>
                 <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-orange-200/70">
@@ -134,7 +134,7 @@ export default function LeaderboardPanel({ entries, currentStudentId }: Props) {
 
         <div
           ref={containerRef}
-          className="pretty-scrollbar mt-5 max-h-[640px] space-y-2 overflow-y-scroll pr-2 scroll-smooth"
+          className="pretty-scrollbar mt-4 max-h-[50vh] space-y-2 overflow-y-scroll pr-2 scroll-smooth sm:mt-5 sm:max-h-[640px]"
         >
           {entries.map((entry) => {
             const isCurrent = entry.id === currentStudentId;

@@ -15,10 +15,11 @@ const getNavLinks = (role: Role) => {
     { name: "Dashboard", href: "/teacher/dashboard", icon: Blocks },
   ];
   if (role === "student") return [
-    { name: "AI Tutor", href: "/ai-tutor", icon: Bot },
+    
     { name: "Home", href: "/student", icon: House },
+    { name: "Explore Skills", href: "/skills", icon: Blocks },
     { name: "Dashboard", href: "/student/dashboard", icon: LibraryBig },
-    { name: "Explore", href: "/skills", icon: Blocks },
+    { name: "AI Tutor", href: "/ai-tutor", icon: Bot },
   ];
   if (role === "admin") return [
     { name: "Home", href: "/admin", icon: House },
@@ -77,20 +78,32 @@ export default function NavBarClient({ role }: { role: Role }) {
         </div>
       </div>
 
-      <div className={`md:hidden overflow-hidden transition-all border-slate-700 backdrop-blur-md bg-[rgba(2,6,23,0.6)] duration-300 ease-in-out ${isOpen ? "max-h-96 border-b border-slate-800" : "max-h-0"}`}>
-        <div className="backdrop-blur-md bg-[rgba(2,6,23,0.6)] border-b border-slate-700 px-6 py-4 flex flex-col gap-4">
+      <div
+        className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${
+          isOpen ? "max-h-[calc(100dvh-4.5rem)] border-b border-slate-800" : "max-h-0"
+        }`}
+      >
+        <div className="rounded-b-[28px] border-b border-slate-700 bg-[rgba(2,6,23,0.82)] px-3 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3 shadow-[0_28px_80px_rgba(0,0,0,0.45)] backdrop-blur-2xl sm:px-4">
           {navLinks.map((link) => (
             <Link
               key={link.name}
               href={link.href}
-              className="text-slate-200 hover:text-white transition-all flex items-center gap-3 p-2 rounded-lg hover:bg-slate-800"
+              className="mb-2 flex items-center justify-between gap-3 rounded-2xl border border-white/5 bg-white/5 px-4 py-4 text-slate-200 transition-all hover:border-orange-400/20 hover:bg-orange-500/10 hover:text-white"
               onClick={() => setIsOpen(false)}
             >
-              <link.icon size={20} />
-              <h3 className="text-lg font-medium">{link.name}</h3>
+              <div className="flex items-center gap-3">
+                <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10 text-orange-200">
+                  <link.icon size={18} />
+                </span>
+                <div>
+                  <h3 className="text-base font-semibold">{link.name}</h3>
+                  <p className="text-[11px] text-slate-500">Open {link.name.toLowerCase()}</p>
+                </div>
+              </div>
+              <span className="text-slate-500">›</span>
             </Link>
           ))}
-          <div className="flex flex-col gap-3 pt-4 border-t border-slate-800 sm:hidden">
+          <div className="mt-2 flex flex-col gap-3 border-t border-slate-800 pt-4 sm:hidden">
             {role !== "guest" ? (
               <ProfileMenu mobile />
             ) : (

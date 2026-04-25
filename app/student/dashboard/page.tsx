@@ -68,7 +68,7 @@ export default async function StudentDashboardPage() {
   );
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-slate-950 pt-24 pb-20 px-4 sm:px-6 text-white">
+    <main className="relative min-h-screen overflow-x-hidden bg-slate-950 pt-24 pb-20 px-4 sm:px-6 text-white">
       <div
         className="pointer-events-none absolute inset-0 opacity-[0.018]"
         style={{ backgroundImage: "radial-gradient(circle, #ffffff 1px, transparent 1px)", backgroundSize: "30px 30px" }}
@@ -86,17 +86,17 @@ export default async function StudentDashboardPage() {
           </header>
 
           {/* Stat cards */}
-          <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <section className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
 
-            <article className="relative overflow-hidden rounded-2xl bg-slate-900 border border-slate-800 p-5 flex items-start gap-4">
+            <article className="relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 p-4 flex items-start gap-4 sm:p-5">
               <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 via-transparent to-transparent pointer-events-none" />
               <div className="absolute -top-6 -right-6 w-20 h-20 bg-orange-500/8 rounded-full pointer-events-none" />
-              <div className="shrink-0 w-10 h-10 rounded-xl bg-orange-500/15 border border-orange-500/25 flex items-center justify-center">
+              <div className="shrink-0 flex h-10 w-10 items-center justify-center rounded-xl border border-orange-500/25 bg-orange-500/15">
                 <Flame size={18} className="text-orange-400" />
               </div>
               <div className="relative">
-                <p className="text-xs font-medium text-slate-500 mb-0.5">Current streak</p>
-                <p className="text-2xl font-bold text-white">
+                <p className="mb-0.5 text-xs font-medium text-slate-500">Current streak</p>
+                <p className="text-xl font-bold text-white sm:text-2xl">
                       {streak} {streak === 1 ? "day" : "days"}
                 </p>
                 <p className="text-xs text-slate-500 mt-0.5">
@@ -105,28 +105,28 @@ export default async function StudentDashboardPage() {
               </div>
             </article>
 
-            <article className="relative overflow-hidden rounded-2xl bg-slate-900 border border-slate-800 p-5 flex items-start gap-4">
+            <article className="relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 p-4 flex items-start gap-4 sm:p-5">
               <div className="absolute inset-0 bg-gradient-to-br from-sky-500/10 via-transparent to-transparent pointer-events-none" />
               <div className="absolute -top-6 -right-6 w-20 h-20 bg-sky-500/8 rounded-full pointer-events-none" />
-              <div className="shrink-0 w-10 h-10 rounded-xl bg-sky-500/15 border border-sky-500/25 flex items-center justify-center">
+              <div className="shrink-0 flex h-10 w-10 items-center justify-center rounded-xl border border-sky-500/25 bg-sky-500/15">
                 <Award size={18} className="text-sky-400" />
               </div>
               <div className="relative">
-                <p className="text-xs font-medium text-slate-500 mb-0.5">Badges earned</p>
-                <p className="text-2xl font-bold text-white">8 badges</p>
+                <p className="mb-0.5 text-xs font-medium text-slate-500">Badges earned</p>
+                <p className="text-xl font-bold text-white sm:text-2xl">8 badges</p>
                 <p className="text-xs text-slate-500 mt-0.5">Latest: Consistent Learner</p>
               </div>
             </article>
 
-            <article className="relative overflow-hidden rounded-2xl bg-slate-900 border border-slate-800 p-5 flex items-start gap-4">
+            <article className="relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 p-4 flex items-start gap-4 sm:p-5">
               <div className="absolute inset-0 bg-gradient-to-br from-violet-500/10 via-transparent to-transparent pointer-events-none" />
               <div className="absolute -top-6 -right-6 w-20 h-20 bg-violet-500/8 rounded-full pointer-events-none" />
-              <div className="shrink-0 w-10 h-10 rounded-xl bg-violet-500/15 border border-violet-500/25 flex items-center justify-center">
+              <div className="shrink-0 flex h-10 w-10 items-center justify-center rounded-xl border border-violet-500/25 bg-violet-500/15">
                 <BookCheck size={18} className="text-violet-400" />
               </div>
               <div className="relative">
-                <p className="text-xs font-medium text-slate-500 mb-0.5">Skills completed</p>
-                <p className="text-2xl font-bold text-white">
+                <p className="mb-0.5 text-xs font-medium text-slate-500">Skills completed</p>
+                <p className="text-xl font-bold text-white sm:text-2xl">
                   {skills} {skills === 1 ? "skill" : "skills"}
                 </p>
                 <p className="text-xs text-slate-500 mt-0.5">
@@ -138,9 +138,9 @@ export default async function StudentDashboardPage() {
           </section>
 
           {/* Weak & Strong points */}
-          <section className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <section className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-5">
 
-            <article className="rounded-2xl bg-slate-900 border border-slate-800 p-6">
+            <article className="rounded-2xl border border-slate-800 bg-slate-900 p-5 sm:p-6">
               <div className="flex items-center gap-2.5 mb-5">
                 <div className="w-7 h-7 rounded-lg bg-rose-500/15 border border-rose-500/20 flex items-center justify-center">
                   <TrendingDown size={13} className="text-rose-400" />
@@ -150,7 +150,7 @@ export default async function StudentDashboardPage() {
               <div className="space-y-5">
                 {weakPoints.map((item, i) => (
                   <div key={item.topic}>
-                    <div className="flex items-start justify-between mb-2">
+                    <div className="mb-2 flex items-start justify-between">
                       <div>
                         <p className="text-sm font-semibold text-white">{item.topic}</p>
                         <p className="text-xs text-slate-500 mt-0.5">{item.skill}</p>
@@ -171,14 +171,14 @@ export default async function StudentDashboardPage() {
                       <ArrowRight size={11} className="group-hover:translate-x-0.5 transition-transform" />
                     </Link>
                     {i < weakPoints.length - 1 && (
-                      <div className="mt-5 border-t border-slate-800" />
+                    <div className="mt-4 border-t border-slate-800 sm:mt-5" />
                     )}
                   </div>
                 ))}
               </div>
             </article>
 
-            <article className="rounded-2xl bg-slate-900 border border-slate-800 p-6">
+            <article className="rounded-2xl border border-slate-800 bg-slate-900 p-5 sm:p-6">
               <div className="flex items-center gap-2.5 mb-5">
                 <div className="w-7 h-7 rounded-lg bg-emerald-500/15 border border-emerald-500/20 flex items-center justify-center">
                   <TrendingUp size={13} className="text-emerald-400" />
@@ -188,7 +188,7 @@ export default async function StudentDashboardPage() {
               <div className="space-y-5">
                 {strongPoints.map((item, i) => (
                   <div key={item.topic}>
-                    <div className="flex items-start justify-between mb-2">
+                    <div className="mb-2 flex items-start justify-between">
                       <div>
                         <p className="text-sm font-semibold text-white">{item.topic}</p>
                         <p className="text-xs text-slate-500 mt-0.5">{item.skill}</p>
@@ -202,7 +202,7 @@ export default async function StudentDashboardPage() {
                       />
                     </div>
                     {i < strongPoints.length - 1 && (
-                      <div className="mt-5 border-t border-slate-800" />
+                    <div className="mt-4 border-t border-slate-800 sm:mt-5" />
                     )}
                   </div>
                 ))}
@@ -211,7 +211,7 @@ export default async function StudentDashboardPage() {
           </section>
 
           {/* Progress chart */}
-          <section className="relative overflow-hidden rounded-2xl bg-slate-900 border border-slate-800 p-6">
+          <section className="relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 p-5 sm:p-6">
             <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-transparent to-transparent pointer-events-none" />
             <div className="relative">
               <div className="mb-5">
@@ -223,7 +223,7 @@ export default async function StudentDashboardPage() {
           </section>
         </div>
 
-        <div className="xl:sticky xl:top-28 h-fit">
+        <div className="h-fit xl:sticky xl:top-28">
           <LeaderboardPanel entries={leaderboardEntries} currentStudentId={currentStudentId} />
         </div>
       </div>

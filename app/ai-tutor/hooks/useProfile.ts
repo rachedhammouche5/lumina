@@ -24,7 +24,12 @@ export function useProfile() {
         .select("score, tpc_id, Topic(tpc_title, Skill(skl_title))")
         .eq("studentId", student?.std_id);
 
-      const map = (s: any) => ({
+      type ScoreRow = {
+        score: number;
+        Topic?: { tpc_title?: string; Skill?: { skl_title?: string }[] }[] | null;
+      };
+
+      const map = (s: ScoreRow) => ({
         topic: s.Topic?.[0]?.tpc_title || "",
         skill: s.Topic?.[0]?.Skill?.[0]?.skl_title || "",
         score: Math.round(s.score),
@@ -33,7 +38,7 @@ export function useProfile() {
         
       setProfile({
         name: student?.std_fullname || "Student",
-        currentSkill: "Python",
+        currentSkill: "",
         streak: student?.std_streak || 0,
         weakPoints: scores?.filter((s) => s.score < 70).map(map) || [],
         strongPoints: scores?.filter((s) => s.score >= 70).map(map) || [],

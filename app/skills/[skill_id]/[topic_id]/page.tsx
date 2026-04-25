@@ -122,11 +122,11 @@ export default async function TopicLearningPage({
     topic.tpc_description ??
     "This topic brings together lesson media, downloadable material, and official references in one place.";
   return (
-    <main className="min-h-screen bg-slate-950 px-4 pb-16 pt-24 text-white sm:px-6">
+    <main className="min-h-screen overflow-x-hidden bg-slate-950 px-4 pb-16 pt-24 text-white sm:px-6">
       <StreakCelebration />
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-8">
-        <section className="relative overflow-hidden rounded-[32px] border border-slate-500 bg-gradient-to-br from-slate-700 to-transparent p-6 shadow-slate-500/40 shadow-[0_20px_60px]">
-          <div className="flex flex-col lg:flex-row gap-10 items-start justify-between">
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 sm:gap-8">
+        <section className="relative overflow-hidden rounded-[28px] border border-slate-500 bg-gradient-to-br from-slate-700 to-transparent p-4 shadow-slate-500/40 shadow-[0_20px_60px] sm:rounded-[32px] sm:p-6">
+          <div className="flex flex-col items-start justify-between gap-6 lg:flex-row lg:gap-10">
             <div className="flex-1 min-w-0">
               <Button
                 variant="outline"
@@ -137,17 +137,17 @@ export default async function TopicLearningPage({
                 Back to roadmap
               </Button>
 
-              <p className="mt-5 text-xs font-semibold uppercase tracking-[0.32em] text-orange-300/90">
+              <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.28em] text-orange-300/90 sm:mt-5 sm:text-xs sm:tracking-[0.32em]">
                 Learning Content
               </p>
 
-              <h1 className="mt-3 text-3xl font-black tracking-tight text-white md:text-5xl">
+              <h1 className="mt-3 text-2xl font-black tracking-tight text-white sm:text-3xl md:text-5xl">
                 {topic.tpc_title}
               </h1>
 
-              <div className="mt-4 max-w-xl lg:max-w-2xl">
+              <div className="mt-3 max-w-xl lg:mt-4 lg:max-w-2xl">
                 <p
-                  className="text-sm leading-relaxed text-slate-300 md:text-base line-clamp-3 transition-colors duration-300 hover:text-white"
+                  className="text-sm leading-relaxed text-slate-300 md:text-base line-clamp-4 transition-colors duration-300 hover:text-white"
                   title={description}
                 >
                   {description}
@@ -155,7 +155,7 @@ export default async function TopicLearningPage({
               </div>
             </div>
 
-            <div className="w-full lg:w-[360px] flex flex-col gap-5 shrink-0">
+            <div className="flex w-full shrink-0 flex-col gap-4 lg:w-[360px] lg:gap-5">
               <div className="flex lg:justify-end">
                 <Button
                   variant="primary"
@@ -167,7 +167,7 @@ export default async function TopicLearningPage({
                 </Button>
               </div>
 
-              <div className="grid gap-3 grid-cols-1 sm:grid-cols-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                 <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-sm">
                   <p className="text-[10px] uppercase tracking-[0.24em] text-white/45">
                     Skill
@@ -201,13 +201,13 @@ export default async function TopicLearningPage({
           </div>
         </section>
 
-        <section className="grid gap-6 lg:grid-cols-[minmax(0,1.5fr)_360px]">
+        <section className="grid gap-5 lg:grid-cols-[minmax(0,1.5fr)_360px] lg:gap-6">
           <div className="space-y-6">
             <VideoSection contents={videoContents} />
             <AudioSection contents={audioContents} />
 
             {(pdfContents.length > 0 || docsContents.length > 0) && (
-              <div className="grid gap-6 xl:grid-cols-2">
+              <div className="grid gap-4 xl:grid-cols-2">
                 <PdfSection contents={pdfContents} />
                 <DocsSection contents={docsContents} />
               </div>
@@ -228,14 +228,14 @@ export default async function TopicLearningPage({
           </div>
 
           <aside className="space-y-4">
-            <div className="rounded-[28px] border border-white/10 bg-slate-900/70 p-5 shadow-[0_20px_60px_rgba(0,0,0,0.28)]">
+            <div className="rounded-[24px] border border-white/10 bg-slate-900/70 p-4 shadow-[0_20px_60px_rgba(0,0,0,0.28)] sm:rounded-[28px] sm:p-5">
               <p className="text-xs font-semibold uppercase tracking-[0.28em] text-orange-300/80">
                 Resource Navigator
               </p>
-              <h2 className="mt-2 text-xl font-black tracking-tight text-white">
+              <h2 className="mt-2 text-lg font-black tracking-tight text-white sm:text-xl">
                 This Topic Includes
               </h2>
-              <div className="mt-5 space-y-3">
+              <div className="mt-4 space-y-3 sm:mt-5">
                 {topicContents.length === 0 ? (
                   <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-slate-400">
                     This topic does not have content items yet.

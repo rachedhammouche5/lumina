@@ -146,33 +146,33 @@ export default async function RoadmapPage({
   const progressValue = initialIsEnrolled && totalTopics > 0 ? calculateRoadmapProgress(topics, scores) : 0;
 
   return (
-    <main className="min-h-screen min-w-screen bg-slate-950 text-white flex flex-col items-center pt-16 md:pt-20 px-4 sm:px-6 relative overflow-hidden font-sans gap-3">
+    <main className="min-h-screen w-full overflow-x-hidden bg-slate-950 text-white flex flex-col items-center pt-16 md:pt-20 px-4 sm:px-6 relative font-sans gap-3">
       <EnrollSection
         skill={skill}
         isLoggedIn={!!user}
         initialIsEnrolled={initialIsEnrolled}
         progressValue={progressValue}
       />
-      <div className="w-full max-w-[1400px]">
+      <div className="w-full max-w-[1400px] overflow-x-hidden">
         <h3 className="text-xl md:text-2xl font-black italic tracking-tight mb-4">
           COURSE PATH
         </h3>
         <RoadmapFlow topics={topics} scores={scores} isEnrolled={initialIsEnrolled} />
-        <div className="mt-15">
+        <div className="mt-12">
           <h3 className="text-xl md:text-2xl font-black italic tracking-tight mb-4 uppercase">
-          Rating & Reviews
-        </h3>
+            Rating & Reviews
+          </h3>
           <div className="flex flex-col md:flex-row w-full gap-4">
-          <div className="mr-8">
-            <Rating comments={reviews} />
-          </div>
+            <div className="md:mr-8">
+              <Rating comments={reviews} />
+            </div>
 
-          <CommentsSection 
-          initialComments={reviews}
-          skillId={resolvedSkillId}
-          currentUser={currentUser}
-        />
-        </div>
+            <CommentsSection
+              initialComments={reviews}
+              skillId={resolvedSkillId}
+              currentUser={currentUser}
+            />
+          </div>
         </div>
       </div>
     </main>
