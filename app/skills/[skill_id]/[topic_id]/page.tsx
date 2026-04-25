@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import {
   ArrowLeft,
@@ -18,6 +17,7 @@ import {
 } from "./content-sections";
 import Button from "@/app/ui/Button";
 import StreakCelebration from "@/app/features/streak/StreakCelebration";
+import { buildTopicGraph, getTopicStatus } from "@/app/ui/roadmapcomp/progression";
 
 const contentTypeMeta: Record<
   ContentType,
@@ -101,13 +101,32 @@ export default async function TopicLearningPage({
         .eq("skill_id", skill_id)
         .maybeSingle();
 
-      if (!enrollment) redirect(`/skills/${skill_id}`);
+      if (!enrollment) {
+        const { data: skillTopics } = await supabase
+          .from("Topic")
+          .select("tpc_id, parent_id, skill_id, tpc_title, tpc_description")
+          .eq("skill_id", skill_id);
 
-      // Check if this is a leaf topic (no children → always accessible)
-      const { count: childCount } = await supabase
-        .from("Topic")
-        .select("tpc_id", { count: "exact", head: true })
-        .eq("parent_id", topic_id);
+        const { data: scoreRows } = await supabase
+          .from("score")
+          .select("tpc_id, score")
+          .eq("studentId", student.std_id)
+          .in("tpc_id", (skillTopics ?? []).map((item) => item.tpc_id));
+
+        const accessGraph = buildTopicGraph(
+          (skillTopics ?? []) as {
+            tpc_id: string;
+            tpc_title: string;
+            tpc_description: string | null;
+            parent_id: string | null;
+            skill_id: string | null;
+          }[],
+          (scoreRows ?? []) as { tpc_id: string; score: number }[],
+        );
+
+        const topicStatus = getTopicStatus(topic_id, accessGraph);
+        if (topicStatus === "locked") redirect(`/skills/${skill_id}`);
+      }
     }
   }
   // ── End access gate ─────────────────────────────────────────────────────────

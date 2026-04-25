@@ -35,20 +35,20 @@ export default function RoadmapFlow({
 
   const { nodes, edges, width, height } = generateRoadmapElements(topics, scores, root, isEnrolled);
 
-  // Keep the viewport constrained so users can't pan into endless negative space.
-  const padding = 120;
+  // Keep the viewport constrained while still allowing a comfortable drag margin.
+  const margin = 220;
   const translateExtent: [[number, number], [number, number]] = [
-    [-padding, -padding],
-    [width + padding, height + padding],
+    [-margin, -margin],
+    [width + margin, height + margin],
   ];
 
   // Clamp the visible canvas height so the roadmap block stays compact.
   const clampedHeight = Math.min(height, isMobile ? 420 : 500);
 
   return (
-    <div className="w-full overflow-hidden border-2 border-slate-400/40 rounded-4xl shadow-2xl shadow-slate-400/40 mb-5 bg-linear-to-br from-slate-900 to-transparent">
+    <div className="w-full overflow-auto border-2 border-slate-400/40 rounded-4xl shadow-2xl shadow-slate-400/40 mb-5 bg-linear-to-br from-slate-900 to-transparent">
       <div
-        className="relative mx-auto w-full max-w-full overflow-hidden"
+        className="relative mx-auto w-full max-w-full"
         style={{
           width: "100%",
           maxWidth: "100vw",
@@ -67,8 +67,8 @@ export default function RoadmapFlow({
           zoomOnPinch={false}
           zoomOnDoubleClick={false}
           zoomActivationKeyCode="Control"
-          panOnScroll={false}
-          panOnDrag={false}
+          panOnScroll={true}
+          panOnDrag={true}
           translateExtent={translateExtent}
           nodesDraggable={false}
           nodesConnectable={false}

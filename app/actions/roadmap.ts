@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { TopicRow, ScoreRow } from "@/app/ui/roadmapcomp/types";
 import { DIFFICULTY_POINTS } from "@/app/skills/[skill_id]/[topic_id]/quiz/quiz.lib";
 import type { Difficulty } from "@/app/skills/[skill_id]/[topic_id]/quiz/quiz.types";
+import { buildTopicGraph, getTopicAggregateDegree } from "@/app/ui/roadmapcomp/progression";
 
 type TopicQuizRow = {
   tpc_id: string | null;
@@ -35,16 +36,8 @@ export function normalizeTopicScores(
 export function calculateRoadmapProgress(topics: TopicRow[] = [], scores: ScoreRow[] = []): number {
   if (!topics.length) return 0;
 
-  const scoreByTopic = new Map(scores.map((s) => [s.tpc_id, s.score]));
-  const total = topics.reduce((sum, topic) => {
-    const score = scoreByTopic.get(topic.tpc_id);
-    if (typeof score === "number" && score >= 50) {
-      // Each completed topic contributes its normalized 0-100 performance score.
-      return sum + Math.min(score, 100);
-    }
-    return sum;
-  }, 0);
-
+  const graph = buildTopicGraph(topics, scores);
+  const total = topics.reduce((sum, topic) => sum + getTopicAggregateDegree(topic.tpc_id, graph), 0);
   const avg = total / topics.length;
   return Math.max(0, Math.min(100, Math.round(avg)));
 }

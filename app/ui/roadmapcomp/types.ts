@@ -18,6 +18,7 @@ export type RoadmapNodeData = {
   onManageTopic?: () => void;
   onModifyQuiz?: () => void;
   onRemove?: () => void;
+  isRoot?: boolean;
 };
 
 // Minimal Supabase row shapes we rely on for the roadmap

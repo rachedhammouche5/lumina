@@ -1,6 +1,13 @@
 import { type Edge, type Node } from "@xyflow/react";
 import type { RoadmapNodeData, RoadmapStatus, TopicRow, ScoreRow } from "./types";
 import { getPerformanceTier } from "./types";
+import {
+  buildTopicGraph,
+  getRootStatus,
+  getTopicAggregateDegree,
+  getTopicStatus,
+  isTopicPassed,
+} from "./progression";
 
 export const NODE_THEMES = {
     locked: {
@@ -66,7 +73,7 @@ export const getIconColorClass = (status: RoadmapStatus, degree?: number) => {
     return "text-[#a855f7]";
 };
 
-const getNodeZIndex = (_status: RoadmapStatus) => 5;
+const getNodeZIndex = () => 5;
 
 export const generateRoadmapElements = (
   topics: TopicRow[] = [],
@@ -79,39 +86,15 @@ export const generateRoadmapElements = (
   onRemoveTopic?: (topicId: string) => void,
   forceUnlocked = false,
 ): { nodes: Node<RoadmapNodeData>[]; edges: Edge[]; width: number; height: number } => {
-    const childrenMap = new Map<string, TopicRow[]>();
-    topics.forEach((t) => {
-        const parentKey = t.parent_id ?? "__ROOT__";
-        const list = childrenMap.get(parentKey) ?? [];
-        list.push(t);
-        childrenMap.set(parentKey, list);
-    });
+    const graph = buildTopicGraph(topics, scores);
+    const degreeMemo = new Map<string, number>();
+    const passMemo = new Map<string, boolean>();
 
-    const scoreamap = new Map(scores.map((s) => [s.tpc_id, s.score]));
-
-    // Compute effective degrees
-    const effectiveDegrees = new Map<string, number>();
-
-    // Root effective degree
-    const rootEffective = topics.length > 0 && topics.every((t) => (scoreamap.get(t.tpc_id) || 0) >= 50) ? 100 : 0;
-    if (root) effectiveDegrees.set(root.id, rootEffective);
-
-    // Recursive function to compute effective degrees
-    function computeEffective(topicId: string) {
-        const ownDegree = scoreamap.get(topicId) || 0;
-        effectiveDegrees.set(topicId, ownDegree);
-        const children = childrenMap.get(topicId) || [];
-        children.forEach(child => computeEffective(child.tpc_id));
-    }
-
-    // Compute for root-level topics
-    topics.filter(t => !t.parent_id).forEach(t => computeEffective(t.tpc_id));
-
-    // Update passing based on effective degrees
-    const effectivePassingIds = new Set([...effectiveDegrees.entries()].filter(([, d]) => d >= 50).map(([id]) => id));
-
-    // Update all topics completed
-    const allTopicsEffectiveCompleted = rootEffective === 100;
+    const computeDegree = (topicId: string) => getTopicAggregateDegree(topicId, graph, degreeMemo);
+    const topicStatus = (topicId: string) => getTopicStatus(topicId, graph);
+    const allTopicsEffectiveCompleted =
+      graph.topLevelTopicIds.length > 0 &&
+      graph.topLevelTopicIds.every((topicId) => isTopicPassed(topicId, graph, passMemo));
 
     const spacingX = 260;
     const spacingY = 260;
@@ -119,7 +102,7 @@ export const generateRoadmapElements = (
     let leafCounter = 0;
 
     const layout = (topicId: string | "__ROOT__", depth: number): number => {
-        const children = childrenMap.get(topicId) ?? [];
+        const children = graph.childrenMap.get(topicId) ?? [];
         const sortedChildren = [...children].sort((a, b) => a.tpc_title.localeCompare(b.tpc_title));
 
         if (sortedChildren.length === 0 && topicId !== "__ROOT__") {
@@ -150,13 +133,18 @@ export const generateRoadmapElements = (
     const nodes: Node<RoadmapNodeData>[] = [];
 
     if (root) {
+        const rootDegree =
+          graph.topLevelTopicIds.length > 0
+            ? Math.round(
+                graph.topLevelTopicIds.reduce(
+                  (sum, topicId) => sum + computeDegree(topicId),
+                  0,
+                ) / graph.topLevelTopicIds.length,
+              )
+            : 0;
         const rootStatus: RoadmapStatus = forceUnlocked
             ? "unlocked"
-            : !isEnrolled
-            ? "locked"
-            : allTopicsEffectiveCompleted
-            ? "completed"
-            : "unlocked";
+            : getRootStatus(graph);
 
         nodes.push({
             id: root.id,
@@ -167,8 +155,9 @@ export const generateRoadmapElements = (
                 title: root.title,
                 subtitle: root.subtitle,
                 status: rootStatus,
-                degree: rootEffective,
+                degree: allTopicsEffectiveCompleted ? 100 : rootDegree,
                 id: root.id,
+                isRoot: true,
                 onAddChild: () => onAddChild?.(null),
                 onManageTopic: () => onManageTopic?.(root.id),
                 onRemove: () => onRemoveTopic?.(root.id),
@@ -177,21 +166,8 @@ export const generateRoadmapElements = (
     }
 
     topics.forEach((topic) => {
-        const effectiveDegree = effectiveDegrees.get(topic.tpc_id) || 0;
-        const hasEffectiveScore = effectiveDegree >= 50;
-        const children = childrenMap.get(topic.tpc_id) ?? [];
-        const areChildrenPassed = children.length > 0 && children.every((c) => (effectiveDegrees.get(c.tpc_id) || 0) >= 50);
-
-        let currentStatus: RoadmapStatus = "locked";
-        if (forceUnlocked) {
-            currentStatus = "unlocked";
-        } else if (!isEnrolled) {
-            currentStatus = "locked";
-        } else if (hasEffectiveScore) {
-            currentStatus = "completed";
-        } else {
-            currentStatus = "unlocked";
-        }
+        const effectiveDegree = computeDegree(topic.tpc_id);
+        const currentStatus: RoadmapStatus = forceUnlocked ? "unlocked" : topicStatus(topic.tpc_id);
 
         nodes.push({
             id: topic.tpc_id,
@@ -205,6 +181,7 @@ export const generateRoadmapElements = (
                 degree: effectiveDegree,
                 id: topic.tpc_id,
                 parentId: topic.parent_id ?? undefined,
+                isRoot: topic.parent_id === null,
                 learnHref: `/skills/${topic.skill_id}/${topic.tpc_id}`,
                 quizHref: `/skills/${topic.skill_id}/${topic.tpc_id}/quiz`,
                 onAddChild: () => onAddChild?.(topic.tpc_id),
@@ -218,12 +195,12 @@ export const generateRoadmapElements = (
     const edges: Edge[] = [];
 
     if (root) {
-        (childrenMap.get("__ROOT__") ?? []).forEach((t) =>
+        (graph.childrenMap.get("__ROOT__") ?? []).forEach((t) =>
             edges.push({
                 id: `e-${root.id}-${t.tpc_id}`,
                 source: root.id,
                 target: t.tpc_id,
-                animated: effectivePassingIds.has(t.tpc_id),
+                animated: isTopicPassed(t.tpc_id, graph, passMemo),
             }),
         );
     }
@@ -235,7 +212,7 @@ export const generateRoadmapElements = (
                 id: `e-${t.parent_id}-${t.tpc_id}`,
                 source: t.parent_id as string,
                 target: t.tpc_id,
-                animated: effectivePassingIds.has(t.tpc_id),
+                animated: isTopicPassed(t.tpc_id, graph, passMemo),
             }),
         );
 
