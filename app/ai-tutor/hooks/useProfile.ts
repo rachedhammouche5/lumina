@@ -19,29 +19,39 @@ export function useProfile() {
         .eq("user_id", user.id)
         .single();
 
-      const { data: scores } = await supabase
-        .from("score")
-        .select("score, tpc_id, Topic(tpc_title, Skill(skl_title))")
-        .eq("studentId", student?.std_id);
+      const [{ data: scores }, { data: enrolled }] = await Promise.all([
+        supabase
+          .from("score")
+          .select("score, tpc_id, Topic(tpc_title, Skill(skl_title))")
+          .eq("studentId", student?.std_id ?? ""),
+        supabase
+          .from("enroll")
+          .select("skill_id, progress, Skill(skl_title)")
+          .eq("student_id", student?.std_id ?? ""),
+      ]);
 
       const map = (s: any) => ({
-        topic: s.Topic?.[0]?.tpc_title || "",
-        skill: s.Topic?.[0]?.Skill?.[0]?.skl_title || "",
+        topic: s.Topic?.tpc_title || "",
+        skill: s.Topic?.Skill?.skl_title || "",
         score: Math.round(s.score),
       });
-        
-        
+
+      const inProgress = enrolled?.find((e: any) => e.progress > 0 && e.progress < 100);
+      const currentSkill =
+        (inProgress as any)?.Skill?.skl_title ||
+        (enrolled?.[0] as any)?.Skill?.skl_title ||
+        "your course";
+
       setProfile({
         name: student?.std_fullname || "Student",
-        currentSkill: "Python",
+        currentSkill,
         streak: student?.std_streak || 0,
         weakPoints: scores?.filter((s) => s.score < 70).map(map) || [],
         strongPoints: scores?.filter((s) => s.score >= 70).map(map) || [],
       });
       setProfileLoading(false);
     }
- fetchProfile();
-    
+    fetchProfile();
   }, []);
 
   return { profile, profileLoading };

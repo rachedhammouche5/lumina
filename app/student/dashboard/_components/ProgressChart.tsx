@@ -10,12 +10,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-const progressData = [
-  { week: "Week 1", score: 58 },
-  { week: "Week 2", score: 63 },
-  { week: "Week 3", score: 70 },
-  { week: "Week 4", score: 76 },
-];
+interface ChartPoint { name: string; score: number }
 
 const CustomTooltip = ({
   active,
@@ -44,10 +39,18 @@ const CustomTooltip = ({
   );
 };
 
-export default function ProgressChart() {
+export default function ProgressChart({ data }: { data: ChartPoint[] }) {
+  if (!data.length) {
+    return (
+      <div className="h-[200px] flex items-center justify-center text-slate-500 text-sm">
+        No skill progress yet — enroll in a skill to see your chart.
+      </div>
+    );
+  }
+
   return (
     <ResponsiveContainer width="100%" height={200}>
-      <AreaChart data={progressData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+      <AreaChart data={data} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
         <defs>
           <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#818cf8" stopOpacity={0.3} />
@@ -60,18 +63,18 @@ export default function ProgressChart() {
         </defs>
         <CartesianGrid vertical={false} stroke="rgba(255,255,255,0.04)" />
         <XAxis
-          dataKey="week"
-          tick={{ fill: "#64748b", fontSize: 12 }}
+          dataKey="name"
+          tick={{ fill: "#64748b", fontSize: 11 }}
           axisLine={false}
           tickLine={false}
         />
         <YAxis
-          domain={[40, 100]}
+          domain={[0, 100]}
           tick={{ fill: "#64748b", fontSize: 12 }}
           axisLine={false}
           tickLine={false}
           tickFormatter={(v) => `${v}%`}
-          tickCount={4}
+          tickCount={5}
         />
         <Tooltip content={<CustomTooltip />} cursor={{ stroke: "rgba(99,102,241,0.2)", strokeWidth: 1 }} />
         <Area

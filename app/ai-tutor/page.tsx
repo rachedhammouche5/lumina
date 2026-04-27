@@ -5,8 +5,8 @@ import { useChat } from "./hooks/useChat";
 import MessageList from "@/app/ui/ai-tutor/MessageList";
 
 export default function AITutorPage() {
-  const { profile } = useProfile();
-  const { messages, loading, sendMessage } = useChat(profile);
+  const { profile, profileLoading } = useProfile();
+  const { messages, loading, sendMessage } = useChat(profile, profileLoading);
   const [input, setInput] = useState("");
   const [chipsVisible, setChipsVisible] = useState(true);
   const textareaRef = useRef<HTMLTextAreaElement>(null);

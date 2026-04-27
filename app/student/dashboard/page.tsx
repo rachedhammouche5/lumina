@@ -1,21 +1,9 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getRole } from "@/features/utils/auth/getRole";
-import { Award, Flame, BookCheck, TrendingUp, TrendingDown, ArrowRight } from "lucide-react";
+import { Flame, BookCheck, TrendingUp, TrendingDown, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import ProgressChart from "./_components/ProgressChart";
-
-const weakPoints = [
-  { skill: "Python", topic: "Pandas GroupBy", score: 48, href: "/courses/python-data-science/pandas-groupby" },
-  { skill: "Modern Backend Systems", topic: "JWT Refresh Flow", score: 52, href: "/courses/backend-systems/jwt-refresh" },
-  { skill: "Debugging Techniques", topic: "Race Conditions", score: 45, href: "/courses/debugging/race-conditions" },
-] as const;
-
-const strongPoints = [
-  { skill: "Python for Data Science", topic: "Data Cleaning", score: 91 },
-  { skill: "SQL for Developers", topic: "Joins & Aggregation", score: 88 },
-  { skill: "Product Thinking Basics", topic: "User Stories", score: 94 },
-] as const;
 
 export default async function StudentDashboardPage() {
   const supabase = await createClient();
@@ -31,19 +19,54 @@ export default async function StudentDashboardPage() {
   if (role !== "student") redirect("/");
 
   const { data: student } = await supabase
-  .from("Student")
-  .select("std_streak,std_id,std_last_activeDate")
-  .eq("user_id", user.id)
-  .single();
+    .from("Student")
+    .select("std_streak, std_id, std_last_activeDate")
+    .eq("user_id", user.id)
+    .single();
 
-  const { count: completedSkills } = await supabase
-  .from("enroll")
-  .select("*", { count: "exact", head: true })
-  .eq("student_id", student?.std_id)
-  .eq("progress", 100);
+  const [{ count: completedSkills }, { data: scores }, { data: enrolled }] = await Promise.all([
+    supabase
+      .from("enroll")
+      .select("*", { count: "exact", head: true })
+      .eq("student_id", student?.std_id ?? "")
+      .eq("progress", 100),
+    supabase
+      .from("score")
+      .select("score, tpc_id, Topic(tpc_title, skill_id, Skill(skl_id, skl_title))")
+      .eq("studentId", student?.std_id ?? ""),
+    supabase
+      .from("enroll")
+      .select("progress, Skill(skl_title)")
+      .eq("student_id", student?.std_id ?? ""),
+  ]);
 
-const streak = student?.std_streak ?? 0;
-const skills = completedSkills ?? 0;
+  const streak = student?.std_streak ?? 0;
+  const skills = completedSkills ?? 0;
+
+  const mapScore = (s: any) => ({
+    tpc_id: s.tpc_id as string,
+    topic: s.Topic?.tpc_title ?? "",
+    skill: s.Topic?.Skill?.skl_title ?? "",
+    score: Math.round(s.score),
+    href: `/skills/${s.Topic?.skill_id}/${s.tpc_id}`,
+  });
+
+  const weakPoints = (scores ?? [])
+    .filter((s) => s.score < 70)
+    .sort((a, b) => a.score - b.score)
+    .slice(0, 3)
+    .map(mapScore);
+
+  const strongPoints = (scores ?? [])
+    .filter((s) => s.score >= 70)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 3)
+    .map(mapScore);
+
+  const chartData = (enrolled ?? []).map((e: any) => ({
+    name: (e.Skill?.skl_title as string)?.slice(0, 14) || "Skill",
+    score: Math.round(e.progress),
+  }));
 
   const studentName =
     (typeof user.user_metadata?.full_name === "string" && user.user_metadata.full_name.trim()) ||
@@ -82,7 +105,6 @@ const skills = completedSkills ?? 0;
               <p className="text-xs text-slate-500 mt-0.5">
                 {streak === 0 ? "Study today to start your streak!" : "Keep learning today"}
               </p>
-              {/* <p className="text-xs text-slate-500 mt-0.5">Keep learning today</p> */}
             </div>
           </article>
 
@@ -90,12 +112,14 @@ const skills = completedSkills ?? 0;
             <div className="absolute inset-0 bg-gradient-to-br from-sky-500/10 via-transparent to-transparent pointer-events-none" />
             <div className="absolute -top-6 -right-6 w-20 h-20 bg-sky-500/8 rounded-full pointer-events-none" />
             <div className="shrink-0 w-10 h-10 rounded-xl bg-sky-500/15 border border-sky-500/25 flex items-center justify-center">
-              <Award size={18} className="text-sky-400" />
+              <TrendingUp size={18} className="text-sky-400" />
             </div>
             <div className="relative">
-              <p className="text-xs font-medium text-slate-500 mb-0.5">Badges earned</p>
-              <p className="text-2xl font-bold text-white">8 badges</p>
-              <p className="text-xs text-slate-500 mt-0.5">Latest: Consistent Learner</p>
+              <p className="text-xs font-medium text-slate-500 mb-0.5">Strong topics</p>
+              <p className="text-2xl font-bold text-white">{strongPoints.length}</p>
+              <p className="text-xs text-slate-500 mt-0.5">
+                {strongPoints.length === 0 ? "Take quizzes to track progress!" : "Topics scored ≥ 70%"}
+              </p>
             </div>
           </article>
 
@@ -108,12 +132,11 @@ const skills = completedSkills ?? 0;
             <div className="relative">
               <p className="text-xs font-medium text-slate-500 mb-0.5">Skills completed</p>
               <p className="text-2xl font-bold text-white">
-                {skills} {completedSkills === 1 ? "skill" : "skills"}
+                {skills} {skills === 1 ? "skill" : "skills"}
               </p>
               <p className="text-xs text-slate-500 mt-0.5">
-                {completedSkills === 0 ? "Complete your first skill!" : "+2 this month"}
-              </p>  
-            <p className="text-xs text-emerald-400 font-semibold mt-0.5">+2 this month</p>
+                {skills === 0 ? "Complete your first skill!" : "Keep it up!"}
+              </p>
             </div>
           </article>
         </section>
@@ -129,11 +152,13 @@ const skills = completedSkills ?? 0;
               <h2 className="text-sm font-semibold text-slate-200">Weak points</h2>
             </div>
             <div className="space-y-5">
-              {weakPoints.map((item, i) => (
-                <div key={item.topic}>
+              {weakPoints.length === 0 ? (
+                <p className="text-sm text-slate-500">No weak areas yet — take some quizzes to get personalized feedback!</p>
+              ) : weakPoints.map((item, i) => (
+                <div key={item.tpc_id ?? item.topic}>
                   <div className="flex items-start justify-between mb-2">
                     <div>
-                      <p className="text-sm font-semibold text-white">{item.topic}</p>
+                      <p className="text-sm font-semibold text-white">{item.topic || "Topic"}</p>
                       <p className="text-xs text-slate-500 mt-0.5">{item.skill}</p>
                     </div>
                     <span className="text-sm font-bold text-rose-400 tabular-nums">{item.score}%</span>
@@ -167,11 +192,13 @@ const skills = completedSkills ?? 0;
               <h2 className="text-sm font-semibold text-slate-200">Strong points</h2>
             </div>
             <div className="space-y-5">
-              {strongPoints.map((item, i) => (
-                <div key={item.topic}>
+              {strongPoints.length === 0 ? (
+                <p className="text-sm text-slate-500">No strong areas yet — keep practicing to build mastery!</p>
+              ) : strongPoints.map((item, i) => (
+                <div key={item.tpc_id ?? item.topic}>
                   <div className="flex items-start justify-between mb-2">
                     <div>
-                      <p className="text-sm font-semibold text-white">{item.topic}</p>
+                      <p className="text-sm font-semibold text-white">{item.topic || "Topic"}</p>
                       <p className="text-xs text-slate-500 mt-0.5">{item.skill}</p>
                     </div>
                     <span className="text-sm font-bold text-emerald-400 tabular-nums">{item.score}%</span>
@@ -196,10 +223,10 @@ const skills = completedSkills ?? 0;
           <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-transparent to-transparent pointer-events-none" />
           <div className="relative">
             <div className="mb-5">
-              <h2 className="text-sm font-semibold text-slate-200">Progress over time</h2>
-              <p className="text-xs text-slate-500 mt-0.5">Average topic score per week</p>
+              <h2 className="text-sm font-semibold text-slate-200">Skill progress</h2>
+              <p className="text-xs text-slate-500 mt-0.5">Completion % per enrolled skill</p>
             </div>
-            <ProgressChart />
+            <ProgressChart data={chartData} />
           </div>
         </section>
 
