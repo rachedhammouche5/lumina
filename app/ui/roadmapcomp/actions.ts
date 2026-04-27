@@ -150,7 +150,7 @@ export const generateRoadmapElements = (
             id: root.id,
             type: "roadmap",
             position: positions.get(root.id) ?? { x: 0, y: 0 },
-            zIndex: getNodeZIndex(rootStatus),
+            zIndex: getNodeZIndex(),
             data: {
                 title: root.title,
                 subtitle: root.subtitle,
@@ -173,7 +173,7 @@ export const generateRoadmapElements = (
             id: topic.tpc_id,
             type: "roadmap",
             position: positions.get(topic.tpc_id) ?? { x: 0, y: spacingY },
-            zIndex: getNodeZIndex(currentStatus),
+            zIndex: getNodeZIndex(),
             data: {
                 title: topic.tpc_title,
                 subtitle: topic.tpc_description ?? undefined,
