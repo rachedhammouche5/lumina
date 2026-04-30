@@ -21,6 +21,7 @@ export type Database = {
           cntnt_title: string
           cntnt_type: Database["public"]["Enums"]["cntnt_type"]
           cntnt_value: string | null
+          processing_status: string | null
           tpc_id: string | null
         }
         Insert: {
@@ -29,6 +30,7 @@ export type Database = {
           cntnt_title: string
           cntnt_type: Database["public"]["Enums"]["cntnt_type"]
           cntnt_value?: string | null
+          processing_status?: string | null
           tpc_id?: string | null
         }
         Update: {
@@ -37,6 +39,7 @@ export type Database = {
           cntnt_title?: string
           cntnt_type?: Database["public"]["Enums"]["cntnt_type"]
           cntnt_value?: string | null
+          processing_status?: string | null
           tpc_id?: string | null
         }
         Relationships: [
@@ -359,6 +362,7 @@ export type Database = {
       }
       Student: {
         Row: {
+          email_notifications_enabled: boolean | null
           std_email: string
           std_fullname: string
           std_id: string
@@ -369,6 +373,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          email_notifications_enabled?: boolean | null
           std_email: string
           std_fullname: string
           std_id?: string
@@ -379,6 +384,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          email_notifications_enabled?: boolean | null
           std_email?: string
           std_fullname?: string
           std_id?: string
@@ -392,6 +398,7 @@ export type Database = {
       }
       Teacher: {
         Row: {
+          email_notifications_enabled: boolean | null
           tchr_email: string
           tchr_fullname: string
           tchr_id: string
@@ -399,6 +406,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          email_notifications_enabled?: boolean | null
           tchr_email: string
           tchr_fullname: string
           tchr_id?: string
@@ -406,6 +414,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          email_notifications_enabled?: boolean | null
           tchr_email?: string
           tchr_fullname?: string
           tchr_id?: string
@@ -417,28 +426,37 @@ export type Database = {
       teacher_requests: {
         Row: {
           admin_note: string | null
+          certification_url: string | null
           created_at: string | null
           cv_url: string | null
+          gov_id_url: string | null
           id: string
           motivation: string | null
+          photo_url: string | null
           status: string
           user_id: string
         }
         Insert: {
           admin_note?: string | null
+          certification_url?: string | null
           created_at?: string | null
           cv_url?: string | null
+          gov_id_url?: string | null
           id?: string
           motivation?: string | null
+          photo_url?: string | null
           status?: string
           user_id: string
         }
         Update: {
           admin_note?: string | null
+          certification_url?: string | null
           created_at?: string | null
           cv_url?: string | null
+          gov_id_url?: string | null
           id?: string
           motivation?: string | null
+          photo_url?: string | null
           status?: string
           user_id?: string
         }
