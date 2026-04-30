@@ -18,7 +18,7 @@ export default async function TeacherRequestsPage() {
 
   const { data: requests, error: requestsError } = await supabase
     .from("teacher_requests")
-    .select("user_id,cv_url,motivation,status,created_at")
+    .select("user_id,cv_url,photo_url,gov_id_url,certification_url,motivation,status,created_at")
     .eq("status", "pending")
     .order("created_at", { ascending: false });
 

@@ -28,6 +28,14 @@ function LoginPageViewContent() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const queryError = (() => {
+    const reason = searchParams.get("error");
+    if (!reason) return "";
+    if (reason === "not_signed_up") {
+      return "This Google account isn't signed up yet. Please sign up first.";
+    }
+    return "Login failed. Please try again.";
+  })();
 
   async function signInWithGoogle() {
     setError("");
@@ -72,8 +80,10 @@ function LoginPageViewContent() {
     const role = user?.app_metadata?.role;
 
     if (role === "student") router.replace("/student");
-    else if (role === "teacher" || role === "teacher_pending") {
+    else if (role === "teacher") {
       router.replace("/teacher");
+    } else if (role === "teacher_pending") {
+      router.replace("/teacher/apply");
     } else if (role === "admin") router.replace("/admin");
     else router.replace("/");
 
@@ -85,16 +95,6 @@ function LoginPageViewContent() {
     const frame = requestAnimationFrame(() => setMounted(true));
     return () => cancelAnimationFrame(frame);
   }, []);
-
-  useEffect(() => {
-    const reason = searchParams.get("error");
-    if (!reason) return;
-    if (reason === "not_signed_up") {
-      setError("This Google account isn't signed up yet. Please sign up first.");
-      return;
-    }
-    setError("Login failed. Please try again.");
-  }, [searchParams]);
 
   return (
     <div
@@ -211,7 +211,9 @@ function LoginPageViewContent() {
               Sign Up.
             </Link>
           </p>
-          {error ? <p className="text-sm text-red-400">{error}</p> : null}
+          {error || queryError ? (
+            <p className="text-sm text-red-400">{error || queryError}</p>
+          ) : null}
         </div>
       </div>
     </div>

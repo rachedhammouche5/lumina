@@ -27,8 +27,10 @@ export async function proxy(req: NextRequest) {
   } = await supabase.auth.getUser();
   const role = getRole(user);
   const dashboardPath =
-    role === "teacher" || role === "teacher_pending"
+    role === "teacher"
       ? "/teacher"
+      : role === "teacher_pending"
+        ? "/teacher/apply"
       : role === "student"
         ? "/student"
         : role === "admin"
@@ -39,26 +41,36 @@ export async function proxy(req: NextRequest) {
   const isHeroPage = req.nextUrl.pathname === "/";
   const isTeacherRoute = req.nextUrl.pathname.startsWith("/teacher");
   const isAdminRoute = req.nextUrl.pathname.startsWith("/admin");
+  const isTeacherApplyRoute =
+    req.nextUrl.pathname === "/teacher/apply" ||
+    req.nextUrl.pathname.startsWith("/teacher/apply/");
   const isAuthPage =
     req.nextUrl.pathname === "/login" || req.nextUrl.pathname === "/signup";
   if (isAuthPage && user) {
     return NextResponse.redirect(new URL(dashboardPath, req.url));
   }
 
-const isTeacherApplyRoute = req.nextUrl.pathname === "/teacher/apply";
+  if (isTeacherApplyRoute) {
+    if (!user) {
+      return NextResponse.redirect(new URL("/", req.url));
+    }
 
-if (
-  isTeacherRoute &&
-  !isTeacherApplyRoute &&
-  role !== "teacher" &&
-  role !== "teacher_pending"
-) {
-  return NextResponse.redirect(new URL("/", req.url));
-}
+    if (role === "teacher") {
+      return NextResponse.redirect(new URL("/teacher", req.url));
+    }
 
-if (isTeacherApplyRoute && !user) {
-  return NextResponse.redirect(new URL("/", req.url));
-}
+    if (role !== "teacher_pending") {
+      return NextResponse.redirect(new URL("/", req.url));
+    }
+  } else if (isTeacherRoute) {
+    if (role === "teacher_pending") {
+      return NextResponse.redirect(new URL("/teacher/apply", req.url));
+    }
+
+    if (role !== "teacher") {
+      return NextResponse.redirect(new URL("/", req.url));
+    }
+  }
 
   if (isStudentRoute) {
     if (!user || role !== "student") {

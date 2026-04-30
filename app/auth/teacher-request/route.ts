@@ -5,6 +5,9 @@ import { createClient as createAdminClient } from "@supabase/supabase-js";
 type TeacherRequestBody = {
   fullName?: string;
   cvUrl?: string;
+  photoUrl?: string;
+  govIdUrl?: string;
+  certificationUrl?: string;
   motivation?: string;
 };
 
@@ -27,11 +30,17 @@ export async function POST(request: Request) {
 
   const fullName = payload.fullName?.trim() ?? "";
   const cvUrl = payload.cvUrl?.trim() ?? "";
+  const photoUrl = payload.photoUrl?.trim() ?? "";
+  const govIdUrl = payload.govIdUrl?.trim() ?? "";
+  const certificationUrl = payload.certificationUrl?.trim() ?? "";
   const motivation = payload.motivation?.trim() ?? "";
 
-  if (!fullName || !cvUrl || !motivation) {
+  if (!fullName || !cvUrl || !photoUrl || !govIdUrl || !certificationUrl || !motivation) {
     return NextResponse.json(
-      { error: "fullName, cvUrl and motivation are required" },
+      {
+        error:
+          "fullName, photoUrl, govIdUrl, certificationUrl, cvUrl and motivation are required",
+      },
       { status: 400 },
     );
   }
@@ -45,15 +54,56 @@ export async function POST(request: Request) {
   }
 
   const admin = createAdminClient(supabaseUrl, serviceRoleKey);
-  const { error } = await admin.from("teacher_requests").upsert(
-    {
-      user_id: user.id,
-      cv_url: cvUrl,
-      motivation,
-      status: "pending",
-    },
-    { onConflict: "user_id" },
-  );
+
+  const { data: existingRequest, error: existingRequestError } = await admin
+    .from("teacher_requests")
+    .select("status")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (existingRequestError) {
+    console.error(
+      "[auth/teacher-request] Failed to read existing request:",
+      existingRequestError.message,
+    );
+    return NextResponse.json(
+      { error: "Failed to read request status" },
+      { status: 500 },
+    );
+  }
+
+  if (existingRequest?.status === "pending") {
+    return NextResponse.json(
+      { error: "Your request is already pending admin review." },
+      { status: 409 },
+    );
+  }
+
+  if (existingRequest?.status === "approved") {
+    return NextResponse.json(
+      { error: "Your teacher account has already been approved." },
+      { status: 409 },
+    );
+  }
+
+  if (existingRequest?.status === "rejected") {
+    return NextResponse.json(
+      { error: "Your account was not accepted." },
+      { status: 409 },
+    );
+  }
+
+  const { error } = await admin.from("teacher_requests").insert({
+    user_id: user.id,
+    email: user.email ?? null,
+    full_name: fullName,
+    photo_url: photoUrl,
+    gov_id_url: govIdUrl,
+    certification_url: certificationUrl,
+    cv_url: cvUrl,
+    motivation,
+    status: "pending",
+  });
 
   if (error) {
     console.error(
@@ -88,7 +138,7 @@ export async function POST(request: Request) {
   }
 
   return NextResponse.json(
-    { ok: true, nextPath: `/${user.id}` },
+    { ok: true, nextPath: "/teacher/apply" },
     { status: 200 },
   );
 }

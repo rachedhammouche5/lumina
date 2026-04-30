@@ -52,6 +52,56 @@ export default function TeacherRequestCard({ request }: TeacherRequestCardProps)
           <p className="text-sm text-slate-400">No CV link provided.</p>
         )}
 
+        <div className="grid gap-2 sm:grid-cols-2">
+          <div className="rounded-lg border border-slate-700 bg-slate-950/70 p-3">
+            <p className="text-xs uppercase tracking-wide text-slate-400">Profile photo</p>
+            {request.photo_url ? (
+              <a
+                href={request.photo_url}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-1 inline-block text-sm font-semibold text-amber-300 underline underline-offset-2"
+              >
+                Open photo
+              </a>
+            ) : (
+              <p className="mt-1 text-sm text-slate-400">No photo provided.</p>
+            )}
+          </div>
+
+          <div className="rounded-lg border border-slate-700 bg-slate-950/70 p-3">
+            <p className="text-xs uppercase tracking-wide text-slate-400">Certification</p>
+            {request.certification_url ? (
+              <a
+                href={request.certification_url}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-1 inline-block text-sm font-semibold text-amber-300 underline underline-offset-2"
+              >
+                Open certification
+              </a>
+            ) : (
+              <p className="mt-1 text-sm text-slate-400">No certification provided.</p>
+            )}
+          </div>
+        </div>
+
+        <div className="rounded-lg border border-slate-700 bg-slate-950/70 p-3">
+          <p className="text-xs uppercase tracking-wide text-slate-400">Government ID</p>
+          {request.gov_id_url ? (
+            <a
+              href={request.gov_id_url}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-1 inline-block text-sm font-semibold text-amber-300 underline underline-offset-2"
+            >
+              Open government ID
+            </a>
+          ) : (
+            <p className="mt-1 text-sm text-slate-400">No government ID provided.</p>
+          )}
+        </div>
+
         <div className="rounded-lg border border-slate-700 bg-slate-950/70 p-3">
           <p className="text-xs uppercase tracking-wide text-slate-400">Motivation</p>
           <p className="mt-1 whitespace-pre-wrap text-sm text-slate-200">
