@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Frontend Developer Roadmap</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+
+body{
+  background:#0d1117;
+  color:#e6edf3;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* subtle dot-grid background */
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background-image:radial-gradient(circle,#21262d 1px,transparent 1px);
+  background-size:28px 28px;
+  pointer-events:none;
+  z-index:0;
+}
+
+/* ── header ─────────────────────────────────────────── */
+.header{
+  position:relative;z-index:1;
+  text-align:center;
+  padding:48px 24px 24px;
+  border-bottom:1px solid #21262d;
+}
+.header h1{
+  font-size:clamp(1.6rem,4vw,2.4rem);
+  font-weight:800;
+  letter-spacing:-0.02em;
+  background:linear-gradient(135deg,#58a6ff 0%,#79c0ff 40%,#a5d6ff 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.header p{color:#8b949e;margin-top:10px;font-size:0.9rem;max-width:540px;margin-left:auto;margin-right:auto;line-height:1.6}
+
+/* ── legend ─────────────────────────────────────────── */
+.legend{
+  position:relative;z-index:1;
+  display:flex;gap:24px;justify-content:center;flex-wrap:wrap;
+  padding:18px 24px;
+  border-bottom:1px solid #161b22;
+}
+.legend-item{display:flex;align-items:center;gap:8px;font-size:0.78rem;color:#8b949e}
+.legend-swatch{
+  width:28px;height:14px;border-radius:4px;
+  flex-shrink:0;
+}
+.swatch-req{background:#0f2d0f;border:1.5px solid #2ea043}
+.swatch-opt{background:transparent;border:1.5px dashed #484f58}
+.swatch-alt{background:#0c2a4a;border:1.5px solid #388bfd}
+
+/* ── scroll wrapper ──────────────────────────────────── */
+#scroll-wrap{
+  overflow-x:auto;
+  padding:32px 20px 64px;
+  position:relative;z-index:1;
+}
+
+/* ── roadmap canvas ──────────────────────────────────── */
+#canvas{
+  position:relative;
+  margin:0 auto;
+  width:1080px;
+}
+
+/* ── section bands ───────────────────────────────────── */
+.section-band{
+  position:absolute;left:0;right:0;
+  border-radius:12px;
+  pointer-events:none;
+}
+.section-chip{
+  position:absolute;
+  font-size:0.6rem;
+  font-weight:700;
+  letter-spacing:0.18em;
+  text-transform:uppercase;
+  padding:3px 12px;
+  border-radius:20px;
+  color:#fff;
+  white-space:nowrap;
+  z-index:2;
+}
+
+/* ── nodes ───────────────────────────────────────────── */
+.node{
+  position:absolute;
+  transform:translate(-50%,-50%);
+  border-radius:8px;
+  padding:9px 16px;
+  font-size:0.72rem;
+  font-weight:600;
+  cursor:pointer;
+  user-select:none;
+  text-align:center;
+  white-space:nowrap;
+  border:1.5px solid;
+  transition:transform 0.18s ease,box-shadow 0.18s ease,border-color 0.18s ease;
+  z-index:10;
+  line-height:1.35;
+}
+.node.required{
+  background:#0f2d0f;
+  border-color:#2ea043;
+  color:#56d364;
+}
+.node.required:hover,.node.required.lit{
+  transform:translate(-50%,-50%) translateY(-3px);
+  border-color:#56d364;
+  box-shadow:0 0 22px rgba(46,160,67,0.45),0 4px 16px rgba(0,0,0,0.4);
+}
+.node.required.lit{
+  box-shadow:0 0 0 3px rgba(46,160,67,0.4),0 0 24px rgba(46,160,67,0.35);
+}
+.node.optional{
+  background:#161b22;
+  border-color:#30363d;
+  border-style:dashed;
+  color:#8b949e;
+}
+.node.optional:hover,.node.optional.lit{
+  transform:translate(-50%,-50%) translateY(-3px);
+  border-color:#6e7681;
+  color:#c9d1d9;
+  box-shadow:0 4px 16px rgba(0,0,0,0.5);
+}
+.node.optional.lit{box-shadow:0 0 0 3px rgba(110,118,129,0.35)}
+.node.alternative{
+  background:#0c2a4a;
+  border-color:#388bfd;
+  color:#79c0ff;
+  border-style:solid;
+}
+.node.alternative:hover,.node.alternative.lit{
+  transform:translate(-50%,-50%) translateY(-3px);
+  border-color:#79c0ff;
+  box-shadow:0 0 22px rgba(56,139,253,0.4),0 4px 16px rgba(0,0,0,0.4);
+}
+.node.alternative.lit{
+  box-shadow:0 0 0 3px rgba(56,139,253,0.35),0 0 24px rgba(56,139,253,0.3);
+}
+
+/* svg layer */
+#svg-layer{
+  position:absolute;top:0;left:0;
+  width:100%;
+  pointer-events:none;
+  z-index:5;
+}
+
+/* ── tooltip ─────────────────────────────────────────── */
+#tip{
+  position:fixed;
+  background:#1c2128;
+  border:1px solid #30363d;
+  border-radius:12px;
+  padding:14px 16px;
+  max-width:270px;
+  pointer-events:none;
+  z-index:9999;
+  opacity:0;
+  transition:opacity 0.14s;
+  box-shadow:0 8px 32px rgba(0,0,0,0.6);
+}
+#tip.show{opacity:1}
+.tip-badge{
+  display:inline-block;
+  font-size:0.58rem;font-weight:700;
+  letter-spacing:0.12em;text-transform:uppercase;
+  padding:2px 8px;border-radius:20px;
+  margin-bottom:8px;
+}
+.tip-badge.required{background:#1a3d1a;color:#56d364;border:1px solid #2ea04380}
+.tip-badge.optional{background:#1c2128;color:#8b949e;border:1px dashed #484f58}
+.tip-badge.alternative{background:#0f2f52;color:#79c0ff;border:1px solid #388bfd60}
+#tip h3{font-size:0.82rem;font-weight:700;color:#e6edf3;margin-bottom:6px}
+#tip p{font-size:0.73rem;color:#8b949e;line-height:1.55}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Frontend Developer Roadmap</h1>
+  <p>A step-by-step guide to becoming a modern frontend developer. Click any node to highlight its connections.</p>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-swatch swatch-req"></div>Required — must learn</div>
+  <div class="legend-item"><div class="legend-swatch swatch-opt"></div>Optional — good to know</div>
+  <div class="legend-item"><div class="legend-swatch swatch-alt"></div>Alternative — pick one</div>
+</div>
+
+<div id="scroll-wrap">
+  <div id="canvas">
+    <svg id="svg-layer"></svg>
+  </div>
+</div>
+
+<div id="tip">
+  <div class="tip-badge" id="tip-badge"></div>
+  <h3 id="tip-title"></h3>
+  <p id="tip-desc"></p>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   DATA
+═══════════════════════════════════════════════════════════ */
+
+const SECTIONS = [
+  { id:"net",   label:"The Internet",          color:"#8957e5" },
+  { id:"html",  label:"HTML",                  color:"#d4422a" },
+  { id:"css",   label:"CSS",                   color:"#146eb4" },
+  { id:"js",    label:"JavaScript",            color:"#c7a500" },
+  { id:"fw",    label:"Frameworks & Libraries",color:"#0ea5e9" },
+  { id:"adv",   label:"Advanced Topics",       color:"#ec4899" },
+  { id:"tools", label:"Dev Tools & Workflow",  color:"#16a34a" },
+];
+
+/* x = horizontal center, y = vertical center (both in px within canvas) */
+const NODES = [
+  /* ── Internet ── */
+  {id:"net-how",   sec:"net",   t:"required",    x:540, y:90,  label:"How the Internet Works",  desc:"Understand packets, routers, IP addresses, TCP/IP, and how data travels from server to browser across the internet."},
+  {id:"net-http",  sec:"net",   t:"required",    x:270, y:165, label:"HTTP / HTTPS",            desc:"Learn HTTP methods (GET, POST, PUT, DELETE), status codes (200, 404, 500), request/response headers, cookies, and HTTPS/TLS encryption."},
+  {id:"net-brw",   sec:"net",   t:"required",    x:540, y:165, label:"How Browsers Work",       desc:"Understand how browsers parse HTML, build the DOM and CSSOM, handle JS, and render frames — including the critical rendering path."},
+  {id:"net-dns",   sec:"net",   t:"required",    x:810, y:165, label:"DNS & Domain Names",      desc:"How DNS resolves domain names to IP addresses. What happens when you type a URL — from DNS lookup to TCP handshake to HTTP request."},
+
+  /* ── HTML ── */
+  {id:"html-basics",sec:"html", t:"required",    x:540, y:280, label:"HTML Basics",             desc:"Document structure, semantic tags (h1–h6, p, a, img, ul, table), attributes, and how browsers parse your markup."},
+  {id:"html-sem",   sec:"html", t:"required",    x:270, y:355, label:"Semantic HTML",           desc:"Use <header>, <nav>, <main>, <article>, <aside>, <footer> for meaningful structure. Improves accessibility and SEO."},
+  {id:"html-forms", sec:"html", t:"required",    x:540, y:355, label:"Forms & Validation",      desc:"Inputs, labels, fieldsets, HTML5 validation (required, pattern, min/max), and accessibility best practices for forms."},
+  {id:"html-seo",   sec:"html", t:"optional",    x:810, y:355, label:"SEO Basics",              desc:"Meta tags, Open Graph, structured data (JSON-LD), canonical URLs, and how search engines crawl and index your pages."},
+  {id:"html-a11y",  sec:"html", t:"optional",    x:270, y:430, label:"Accessibility (a11y)",    desc:"ARIA roles and attributes, keyboard navigation, focus management, screen reader compatibility, and WCAG 2.1 guidelines."},
+
+  /* ── CSS ── */
+  {id:"css-basics", sec:"css",  t:"required",    x:540, y:540, label:"CSS Basics",              desc:"Selectors, specificity, the cascade, inheritance, the box model (margin, border, padding, content), and display properties."},
+  {id:"css-layout", sec:"css",  t:"required",    x:270, y:615, label:"Flexbox & Grid",          desc:"Flexbox for 1D layouts (rows or columns), CSS Grid for 2D layouts. The primary tools for modern responsive page layout."},
+  {id:"css-resp",   sec:"css",  t:"required",    x:540, y:615, label:"Responsive Design",       desc:"Media queries, mobile-first design, fluid grids, viewport units (vw, vh), and clamp() for fluid typography."},
+  {id:"css-anim",   sec:"css",  t:"optional",    x:810, y:615, label:"Animations & Transitions",desc:"CSS transitions, keyframe animations, transform, will-change, and how to keep animations performant (GPU compositing)."},
+  {id:"css-tail",   sec:"css",  t:"alternative", x:270, y:695, label:"Tailwind CSS",            desc:"Utility-first CSS framework. Build designs directly in HTML using low-level utility classes without writing custom CSS files."},
+  {id:"css-sass",   sec:"css",  t:"alternative", x:810, y:695, label:"Sass / SCSS",             desc:"CSS preprocessor. Variables, nesting, mixins, functions, and partials. Compiles to standard CSS for the browser."},
+
+  /* ── JavaScript ── */
+  {id:"js-basics",  sec:"js",   t:"required",    x:540, y:810, label:"JavaScript Basics",       desc:"Variables (let/const), data types, operators, control flow, functions, scope, closures, hoisting, and the event loop."},
+  {id:"js-dom",     sec:"js",   t:"required",    x:270, y:885, label:"DOM Manipulation",        desc:"Select and modify elements, add event listeners, understand event bubbling/delegation, and dynamically update the UI."},
+  {id:"js-fetch",   sec:"js",   t:"required",    x:540, y:885, label:"Fetch API & Async",       desc:"fetch(), Promises, async/await, error handling, JSON parsing, and working with REST APIs from the browser."},
+  {id:"js-es6",     sec:"js",   t:"required",    x:810, y:885, label:"ES6+ Features",           desc:"Destructuring, spread/rest, template literals, arrow functions, modules (import/export), optional chaining, nullish coalescing."},
+  {id:"js-ts",      sec:"js",   t:"required",    x:540, y:965, label:"TypeScript",              desc:"Static typing for JavaScript. Types, interfaces, generics, enums, union types, and how TS improves developer experience."},
+
+  /* ── Frameworks ── */
+  {id:"fw-react",   sec:"fw",   t:"alternative", x:270, y:1080,label:"React",                  desc:"Component-based library by Meta. JSX, props, state, hooks (useState, useEffect, useContext, useReducer), and component lifecycle."},
+  {id:"fw-vue",     sec:"fw",   t:"alternative", x:540, y:1080,label:"Vue.js",                 desc:"Progressive framework. Options API vs Composition API, reactive data with ref()/reactive(), directives, Vue Router, and Pinia."},
+  {id:"fw-ng",      sec:"fw",   t:"alternative", x:810, y:1080,label:"Angular",                desc:"Full-featured TypeScript framework by Google. Modules, components, services, dependency injection, RxJS, and the Angular CLI."},
+  {id:"fw-state",   sec:"fw",   t:"required",    x:540, y:1160,label:"State Management",       desc:"Manage global app state with Redux/Zustand (React), Pinia (Vue), or NgRx (Angular). Understand unidirectional data flow."},
+  {id:"fw-router",  sec:"fw",   t:"required",    x:270, y:1160,label:"Client-Side Routing",    desc:"React Router, Vue Router, or Angular Router. Dynamic routes, nested routes, lazy-loaded routes, and navigation guards."},
+
+  /* ── Advanced ── */
+  {id:"adv-test",   sec:"adv",  t:"required",    x:270, y:1280,label:"Testing",                desc:"Unit tests with Jest/Vitest, component testing with Testing Library, and end-to-end tests with Playwright or Cypress."},
+  {id:"adv-perf",   sec:"adv",  t:"required",    x:540, y:1280,label:"Web Performance",        desc:"Core Web Vitals (LCP, FID, CLS), lazy loading, code splitting, bundle analysis, rendering strategies (CSR, SSR, SSG, ISR)."},
+  {id:"adv-sec",    sec:"adv",  t:"optional",    x:810, y:1280,label:"Web Security",           desc:"XSS, CSRF, Content Security Policy, HTTPS, CORS, secure cookies. Understand how attackers exploit the browser environment."},
+  {id:"adv-pwa",    sec:"adv",  t:"optional",    x:270, y:1360,label:"PWAs & Service Workers", desc:"Make web apps installable and work offline. Service worker lifecycle, caching strategies, push notifications, and the Web App Manifest."},
+  {id:"adv-ssr",    sec:"adv",  t:"optional",    x:810, y:1360,label:"SSR / Next.js / Nuxt",   desc:"Server-side rendering for faster first paint and SEO. Next.js (React) and Nuxt (Vue) provide file-based routing and server actions."},
+
+  /* ── Tools ── */
+  {id:"t-git",      sec:"tools",t:"required",    x:270, y:1480,label:"Git & GitHub",           desc:"git init, clone, add, commit, push, pull, merge, rebase, cherry-pick, stash. GitHub pull requests, code review, and CI triggers."},
+  {id:"t-npm",      sec:"tools",t:"required",    x:540, y:1480,label:"npm / pnpm / yarn",      desc:"Installing packages, managing package.json and lock files, semver, scripts, workspaces, and understanding node_modules."},
+  {id:"t-build",    sec:"tools",t:"required",    x:810, y:1480,label:"Build Tools — Vite",     desc:"Bundling, transpiling, hot module replacement (HMR), tree-shaking, code splitting, and production optimisation with Vite or Webpack."},
+  {id:"t-cli",      sec:"tools",t:"required",    x:270, y:1555,label:"CLI / Terminal",         desc:"Navigate the filesystem, manage files, run scripts, use pipes and redirects, and be productive in Bash/Zsh."},
+  {id:"t-dev",      sec:"tools",t:"required",    x:540, y:1555,label:"Browser DevTools",       desc:"Inspect DOM/CSS, JavaScript debugger and breakpoints, network waterfall, performance profiler, and memory inspector."},
+  {id:"t-deploy",   sec:"tools",t:"optional",    x:810, y:1555,label:"Deployment",            desc:"Deploy to Vercel, Netlify, or Cloudflare Pages. Understand CI/CD pipelines, environment variables, preview deployments, and CDN caching."},
+];
+
+const CONNECTIONS = [
+  /* internet */
+  {f:"net-how", t:"net-http",   k:"main"},
+  {f:"net-how", t:"net-brw",    k:"main"},
+  {f:"net-how", t:"net-dns",    k:"main"},
+  /* net → html */
+  {f:"net-brw", t:"html-basics",k:"main"},
+  /* html */
+  {f:"html-basics",t:"html-sem",  k:"main"},
+  {f:"html-basics",t:"html-forms",k:"main"},
+  {f:"html-basics",t:"html-seo",  k:"opt"},
+  {f:"html-sem",   t:"html-a11y", k:"opt"},
+  /* html → css */
+  {f:"html-forms", t:"css-basics",k:"main"},
+  /* css */
+  {f:"css-basics", t:"css-layout",k:"main"},
+  {f:"css-basics", t:"css-resp",  k:"main"},
+  {f:"css-basics", t:"css-anim",  k:"opt"},
+  {f:"css-resp",   t:"css-tail",  k:"alt"},
+  {f:"css-resp",   t:"css-sass",  k:"alt"},
+  /* css → js */
+  {f:"css-layout", t:"js-basics", k:"main"},
+  /* js */
+  {f:"js-basics",  t:"js-dom",    k:"main"},
+  {f:"js-basics",  t:"js-fetch",  k:"main"},
+  {f:"js-basics",  t:"js-es6",    k:"main"},
+  {f:"js-es6",     t:"js-ts",     k:"main"},
+  /* js → fw */
+  {f:"js-ts",      t:"fw-react",  k:"alt"},
+  {f:"js-ts",      t:"fw-vue",    k:"alt"},
+  {f:"js-ts",      t:"fw-ng",     k:"alt"},
+  {f:"fw-react",   t:"fw-router", k:"main"},
+  {f:"fw-react",   t:"fw-state",  k:"main"},
+  {f:"fw-vue",     t:"fw-state",  k:"alt"},
+  {f:"fw-ng",      t:"fw-state",  k:"alt"},
+  /* fw → adv */
+  {f:"fw-state",   t:"adv-test",  k:"main"},
+  {f:"fw-state",   t:"adv-perf",  k:"main"},
+  {f:"fw-state",   t:"adv-sec",   k:"opt"},
+  {f:"adv-test",   t:"adv-pwa",   k:"opt"},
+  {f:"adv-perf",   t:"adv-ssr",   k:"opt"},
+  /* tools (parallel) */
+  {f:"js-basics",  t:"t-git",     k:"main"},
+  {f:"t-git",      t:"t-npm",     k:"main"},
+  {f:"t-npm",      t:"t-build",   k:"main"},
+  {f:"adv-test",   t:"t-cli",     k:"main"},
+  {f:"adv-perf",   t:"t-dev",     k:"main"},
+  {f:"adv-sec",    t:"t-deploy",  k:"opt"},
+];
+
+/* ═══════════════════════════════════════════════════════════
+   RENDER
+═══════════════════════════════════════════════════════════ */
+
+const canvas = document.getElementById("canvas");
+const svgEl  = document.getElementById("svg-layer");
+
+const TOTAL_H = Math.max(...NODES.map(n=>n.y)) + 100;
+canvas.style.height = TOTAL_H + "px";
+svgEl.style.height  = TOTAL_H + "px";
+
+const nodeMap = new Map(NODES.map(n=>[n.id,n]));
+const secMap  = new Map(SECTIONS.map(s=>[s.id,s]));
+
+/* section bands */
+const secYs = new Map();
+NODES.forEach(n=>{
+  const prev = secYs.get(n.sec);
+  if(!prev) secYs.set(n.sec,{min:n.y,max:n.y});
+  else{ prev.min=Math.min(prev.min,n.y); prev.max=Math.max(prev.max,n.y); }
+});
+
+SECTIONS.forEach(s=>{
+  const ys = secYs.get(s.id);
+  if(!ys) return;
+  const pad = 48;
+  const top  = ys.min - pad;
+  const bot  = ys.max + pad;
+
+  const band = document.createElement("div");
+  band.className = "section-band";
+  band.style.cssText = `
+    top:${top}px; height:${bot-top}px;
+    background:${s.color}09;
+    border:1px solid ${s.color}18;
+    border-radius:14px;
+  `;
+  canvas.insertBefore(band, canvas.firstChild);
+
+  const chip = document.createElement("div");
+  chip.className = "section-chip";
+  chip.textContent = s.label;
+  chip.style.cssText = `top:${top+10}px; left:14px; background:${s.color}; `;
+  canvas.appendChild(chip);
+});
+
+/* nodes */
+const elMap = new Map();
+NODES.forEach(n=>{
+  const el = document.createElement("div");
+  el.className = `node ${n.t}`;
+  el.textContent = n.label;
+  el.style.left = n.x+"px";
+  el.style.top  = n.y+"px";
+  el.addEventListener("mouseenter", e=>showTip(n,e));
+  el.addEventListener("mousemove",  e=>moveTip(e));
+  el.addEventListener("mouseleave", hideTip);
+  el.addEventListener("click", ()=>highlight(n.id));
+  canvas.appendChild(el);
+  elMap.set(n.id,el);
+});
+
+/* ── SVG connections ──────────────────────────────────── */
+
+function nodeRect(id){
+  const el = elMap.get(id);
+  if(!el) return null;
+  const cr = canvas.getBoundingClientRect();
+  const er = el.getBoundingClientRect();
+  return {
+    cx: er.left + er.width/2 - cr.left,
+    cy: er.top  + er.height/2 - cr.top,
+    top:    er.top  - cr.top,
+    bottom: er.bottom - cr.top,
+    left:   er.left - cr.left,
+    right:  er.right - cr.left,
+    w: er.width, h: er.height,
+  };
+}
+
+const COLORS = {
+  main:{ stroke:"#2ea043", width:2.5, opacity:0.65, dash:"none",    arrow:"#2ea043" },
+  opt: { stroke:"#484f58", width:1.5, opacity:0.5,  dash:"7 5",     arrow:"#484f58" },
+  alt: { stroke:"#388bfd", width:2,   opacity:0.55,  dash:"none",   arrow:"#388bfd" },
+};
+
+function makeArrowMarker(id, color){
+  const marker = document.createElementNS("http://www.w3.org/2000/svg","marker");
+  marker.setAttribute("id",id);
+  marker.setAttribute("markerWidth","9");
+  marker.setAttribute("markerHeight","9");
+  marker.setAttribute("refX","7");
+  marker.setAttribute("refY","3.5");
+  marker.setAttribute("orient","auto");
+  marker.setAttribute("markerUnits","strokeWidth");
+  const poly = document.createElementNS("http://www.w3.org/2000/svg","polygon");
+  poly.setAttribute("points","0 0, 8 3.5, 0 7");
+  poly.setAttribute("fill",color);
+  poly.setAttribute("opacity","0.85");
+  marker.appendChild(poly);
+  return marker;
+}
+
+function drawAllConnections(){
+  svgEl.innerHTML="";
+  const defs = document.createElementNS("http://www.w3.org/2000/svg","defs");
+  defs.appendChild(makeArrowMarker("arr-main","#2ea043"));
+  defs.appendChild(makeArrowMarker("arr-opt", "#484f58"));
+  defs.appendChild(makeArrowMarker("arr-alt", "#388bfd"));
+  svgEl.appendChild(defs);
+
+  CONNECTIONS.forEach(c=>{
+    const from = nodeRect(c.f);
+    const to   = nodeRect(c.t);
+    if(!from||!to) return;
+
+    const style = COLORS[c.k]??COLORS.main;
+
+    // connect bottom-center of parent → top-center of child
+    const x1 = from.cx;
+    const y1 = from.bottom;
+    const x2 = to.cx;
+    const y2 = to.top;
+    const midY = (y1+y2)/2;
+
+    const d = `M${x1},${y1} C${x1},${midY} ${x2},${midY} ${x2},${y2}`;
+    const arrowId = c.k==="main"?"arr-main":c.k==="opt"?"arr-opt":"arr-alt";
+
+    /* glow */
+    const glow = document.createElementNS("http://www.w3.org/2000/svg","path");
+    glow.setAttribute("d",d);
+    glow.setAttribute("fill","none");
+    glow.setAttribute("stroke",style.stroke);
+    glow.setAttribute("stroke-width",(style.width+8)+"");
+    glow.setAttribute("stroke-opacity","0.07");
+    glow.setAttribute("stroke-linecap","round");
+    svgEl.appendChild(glow);
+
+    /* main line */
+    const path = document.createElementNS("http://www.w3.org/2000/svg","path");
+    path.setAttribute("d",d);
+    path.setAttribute("fill","none");
+    path.setAttribute("stroke",style.stroke);
+    path.setAttribute("stroke-width",style.width+"");
+    path.setAttribute("stroke-opacity",style.opacity+"");
+    path.setAttribute("stroke-linecap","round");
+    if(style.dash!=="none") path.setAttribute("stroke-dasharray",style.dash);
+    path.setAttribute("marker-end",`url(#${arrowId})`);
+    svgEl.appendChild(path);
+  });
+}
+
+/* ── init after layout ─────────────────────────────────── */
+requestAnimationFrame(()=>{
+  requestAnimationFrame(drawAllConnections);
+});
+window.addEventListener("resize", drawAllConnections);
+
+/* ═══════════════════════════════════════════════════════════
+   TOOLTIP
+═══════════════════════════════════════════════════════════ */
+
+const tip = document.getElementById("tip");
+
+function showTip(n,e){
+  const badge = document.getElementById("tip-badge");
+  badge.textContent = n.t==="required"?"Required":n.t==="optional"?"Optional":"Alternative";
+  badge.className = "tip-badge "+n.t;
+  document.getElementById("tip-title").textContent = n.label;
+  document.getElementById("tip-desc").textContent  = n.desc;
+  tip.classList.add("show");
+  moveTip(e);
+}
+function moveTip(e){
+  let x=e.clientX+18, y=e.clientY+18;
+  if(x+290>window.innerWidth)  x=e.clientX-290-8;
+  if(y+180>window.innerHeight) y=e.clientY-180-8;
+  tip.style.left=x+"px"; tip.style.top=y+"px";
+}
+function hideTip(){ tip.classList.remove("show"); }
+
+/* ═══════════════════════════════════════════════════════════
+   CLICK → HIGHLIGHT CONNECTIONS
+═══════════════════════════════════════════════════════════ */
+
+let activeId=null;
+
+function highlight(id){
+  if(activeId===id){ clearHighlight(); return; }
+  activeId=id;
+  elMap.forEach(el=>el.classList.remove("lit"));
+  elMap.get(id)?.classList.add("lit");
+  CONNECTIONS.forEach(c=>{
+    if(c.f===id) elMap.get(c.t)?.classList.add("lit");
+    if(c.t===id) elMap.get(c.f)?.classList.add("lit");
+  });
+}
+function clearHighlight(){
+  activeId=null;
+  elMap.forEach(el=>el.classList.remove("lit"));
+}
+document.getElementById("scroll-wrap").addEventListener("click",e=>{
+  if(e.target.id==="scroll-wrap"||e.target.id==="canvas") clearHighlight();
+});
+</script>
+</body>
+</html>

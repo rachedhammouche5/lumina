@@ -7,6 +7,7 @@ import {
   FileAudio2,
   FileText,
   PlayCircle,
+  Brain,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import type { Content, ContentType } from "@/lib/database.types";
@@ -156,7 +157,7 @@ export default async function TopicLearningPage({
             </div>
 
             <div className="w-full lg:w-[360px] flex flex-col gap-5 shrink-0">
-              <div className="flex lg:justify-end">
+              <div className="flex flex-col gap-2 lg:items-end">
                 <Button
                   variant="primary"
                   size="m"
@@ -165,6 +166,13 @@ export default async function TopicLearningPage({
                 >
                   QUIZ ME
                 </Button>
+                <Link
+                  href={`/skills/${skill_id}/${topic_id}/feynman`}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-violet-500/30 bg-violet-500/10 px-4 py-2.5 text-sm font-bold text-violet-300 transition hover:bg-violet-500/20 lg:w-44"
+                >
+                  <Brain size={15} />
+                  Feynman Coach
+                </Link>
               </div>
 
               <div className="grid gap-3 grid-cols-1 sm:grid-cols-3">

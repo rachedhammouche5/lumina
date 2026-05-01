@@ -1,14 +1,14 @@
-import Button from "../Button";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 
 export default function BackButton() {
   return (
-    <Button
-      variant="outline"
-      size="s"
+    <Link
       href="/skills"
-      className="bg-linear-to-br from-slate-300/50 to-slate-500/10 border-2 border-slate-700/40"
+      className="inline-flex items-center gap-1.5 rounded-xl border border-slate-700/60 bg-slate-800/40 px-3 py-1.5 text-sm font-medium text-slate-300 transition hover:border-slate-600 hover:bg-slate-700/60 hover:text-white"
     >
-      {"< Back to courses"}
-    </Button>
+      <ArrowLeft size={14} />
+      Back to skills
+    </Link>
   );
 }

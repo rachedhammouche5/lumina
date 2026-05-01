@@ -1,10 +1,9 @@
-// app/ui/roadmapcomp/EnrollButton.tsx
 "use client";
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import Button from "../Button";
 import { Enrollment } from "@/app/actions/enrollement";
+import { CheckCircle2, LogIn, Loader2 } from "lucide-react";
 
 export default function EnrollButton({
   skillId,
@@ -22,22 +21,22 @@ export default function EnrollButton({
 
   if (isEnrolled) {
     return (
-      <Button variant="outline" size="s" disabled>
-        Enrolled ✓
-      </Button>
+      <div className="inline-flex items-center gap-2 rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-1.5 text-sm font-semibold text-emerald-300">
+        <CheckCircle2 size={14} />
+        Enrolled
+      </div>
     );
   }
 
   if (!isLoggedIn) {
     return (
-      <Button
-        variant="outline"
-        size="s"
-        className="bg-linear-to-br from-slate-300/50 to-slate-500/10 border-2 border-slate-700/40"
+      <button
         onClick={() => router.push("/login")}
+        className="inline-flex items-center gap-2 rounded-xl border border-indigo-500/40 bg-indigo-500/10 px-4 py-1.5 text-sm font-semibold text-indigo-200 transition hover:border-indigo-400/60 hover:bg-indigo-500/20"
       >
-        Log in to Enroll
-      </Button>
+        <LogIn size={14} />
+        Log in to enroll
+      </button>
     );
   }
 
@@ -54,14 +53,13 @@ export default function EnrollButton({
   }
 
   return (
-    <Button
-      variant="outline"
-      size="s"
-      className="bg-linear-to-br from-slate-300/50 to-slate-500/10 border-2 border-slate-700/40"
+    <button
       disabled={isPending}
       onClick={handleEnroll}
+      className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 px-5 py-1.5 text-sm font-semibold text-white shadow-lg shadow-orange-500/20 transition hover:-translate-y-0.5 hover:shadow-orange-500/30 disabled:opacity-60"
     >
-      {isPending ? "Enrolling..." : "Enroll"}
-    </Button>
+      {isPending && <Loader2 size={14} className="animate-spin" />}
+      {isPending ? "Enrolling…" : "Enroll now"}
+    </button>
   );
 }
