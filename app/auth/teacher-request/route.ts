@@ -21,19 +21,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  let payload: TeacherRequestBody;
+  let requestBody: TeacherRequestBody;
   try {
-    payload = (await request.json()) as TeacherRequestBody;
+    requestBody = (await request.json()) as TeacherRequestBody;
   } catch {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const fullName = payload.fullName?.trim() ?? "";
-  const cvUrl = payload.cvUrl?.trim() ?? "";
-  const photoUrl = payload.photoUrl?.trim() ?? "";
-  const govIdUrl = payload.govIdUrl?.trim() ?? "";
-  const certificationUrl = payload.certificationUrl?.trim() ?? "";
-  const motivation = payload.motivation?.trim() ?? "";
+  const fullName = requestBody.fullName?.trim() ?? "";
+  const cvUrl = requestBody.cvUrl?.trim() ?? "";
+  const photoUrl = requestBody.photoUrl?.trim() ?? "";
+  const govIdUrl = requestBody.govIdUrl?.trim() ?? "";
+  const certificationUrl = requestBody.certificationUrl?.trim() ?? "";
+  const motivation = requestBody.motivation?.trim() ?? "";
 
   if (!fullName || !cvUrl || !photoUrl || !govIdUrl || !certificationUrl || !motivation) {
     return NextResponse.json(
@@ -72,13 +72,6 @@ export async function POST(request: Request) {
     );
   }
 
-  if (existingRequest?.status === "pending") {
-    return NextResponse.json(
-      { error: "Your request is already pending admin review." },
-      { status: 409 },
-    );
-  }
-
   if (existingRequest?.status === "approved") {
     return NextResponse.json(
       { error: "Your teacher account has already been approved." },
@@ -93,25 +86,39 @@ export async function POST(request: Request) {
     );
   }
 
-  const { error } = await admin.from("teacher_requests").insert({
+  const requestPayload = {
     user_id: user.id,
-    email: user.email ?? null,
     full_name: fullName,
     photo_url: photoUrl,
     gov_id_url: govIdUrl,
     certification_url: certificationUrl,
     cv_url: cvUrl,
     motivation,
-    status: "pending",
-  });
+    status: "pending" as const,
+  };
+
+  const { error } = existingRequest
+    ? await admin
+        .from("teacher_requests")
+        .update(requestPayload)
+        .eq("user_id", user.id)
+        .eq("status", "pending")
+    : await admin.from("teacher_requests").insert(requestPayload);
 
   if (error) {
     console.error(
       "[auth/teacher-request] Failed to save request:",
       error.message,
+      error.details ?? "",
+      error.hint ?? "",
     );
     return NextResponse.json(
-      { error: "Failed to save request" },
+      {
+        error: error.message || "Failed to save request",
+        details: error.details ?? null,
+        hint: error.hint ?? null,
+        code: error.code ?? null,
+      },
       { status: 500 },
     );
   }

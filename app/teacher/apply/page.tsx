@@ -3,7 +3,6 @@ import type { ReactNode } from "react";
 import {
   ArrowRight,
   BadgeCheck,
-  Clock3,
   FileText,
   ShieldAlert,
   Sparkles,
@@ -11,11 +10,15 @@ import {
 import { createClient } from "@/lib/supabase/server";
 import { getRole } from "@/features/utils/auth/getRole";
 import TeacherRequestForm from "./TeacherRequestForm";
+import TeacherRequestEditor from "./TeacherRequestEditor";
 
 type TeacherRequestRow = {
   status: "pending" | "approved" | "rejected";
   admin_note: string | null;
   full_name: string | null;
+  photo_url: string | null;
+  gov_id_url: string | null;
+  certification_url: string | null;
   cv_url: string | null;
   motivation: string | null;
 };
@@ -157,21 +160,6 @@ function PageShell({
   );
 }
 
-function InfoBlock({
-  label,
-  value,
-}: {
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="rounded-2xl border border-white/10 bg-slate-950/60 p-4">
-      <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500">{label}</p>
-      <p className="mt-2 break-words text-sm font-medium text-white">{value}</p>
-    </div>
-  );
-}
-
 export default async function TeacherApplyPage() {
   const supabase = await createClient();
   const {
@@ -190,7 +178,9 @@ export default async function TeacherApplyPage() {
 
   const { data: request, error: requestError } = await supabase
     .from("teacher_requests")
-    .select("status,admin_note,full_name,cv_url,motivation")
+    .select(
+      "status,admin_note,full_name,photo_url,gov_id_url,certification_url,cv_url,motivation",
+    )
     .eq("user_id", user.id)
     .maybeSingle();
 
@@ -215,44 +205,7 @@ export default async function TeacherApplyPage() {
         title="Your request is waiting in the review queue"
         description="We received your teacher request and it is now under admin review. You’ll unlock the teacher tools as soon as it’s approved."
       >
-        <div className="space-y-5">
-          <div className="rounded-[1.75rem] border border-amber-400/20 bg-amber-500/10 p-5 shadow-2xl shadow-amber-950/20">
-            <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/20 bg-amber-500/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-amber-200">
-              <Clock3 size={13} />
-              Waiting for review
-            </div>
-            <div className="mt-4 space-y-2">
-              <h2 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
-                Your teacher request is in the queue
-              </h2>
-              <p className="max-w-2xl text-sm leading-7 text-slate-200/90 sm:text-base">
-                You cannot use the teacher dashboard yet. We’ll notify you once
-                an admin finishes the review.
-              </p>
-            </div>
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <InfoBlock label="Submitted name" value={requestRow.full_name ?? fullName} />
-            <InfoBlock label="CV link" value={requestRow.cv_url ?? "Not provided"} />
-          </div>
-
-          <div className="rounded-2xl border border-white/10 bg-slate-950/60 p-4">
-            <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500">
-              Motivation
-            </p>
-            <p className="mt-2 whitespace-pre-wrap text-sm leading-7 text-slate-200">
-              {requestRow.motivation ?? "No motivation was saved with the request."}
-            </p>
-          </div>
-
-          <StatusCard
-            tone="pending"
-            title="Please wait for admin approval"
-            description="Your request has been submitted successfully. Once approved, this account will unlock the normal teacher dashboard."
-            icon={<Sparkles className="text-amber-200" size={18} />}
-          />
-        </div>
+        <TeacherRequestEditor request={requestRow} initialFullName={fullName} />
       </PageShell>
     );
   }

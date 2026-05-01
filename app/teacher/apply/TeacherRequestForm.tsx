@@ -20,7 +20,27 @@ type FileUploadCardProps = {
   description: string;
   accent: string;
   icon: ReactNode;
+  existingUrl?: string | null;
 };
+
+type SubmitMode = "create" | "edit";
+
+const STORAGE_BUCKETS = {
+  photo: "teacher-photo",
+  govId: "teacher-id",
+  cv: "teacher-cv",
+  certification: "certification",
+} as const;
+
+function filenameFromUrl(url: string) {
+  try {
+    const pathname = new URL(url).pathname;
+    const lastSegment = pathname.split("/").filter(Boolean).pop();
+    return lastSegment ? decodeURIComponent(lastSegment) : "Uploaded file";
+  } catch {
+    return "Uploaded file";
+  }
+}
 
 function SectionCard({
   eyebrow,
@@ -57,6 +77,7 @@ function FileUploadCard({
   description,
   accent,
   icon,
+  existingUrl,
 }: FileUploadCardProps) {
   return (
     <div className="group rounded-[1.5rem] border border-white/10 bg-slate-950/60 p-4 transition duration-200 hover:border-white/20 hover:bg-slate-950/80">
@@ -72,6 +93,16 @@ function FileUploadCard({
             </span>
           </div>
           <p className="mt-1 text-xs leading-5 text-slate-400">{description}</p>
+          {existingUrl ? (
+            <a
+              href={existingUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-2 inline-flex max-w-full items-center rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[11px] font-medium text-slate-200 transition hover:border-white/20 hover:bg-white/[0.08]"
+            >
+              Current file: {filenameFromUrl(existingUrl)}
+            </a>
+          ) : null}
         </div>
       </div>
 
@@ -96,26 +127,56 @@ function FileUploadCard({
 
 export default function TeacherApplicationFlow({
   initialFullName,
+  initialPhotoUrl = null,
+  initialGovIdUrl = null,
+  initialCvUrl = null,
+  initialCertificationUrl = null,
+  initialMotivation = "",
+  submitMode = "create",
+  submitLabel,
+  submittingLabel,
+  onCancel,
+  onSaved,
 }: {
   initialFullName: string;
+  initialPhotoUrl?: string | null;
+  initialGovIdUrl?: string | null;
+  initialCvUrl?: string | null;
+  initialCertificationUrl?: string | null;
+  initialMotivation?: string;
+  submitMode?: SubmitMode;
+  submitLabel?: string;
+  submittingLabel?: string;
+  onCancel?: () => void;
+  onSaved?: () => void;
 }) {
   const router = useRouter();
   const supabase = createClient();
 
   const [fullName, setFullName] = useState(initialFullName);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(initialPhotoUrl);
+  const [govIdUrl, setGovIdUrl] = useState<string | null>(initialGovIdUrl);
+  const [cvUrl, setCvUrl] = useState<string | null>(initialCvUrl);
+  const [certificationUrl, setCertificationUrl] = useState<string | null>(
+    initialCertificationUrl,
+  );
   const [photo, setPhoto] = useState<File | null>(null);
   const [govId, setGovId] = useState<File | null>(null);
   const [cv, setCv] = useState<File | null>(null);
   const [certification, setCertification] = useState<File | null>(null);
-  const [motivation, setMotivation] = useState("");
+  const [motivation, setMotivation] = useState(initialMotivation);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
   const uploadFile = async (file: File, bucket: string) => {
-    const fileName = `${Date.now()}-${file.name.replace(/\s+/g, "-")}`;
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const fileName = `${Date.now()}-${safeName}`;
     const { error: uploadError } = await supabase.storage
       .from(bucket)
-      .upload(fileName, file);
+      .upload(fileName, file, {
+        contentType: file.type || "application/octet-stream",
+        upsert: false,
+      });
 
     if (uploadError) throw uploadError;
 
@@ -123,10 +184,40 @@ export default function TeacherApplicationFlow({
     return data.publicUrl;
   };
 
+  const uploadOrKeep = async (
+    file: File | null,
+    existingUrl: string | null,
+    bucket: string,
+  ) => {
+    if (file) {
+      return uploadFile(file, bucket);
+    }
+
+    if (existingUrl) {
+      return existingUrl;
+    }
+
+    throw new Error("Please upload all required files.");
+  };
+
+  const resetToInitialValues = () => {
+    setFullName(initialFullName);
+    setPhotoUrl(initialPhotoUrl);
+    setGovIdUrl(initialGovIdUrl);
+    setCvUrl(initialCvUrl);
+    setCertificationUrl(initialCertificationUrl);
+    setPhoto(null);
+    setGovId(null);
+    setCv(null);
+    setCertification(null);
+    setMotivation(initialMotivation);
+    setError("");
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    if (!fullName.trim() || !photo || !govId || !cv || !certification || !motivation.trim()) {
+    if (!fullName.trim() || !motivation.trim()) {
       return setError("Please complete all required fields.");
     }
 
@@ -134,11 +225,11 @@ export default function TeacherApplicationFlow({
     setError("");
 
     try {
-      const [photoUrl, govIdUrl, cvUrl, certificationUrl] = await Promise.all([
-        uploadFile(photo, "public-profiles"),
-        uploadFile(govId, "private-docs"),
-        uploadFile(cv, "private-docs"),
-        uploadFile(certification, "private-docs"),
+      const [nextPhotoUrl, nextGovIdUrl, nextCvUrl, nextCertificationUrl] = await Promise.all([
+        uploadOrKeep(photo, photoUrl, STORAGE_BUCKETS.photo),
+        uploadOrKeep(govId, govIdUrl, STORAGE_BUCKETS.govId),
+        uploadOrKeep(cv, cvUrl, STORAGE_BUCKETS.cv),
+        uploadOrKeep(certification, certificationUrl, STORAGE_BUCKETS.certification),
       ]);
 
       const response = await fetch("/auth/teacher-request", {
@@ -146,16 +237,44 @@ export default function TeacherApplicationFlow({
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           fullName: fullName.trim(),
-          cvUrl,
-          photoUrl,
-          govIdUrl,
-          certificationUrl,
+          cvUrl: nextCvUrl,
+          photoUrl: nextPhotoUrl,
+          govIdUrl: nextGovIdUrl,
+          certificationUrl: nextCertificationUrl,
           motivation: motivation.trim(),
         }),
       });
 
-      if (!response.ok) throw new Error("Submission failed.");
-      router.push("/teacher/success");
+      if (!response.ok) {
+        let message = "Submission failed.";
+        try {
+          const result = (await response.json()) as { error?: string };
+          if (typeof result.error === "string" && result.error.trim()) {
+            message = result.error;
+          }
+        } catch {
+          const text = await response.text();
+          if (text.trim()) {
+            message = text;
+          }
+        }
+
+        throw new Error(message);
+      }
+      if (submitMode === "edit") {
+        setPhotoUrl(nextPhotoUrl);
+        setGovIdUrl(nextGovIdUrl);
+        setCvUrl(nextCvUrl);
+        setCertificationUrl(nextCertificationUrl);
+        setPhoto(null);
+        setGovId(null);
+        setCv(null);
+        setCertification(null);
+        onSaved?.();
+        router.refresh();
+      } else {
+        router.push("/teacher/success");
+      }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
@@ -199,6 +318,7 @@ export default function TeacherApplicationFlow({
           description="A clean, well-lit headshot works best on the dashboard."
           accent="bg-gradient-to-br from-sky-500/20 to-cyan-500/20"
           icon={<ImageIcon size={18} />}
+          existingUrl={photoUrl}
         />
       </SectionCard>
 
@@ -209,24 +329,26 @@ export default function TeacherApplicationFlow({
       >
         <div className="grid gap-4 md:grid-cols-2">
           <FileUploadCard
-            label="Resume / CV"
-            accept=".pdf"
-            file={cv}
-            setFile={setCv}
-            description="Upload your latest CV in PDF format."
-            accent="bg-gradient-to-br from-orange-500/20 to-amber-500/20"
-            icon={<FileText size={18} />}
-          />
-          <FileUploadCard
-            label="Primary certification"
-            accept=".pdf"
-            file={certification}
-            setFile={setCertification}
-            description="Upload your highest degree or a relevant teaching certificate."
-            accent="bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20"
-            icon={<ShieldCheck size={18} />}
-          />
-        </div>
+          label="Resume / CV"
+          accept=".pdf"
+          file={cv}
+          setFile={setCv}
+          description="Upload your latest CV in PDF format."
+          accent="bg-gradient-to-br from-orange-500/20 to-amber-500/20"
+          icon={<FileText size={18} />}
+          existingUrl={cvUrl}
+        />
+        <FileUploadCard
+          label="Primary certification"
+          accept=".pdf"
+          file={certification}
+          setFile={setCertification}
+          description="Upload your highest degree or a relevant teaching certificate."
+          accent="bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20"
+          icon={<ShieldCheck size={18} />}
+          existingUrl={certificationUrl}
+        />
+      </div>
       </SectionCard>
 
       <SectionCard
@@ -242,6 +364,7 @@ export default function TeacherApplicationFlow({
           description="Upload a clear passport, national ID, or other government-issued photo ID."
           accent="bg-gradient-to-br from-emerald-500/20 to-teal-500/20"
           icon={<ShieldCheck size={18} />}
+          existingUrl={govIdUrl}
         />
       </SectionCard>
 
@@ -281,23 +404,39 @@ export default function TeacherApplicationFlow({
           </div>
         )}
 
-        <button
-          type="submit"
-          disabled={submitting}
-          className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-orange-500 via-amber-500 to-orange-400 px-4 py-4 text-sm font-semibold text-white shadow-[0_18px_40px_rgba(249,115,22,0.28)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-70"
-        >
-          {submitting ? (
-            <>
-              <Loader2 className="animate-spin" size={18} />
-              Submitting application...
-            </>
-          ) : (
-            <>
-              <UploadCloud size={18} />
-              Submit application
-            </>
-          )}
-        </button>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          {submitMode === "edit" ? (
+            <button
+              type="button"
+              onClick={() => {
+                resetToInitialValues();
+                onCancel?.();
+              }}
+              disabled={submitting}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4 text-sm font-semibold text-slate-200 transition hover:border-white/20 hover:bg-white/[0.06] disabled:cursor-not-allowed disabled:opacity-70"
+            >
+              Ignore changes
+            </button>
+          ) : null}
+
+          <button
+            type="submit"
+            disabled={submitting}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-orange-500 via-amber-500 to-orange-400 px-4 py-4 text-sm font-semibold text-white shadow-[0_18px_40px_rgba(249,115,22,0.28)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-70"
+          >
+            {submitting ? (
+              <>
+                <Loader2 className="animate-spin" size={18} />
+                {submittingLabel ?? "Submitting application..."}
+              </>
+            ) : (
+              <>
+                <UploadCloud size={18} />
+                {submitLabel ?? "Submit application"}
+              </>
+            )}
+          </button>
+        </div>
       </div>
     </form>
   );

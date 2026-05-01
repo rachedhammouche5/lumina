@@ -429,6 +429,7 @@ export type Database = {
           certification_url: string | null
           created_at: string | null
           cv_url: string | null
+          full_name: string | null
           gov_id_url: string | null
           id: string
           motivation: string | null
@@ -441,6 +442,7 @@ export type Database = {
           certification_url?: string | null
           created_at?: string | null
           cv_url?: string | null
+          full_name?: string | null
           gov_id_url?: string | null
           id?: string
           motivation?: string | null
@@ -453,6 +455,7 @@ export type Database = {
           certification_url?: string | null
           created_at?: string | null
           cv_url?: string | null
+          full_name?: string | null
           gov_id_url?: string | null
           id?: string
           motivation?: string | null
