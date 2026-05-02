@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft, Brain, CheckCircle2, AlertTriangle,
-  HelpCircle, RefreshCw, Loader2, Lightbulb,
+  HelpCircle, RefreshCw, Loader2, Lightbulb, Mic, MicOff,
 } from "lucide-react";
 import type { FeynmanResult } from "@/app/api/feynman/route";
+import { useVoiceInput, VOICE_LANGS } from "@/lib/hooks/useVoiceInput";
 
 /* ── Score ring ─────────────────────────────────────────── */
 
@@ -87,6 +88,15 @@ export default function FeynmanClient({
   const MIN_CHARS = 80;
   const charsLeft = Math.max(0, MIN_CHARS - explanation.length);
 
+  const handleVoiceTranscript = useCallback((text: string) => {
+    setExplanation(prev => prev + (prev.trim() ? " " : "") + text);
+  }, []);
+
+  const {
+    voiceState, interimText, lang, setLang,
+    startListening, stopListening, voiceError: micError, isSupported,
+  } = useVoiceInput(handleVoiceTranscript);
+
   async function handleSubmit() {
     if (explanation.trim().length < MIN_CHARS) return;
     setPhase("loading");
@@ -108,6 +118,7 @@ export default function FeynmanClient({
   }
 
   function handleRetry() {
+    if (voiceState === "listening") stopListening();
     setExplanation("");
     setResult(null);
     setPhase("input");
@@ -183,17 +194,62 @@ export default function FeynmanClient({
                 rows={9}
                 className="w-full resize-none rounded-2xl border border-violet-500/20 bg-violet-500/5 px-5 py-4 text-sm leading-relaxed text-white placeholder-violet-300/30 outline-none transition focus:border-violet-500/60 focus:shadow-[0_0_20px_rgba(139,92,246,0.12)] focus:ring-2 focus:ring-violet-500/20 disabled:opacity-50"
               />
-              <div className="mt-2 flex items-center justify-between">
-                <span className="text-xs text-zinc-600">{explanation.length} characters</span>
-                {charsLeft > 0 && (
-                  <span className="text-xs text-zinc-500">{charsLeft} more characters needed</span>
-                )}
+              {interimText && (
+                <p className="mt-2 px-1 text-xs italic text-violet-300/40">{interimText}…</p>
+              )}
+              <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  {isSupported && (
+                    <button
+                      type="button"
+                      onClick={voiceState === "listening" ? stopListening : startListening}
+                      disabled={phase === "loading"}
+                      className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold transition disabled:opacity-40 ${
+                        voiceState === "listening"
+                          ? "bg-red-500/15 text-red-400 ring-1 ring-red-500/30"
+                          : "bg-zinc-800 text-zinc-400 hover:text-zinc-200"
+                      }`}
+                    >
+                      {voiceState === "listening"
+                        ? <><MicOff size={11} /> Stop</>
+                        : <><Mic size={11} /> Speak</>
+                      }
+                    </button>
+                  )}
+                  <div className="flex gap-0.5">
+                    {VOICE_LANGS.map(l => (
+                      <button
+                        key={l.code}
+                        type="button"
+                        onClick={() => setLang(l.code)}
+                        className={`rounded-lg px-2 py-1 text-[11px] font-bold transition ${
+                          lang === l.code
+                            ? "bg-violet-500/25 text-violet-300"
+                            : "text-zinc-600 hover:text-zinc-400"
+                        }`}
+                      >
+                        {l.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-zinc-600">{explanation.length} chars</span>
+                  {charsLeft > 0 && (
+                    <span className="text-xs text-zinc-500">{charsLeft} more needed</span>
+                  )}
+                </div>
               </div>
             </div>
 
             {error && (
               <p className="rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-400">
                 {error}
+              </p>
+            )}
+            {micError && (
+              <p className="rounded-xl border border-orange-500/20 bg-orange-500/5 px-3 py-2.5 text-xs text-orange-400">
+                {micError}
               </p>
             )}
 
@@ -229,41 +285,42 @@ export default function FeynmanClient({
               </p>
             </div>
 
-            {/* Strengths */}
-            {result.strengths.length > 0 && (
-              <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-5">
-                <div className="mb-3 flex items-center gap-2">
-                  <CheckCircle2 size={15} className="text-emerald-400" />
-                  <p className="text-sm font-bold text-emerald-400">What you got right</p>
+            {/* Strengths + Gaps side by side */}
+            <div className="grid grid-cols-2 gap-4">
+              {result.strengths.length > 0 && (
+                <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-5">
+                  <div className="mb-3 flex items-center gap-2">
+                    <CheckCircle2 size={15} className="text-emerald-400" />
+                    <p className="text-sm font-bold text-emerald-400">What you got right</p>
+                  </div>
+                  <ul className="space-y-2">
+                    {result.strengths.map((s, i) => (
+                      <li key={i} className="flex items-start gap-2.5 text-sm text-zinc-300">
+                        <span className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />
+                        {s}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-                <ul className="space-y-2">
-                  {result.strengths.map((s, i) => (
-                    <li key={i} className="flex items-start gap-2.5 text-sm text-zinc-300">
-                      <span className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />
-                      {s}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
+              )}
 
-            {/* Gaps */}
-            {result.gaps.length > 0 && (
-              <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-5">
-                <div className="mb-3 flex items-center gap-2">
-                  <AlertTriangle size={15} className="text-amber-400" />
-                  <p className="text-sm font-bold text-amber-400">What to review</p>
+              {result.gaps.length > 0 && (
+                <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-5">
+                  <div className="mb-3 flex items-center gap-2">
+                    <AlertTriangle size={15} className="text-amber-400" />
+                    <p className="text-sm font-bold text-amber-400">What to review</p>
+                  </div>
+                  <ul className="space-y-2">
+                    {result.gaps.map((g, i) => (
+                      <li key={i} className="flex items-start gap-2.5 text-sm text-zinc-300">
+                        <span className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" />
+                        {g}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-                <ul className="space-y-2">
-                  {result.gaps.map((g, i) => (
-                    <li key={i} className="flex items-start gap-2.5 text-sm text-zinc-300">
-                      <span className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" />
-                      {g}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
+              )}
+            </div>
 
             {/* Follow-up question */}
             <div className="rounded-2xl border border-violet-500/20 bg-violet-500/5 p-5">

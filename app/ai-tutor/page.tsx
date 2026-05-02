@@ -1,8 +1,9 @@
 "use client";
-import { useState, useRef } from "react";
+import { useCallback, useState, useRef } from "react";
 import { useProfile } from "./hooks/useProfile";
 import { useChat } from "./hooks/useChat";
 import MessageList from "@/app/ui/ai-tutor/MessageList";
+import { useVoiceInput, VOICE_LANGS } from "@/lib/hooks/useVoiceInput";
 
 export default function AITutorPage() {
   const { profile } = useProfile();
@@ -32,6 +33,16 @@ export default function AITutorPage() {
       handleSend(input);
     }
   };
+
+  const handleVoiceTranscript = useCallback((text: string) => {
+    setInput(prev => prev + (prev.trim() ? " " : "") + text);
+    requestAnimationFrame(autoResize);
+  }, []);
+
+  const {
+    voiceState, interimText: voiceInterim, lang, setLang,
+    startListening, stopListening, voiceError: micError, isSupported,
+  } = useVoiceInput(handleVoiceTranscript);
 
   return (
     <div className="relative min-h-screen bg-[#080c18] overflow-hidden font-[DM_Sans,system-ui,sans-serif]">
@@ -70,15 +81,38 @@ export default function AITutorPage() {
           {/* Input area */}
           <div className="px-7 pb-6 pt-3 border-t border-white/[0.07] bg-[rgba(10,14,26,0.6)] backdrop-blur-xl flex-shrink-0">
             <div className="flex gap-2.5 items-end bg-[rgba(21,28,48,0.9)] border border-white/10 rounded-2xl px-3 py-2.5 focus-within:border-[rgba(232,114,12,0.4)] transition-colors">
-              <textarea
-                ref={textareaRef}
-                value={input}
-                onChange={(e) => { setInput(e.target.value); autoResize(); }}
-                onKeyDown={handleKeyDown}
-                placeholder="Ask anything about your course…"
-                rows={1}
-                className="flex-1 bg-transparent border-none outline-none text-[#c8d4e8] text-sm font-[DM_Sans,sans-serif] resize-none min-h-[22px] max-h-[120px] leading-snug caret-[#e8720c] placeholder:text-[#3d4560]"
-              />
+              <div className="flex-1 min-w-0">
+                <textarea
+                  ref={textareaRef}
+                  value={input}
+                  onChange={(e) => { setInput(e.target.value); autoResize(); }}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Ask anything about your course…"
+                  rows={1}
+                  className="w-full bg-transparent border-none outline-none text-[#c8d4e8] text-sm font-[DM_Sans,sans-serif] resize-none min-h-[22px] max-h-[120px] leading-snug caret-[#e8720c] placeholder:text-[#3d4560]"
+                />
+                {voiceInterim && (
+                  <p className="mt-1 text-xs italic text-[#3d4560]">{voiceInterim}…</p>
+                )}
+              </div>
+              {isSupported && (
+                <button
+                  type="button"
+                  onClick={voiceState === "listening" ? stopListening : startListening}
+                  disabled={loading}
+                  className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-150 disabled:opacity-40 ${
+                    voiceState === "listening"
+                      ? "bg-red-500/20 text-red-400 ring-1 ring-red-500/40"
+                      : "bg-white/5 text-[#7c83a0] hover:text-white hover:bg-white/10"
+                  }`}
+                >
+                  {voiceState === "listening" ? (
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+                  ) : (
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+                  )}
+                </button>
+              )}
               <button
                 onClick={() => handleSend(input)}
                 disabled={!input.trim() || loading}
@@ -89,9 +123,32 @@ export default function AITutorPage() {
                 </svg>
               </button>
             </div>
-            <div className="text-[11px] text-[#2a3050] mt-2 text-center">
-              Press Enter to send · Shift+Enter for new line
+            <div className="mt-2 flex items-center justify-between">
+              <div className="flex gap-0.5">
+                {VOICE_LANGS.map(l => (
+                  <button
+                    key={l.code}
+                    type="button"
+                    onClick={() => setLang(l.code)}
+                    className={`rounded-lg px-2 py-1 text-[11px] font-bold transition ${
+                      lang === l.code
+                        ? "bg-white/10 text-[#c8d4e8]"
+                        : "text-[#2a3050] hover:text-[#7c83a0]"
+                    }`}
+                  >
+                    {l.label}
+                  </button>
+                ))}
+              </div>
+              <div className="text-[11px] text-[#2a3050]">
+                Press Enter to send · Shift+Enter for new line
+              </div>
             </div>
+            {micError && (
+              <p className="mt-2 rounded-xl border border-orange-500/20 bg-orange-900/10 px-3 py-2 text-xs text-orange-400">
+                {micError}
+              </p>
+            )}
           </div>
 
         </main>

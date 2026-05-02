@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { createClient } from "@/lib/supabase/server";
+import { fetchChunks } from "@/lib/ai/fetch-chunks";
 
 export interface FeynmanResult {
   mastery_score: number;
@@ -19,25 +20,25 @@ export async function POST(req: NextRequest) {
 
   const supabase = await createClient();
 
-  const [{ data: topic }, { data: contents }] = await Promise.all([
+  const [{ data: topic }, chunks] = await Promise.all([
     supabase.from("Topic").select("tpc_title, tpc_description").eq("tpc_id", topic_id).single(),
-    supabase.from("Content").select("cntnt_title, cntnt_type").eq("tpc_id", topic_id),
+    fetchChunks(explanation, { topK: 5, skillId: skill_id }),
   ]);
 
   if (!topic) {
     return NextResponse.json({ error: "Topic not found" }, { status: 404 });
   }
 
-  const materialsList = (contents ?? [])
-    .map(c => `- ${c.cntnt_title} (${c.cntnt_type})`)
-    .join("\n") || "- No specific materials listed";
+  const courseContext = chunks.length > 0
+    ? chunks.map(c => c.chunk_text).join("\n\n---\n\n")
+    : "No course material available.";
 
   const prompt = `You are an expert AI learning coach applying the Feynman Technique to assess deep understanding.
 
 TOPIC: ${topic.tpc_title}
 DESCRIPTION: ${topic.tpc_description ?? "No description provided"}
-LEARNING MATERIALS COVERED:
-${materialsList}
+RELEVANT COURSE MATERIAL (retrieved from the student's actual learning content):
+${courseContext}
 
 A student has studied this topic and is now explaining it in their own words:
 
@@ -74,26 +75,6 @@ SCORING GUIDE:
       : raw;
 
     const parsed: FeynmanResult = JSON.parse(jsonStr);
-
-    // save to db (best-effort — don't fail the request if this fails)
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      const { data: student } = await supabase
-        .from("Student").select("std_id").eq("user_id", user.id).maybeSingle();
-      if (student) {
-        await supabase.from("feynman_attempt").insert({
-          student_id: student.std_id,
-          topic_id,
-          skill_id,
-          explanation: explanation.trim(),
-          mastery_score: parsed.mastery_score,
-          strengths: parsed.strengths,
-          gaps: parsed.gaps,
-          follow_up: parsed.follow_up,
-          encouragement: parsed.encouragement,
-        });
-      }
-    }
 
     return NextResponse.json(parsed);
   } catch (err) {
