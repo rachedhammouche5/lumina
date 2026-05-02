@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import Logo from "./Logo";
 import Button from "./Button";
 import Link from "next/link";
-import { House, LibraryBig, Blocks, Menu, User, X, FileText, Bot } from "lucide-react";
+import { House, LibraryBig, Blocks, Menu, User, X, BarChart3, Bot, ShieldCheck } from "lucide-react";
 import ProfileMenu from "./ProfileMenu";
 import LogoutButton from "./LogoutButton";
 
@@ -24,8 +24,9 @@ const getNavLinks = (role: Role) => {
   ];
   if (role === "admin") return [
     { name: "Home", href: "/admin", icon: House },
-    { name: "Teacher requests", href: "/admin/requests", icon: FileText },
-    { name: "User Management", href: "/admin/users", icon: User },
+    { name: "Teachers", href: "/admin/teachers", icon: ShieldCheck },
+    { name: "Students", href: "/admin/students", icon: User },
+    { name: "Dashboards", href: "/admin/dashboards", icon: BarChart3 },
   ];
   return [
     { name: "Home", href: "/", icon: House },
