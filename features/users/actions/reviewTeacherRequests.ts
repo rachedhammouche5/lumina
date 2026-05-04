@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getRole } from "@/features/utils/auth/getRole";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { syncRoleTables } from "./syncTables";
+
 type ReviewDecision = "approved" | "rejected";
 
 export async function reviewTeacherRequest(formData: FormData) {
@@ -46,14 +48,41 @@ export async function reviewTeacherRequest(formData: FormData) {
 
   const adminClient = createAdminClient(supabaseUrl, serviceRoleKey);
 
-  const { data: requestRow, error: requestLookupError } = await adminClient
+  const requestLookupColumns = "status,email,full_name";
+  let requestRow: {
+    status?: string | null;
+    email?: string | null;
+    full_name?: string | null;
+  } | null = null;
+
+  const requestLookup = await adminClient
     .from("teacher_requests")
-    .select("status")
+    .select(requestLookupColumns)
     .eq("user_id", requestUserId)
     .single();
 
-  if (requestLookupError) {
-    throw requestLookupError;
+  if (requestLookup.error) {
+    if (requestLookup.error.code === "42703" || requestLookup.error.message?.includes("column") ) {
+      const fallbackLookup = await adminClient
+        .from("teacher_requests")
+        .select("status")
+        .eq("user_id", requestUserId)
+        .single();
+
+      if (fallbackLookup.error) {
+        throw fallbackLookup.error;
+      }
+
+      requestRow = {
+        status: fallbackLookup.data?.status ?? null,
+        email: null,
+        full_name: null,
+      };
+    } else {
+      throw requestLookup.error;
+    }
+  } else {
+    requestRow = requestLookup.data;
   }
 
   const currentRequestStatus = requestRow?.status as string | undefined;
@@ -68,17 +97,8 @@ export async function reviewTeacherRequest(formData: FormData) {
     throw new Error("Target user not found");
   }
 
-  const targetUserRole = targetUserResult.user.app_metadata?.role as
-    | string
-    | undefined;
-
-  
-  const nextRole =
-  decision === "approved"
-    ? "teacher"
-    : targetUserRole === "admin"
-      ? "admin"
-      : "teacher_pending";
+  const nextRole: "student" | "teacher" =
+    decision === "approved" ? "teacher" : "student";
 
   const { error: roleError } = await adminClient.auth.admin.updateUserById(
     requestUserId,
@@ -93,42 +113,69 @@ export async function reviewTeacherRequest(formData: FormData) {
     throw roleError;
   }
 
-  const now = new Date().toISOString();
-  const { error: updateRequestError } = await adminClient
+  if (decision === "approved") {
+    await syncRoleTables(
+      adminClient,
+      {
+        userId: requestUserId,
+        email: requestRow?.email ?? targetUserResult.user.email ?? null,
+        fullName:
+          requestRow?.full_name ??
+          (typeof targetUserResult.user.user_metadata?.full_name === "string"
+            ? targetUserResult.user.user_metadata.full_name
+            : null) ??
+          (typeof targetUserResult.user.user_metadata?.name === "string"
+            ? targetUserResult.user.user_metadata.name
+            : null),
+        photoUrl:
+          typeof targetUserResult.user.user_metadata?.photo_url === "string"
+            ? targetUserResult.user.user_metadata.photo_url
+            : null,
+      },
+      "teacher",
+    );
+  }
+
+  const fullUpdatePayload = {
+    status: decision,
+    admin_note: adminNote || null,
+  };
+
+  let updateRequestError: { code?: string; message: string } | null = null;
+
+  const updateResponse = await adminClient
     .from("teacher_requests")
-    .update({
-      status: decision,
-      admin_note: adminNote || null,
-    
-    })
+    .update(fullUpdatePayload)
     .eq("user_id", requestUserId)
-    .eq("status", "pending")
-    .select("user_id")
-    .single();
+    .eq("status", "pending");
+
+  updateRequestError = updateResponse.error;
+
+  if (
+    updateRequestError?.code === "42703" ||
+    updateRequestError?.message?.includes("admin_note")
+  ) {
+    const fallbackUpdateResponse = await adminClient
+      .from("teacher_requests")
+      .update({ status: decision })
+      .eq("user_id", requestUserId)
+      .eq("status", "pending");
+
+    updateRequestError = fallbackUpdateResponse.error;
+  }
 
   if (updateRequestError) {
     throw updateRequestError;
   }
 
-  const { error: auditError } = await adminClient.from("AuditLog").insert({
-    actorId: user.id,
-    actorRole: actorRole,
-    action:
-      decision === "approved"
-        ? "APPROVE_TEACHER_REQUEST"
-        : "REJECT_TEACHER_REQUEST",
-    targetId: requestUserId,
-    targetRole: nextRole,
-    createdAt: new Date(),
-  });
+  
 
-  if (auditError) {
-    console.error(
-      "[reviewTeacherRequest] Failed to write audit log:",
-      auditError.message,
-    );
-  }
+
 
   revalidatePath("/admin");
+  revalidatePath("/admin/teachers");
+  revalidatePath("/admin/students");
+  revalidatePath("/admin/dashboards");
   revalidatePath("/teacher");
+  revalidatePath("/teacher/apply");
 }

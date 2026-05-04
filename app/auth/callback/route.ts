@@ -90,39 +90,6 @@ export async function GET(request: NextRequest) {
     if (!admin) {
       return NextResponse.redirect(new URL("/login?error=config", url.origin));
     }
-    if (!wantsTeacher) {
-      await syncRoleTables(
-        admin,
-        {
-          userId: user.id,
-          email: user.email ?? null,
-          fullName:
-            (user.user_metadata?.full_name as string | undefined) ?? null,
-        },
-        "student",
-      );
-    }
-
-    const { error: requestError } = await admin.from("teacher_requests").upsert(
-      {
-        user_id: user.id,
-        //email: user.email ?? null,
-        // full_name: user.user_metadata?.full_name ?? null,
-        status: "pending",
-        //updated_at: new Date().toISOString(),
-      },
-      { onConflict: "user_id" },
-    );
-
-    if (requestError) {
-      console.error(
-        "[auth/callback] Teacher request failed:",
-        requestError.message,
-      );
-      return NextResponse.redirect(
-        new URL("/login?error=teacher_request", url.origin),
-      );
-    }
 
     if (role !== "teacher_pending") {
       const { error: pendingRoleError } = await admin.auth.admin.updateUserById(
@@ -193,8 +160,10 @@ export async function GET(request: NextRequest) {
   const destination =
     role === "admin"
       ? "/admin"
-      : role === "teacher" || role === "teacher_pending"
+      : role === "teacher"
         ? "/teacher"
+        : role === "teacher_pending"
+          ? "/teacher/apply"
         : "/student";
 
   return NextResponse.redirect(new URL(destination, url.origin));

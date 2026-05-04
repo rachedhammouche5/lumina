@@ -41,6 +41,7 @@ export async function deleteUserAccount(formData: FormData) {
 
   const adminClient = createAdminClient(supabaseUrl, serviceRoleKey);
 
+  await adminClient.from("teacher_requests").delete().eq("user_id", userId);
   const { error: deleteStudentError } = await adminClient
     .from("Student")
     .delete()
@@ -74,4 +75,7 @@ export async function deleteUserAccount(formData: FormData) {
   }
 
   revalidatePath("/admin");
+  revalidatePath("/admin/teachers");
+  revalidatePath("/admin/students");
+  revalidatePath("/admin/dashboards");
 }
