@@ -8,6 +8,8 @@ export default async function NavBar() {
   const { data: { user } } = await supabase.auth.getUser();
   const rawRole = user?.app_metadata?.role as string | undefined;
   const knownRoles: Role[] = ["student", "teacher", "admin"];
-  const role: Role = knownRoles.includes(rawRole as Role) ? (rawRole as Role) : "guest";
-  return <NavBarClient role={role} />;
+  const role: Role =
+    knownRoles.includes(rawRole as Role) ? (rawRole as Role) : "guest";
+  const locked = rawRole === "teacher_pending";
+  return <NavBarClient role={locked ? "teacher" : role} locked={locked} />;
 }
