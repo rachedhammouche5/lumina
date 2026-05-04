@@ -19,6 +19,10 @@ export function useChat(profile: UserProfile, profileLoading: boolean) {
   }, [profileLoading, profile]);
 
 
+  useEffect(() => {
+    setMessages(buildInitialMessages(profile));
+  }, [profile]);
+
   const sendMessage = useCallback(
     async (text: string) => {
       if (!text.trim() || loading) return;

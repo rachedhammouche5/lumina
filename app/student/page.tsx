@@ -102,7 +102,7 @@ export default async function studentPage() {
   const inProgressCount = enrolledSkills.filter((s) => s.progress > 0 && s.progress < 100).length;
 
   return (
-    <main className="relative min-h-screen bg-slate-950 pt-24 pb-20 px-4 sm:px-6 text-white overflow-hidden">
+    <main className="relative min-h-screen overflow-x-hidden bg-slate-950 pt-24 pb-20 px-4 sm:px-6 text-white">
 
       {/* Ambient background */}
       <div className="pointer-events-none absolute inset-0">
@@ -114,7 +114,7 @@ export default async function studentPage() {
         />
       </div>
 
-      <div className="relative z-10 w-full max-w-6xl mx-auto space-y-12">
+      <div className="relative z-10 mx-auto w-full max-w-6xl space-y-12">
 
         {/* ── Welcome header ── */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">

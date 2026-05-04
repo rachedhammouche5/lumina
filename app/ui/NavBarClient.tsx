@@ -3,8 +3,9 @@ import React, { useState } from "react";
 import Logo from "./Logo";
 import Button from "./Button";
 import Link from "next/link";
-import { House, LibraryBig, Blocks, Menu, User, X, FileText, Bot } from "lucide-react";
+import { House, LibraryBig, Blocks, Menu, User, X, BarChart3, Bot, ShieldCheck } from "lucide-react";
 import ProfileMenu from "./ProfileMenu";
+import LogoutButton from "./LogoutButton";
 
 type Role = "student" | "teacher" | "guest" | "admin";
 
@@ -15,15 +16,17 @@ const getNavLinks = (role: Role) => {
     { name: "Dashboard", href: "/teacher/dashboard", icon: Blocks },
   ];
   if (role === "student") return [
-    { name: "AI Tutor", href: "/ai-tutor", icon: Bot },
+    
     { name: "Home", href: "/student", icon: House },
-    { name: "My Learning", href: "/student/dashboard", icon: LibraryBig },
-    { name: "Explore", href: "/skills", icon: Blocks },
+    { name: "Explore Skills", href: "/skills", icon: Blocks },
+    { name: "Dashboard", href: "/student/dashboard", icon: LibraryBig },
+    { name: "AI Tutor", href: "/ai-tutor", icon: Bot },
   ];
   if (role === "admin") return [
     { name: "Home", href: "/admin", icon: House },
-    { name: "Teacher requests", href: "/admin/requests", icon: FileText },
-    { name: "User Management", href: "/admin/users", icon: User },
+    { name: "Teachers", href: "/admin/teachers", icon: ShieldCheck },
+    { name: "Students", href: "/admin/students", icon: User },
+    { name: "Dashboards", href: "/admin/dashboards", icon: BarChart3 },
   ];
   return [
     { name: "Home", href: "/", icon: House },
@@ -32,9 +35,36 @@ const getNavLinks = (role: Role) => {
   ];
 };
 
-export default function NavBarClient({ role }: { role: Role }) {
+export default function NavBarClient({ role, locked = false }: { role: Role; locked?: boolean }) {
   const [isOpen, setIsOpen] = useState(false);
   const navLinks = getNavLinks(role);
+
+  const renderNavLink = (link: (typeof navLinks)[number]) => {
+    const baseClass =
+      "flex items-center justify-center gap-1.5 font-medium transition-all duration-200 ease-in";
+    const lockedClass = "cursor-not-allowed text-slate-600";
+    const activeClass = "hover:text-slate-100 text-slate-400";
+
+    if (locked) {
+      return (
+        <span
+          key={link.name}
+          aria-disabled="true"
+          className={`${baseClass} ${lockedClass}`}
+        >
+          <link.icon size={16} />
+          <h3>{link.name}</h3>
+        </span>
+      );
+    }
+
+    return (
+      <Link key={link.name} href={link.href} className={`${baseClass} ${activeClass}`}>
+        <link.icon size={16} />
+        <h3>{link.name}</h3>
+      </Link>
+    );
+  };
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md bg-[rgba(2,6,23,0.6)] border-b border-slate-800">
@@ -44,22 +74,17 @@ export default function NavBarClient({ role }: { role: Role }) {
         </div>
 
         <div className="hidden md:flex flex-row gap-8 text-slate-400">
-          {navLinks.map((link) => (
-            <Link
-              key={link.name}
-              href={link.href}
-              className="hover:text-slate-100 transition-all duration-200 ease-in flex justify-center items-center gap-1.5 font-medium"
-            >
-              <link.icon size={16} />
-              <h3>{link.name}</h3>
-            </Link>
-          ))}
+          {navLinks.map((link) => renderNavLink(link))}
         </div>
 
         <div className="flex items-center gap-3">
           <div className="hidden sm:flex gap-3">
             {role !== "guest" ? (
-              <ProfileMenu />
+              locked ? (
+                <LogoutButton />
+              ) : (
+                <ProfileMenu />
+              )
             ) : (
               <>
                 <Button variant="ghost" href="/login">Login</Button>
@@ -77,22 +102,57 @@ export default function NavBarClient({ role }: { role: Role }) {
         </div>
       </div>
 
-      <div className={`md:hidden overflow-hidden transition-all border-slate-700 backdrop-blur-md bg-[rgba(2,6,23,0.6)] duration-300 ease-in-out ${isOpen ? "max-h-96 border-b border-slate-800" : "max-h-0"}`}>
-        <div className="backdrop-blur-md bg-[rgba(2,6,23,0.6)] border-b border-slate-700 px-6 py-4 flex flex-col gap-4">
-          {navLinks.map((link) => (
-            <Link
-              key={link.name}
-              href={link.href}
-              className="text-slate-200 hover:text-white transition-all flex items-center gap-3 p-2 rounded-lg hover:bg-slate-800"
-              onClick={() => setIsOpen(false)}
-            >
-              <link.icon size={20} />
-              <h3 className="text-lg font-medium">{link.name}</h3>
-            </Link>
-          ))}
-          <div className="flex flex-col gap-3 pt-4 border-t border-slate-800 sm:hidden">
+      <div
+        className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${
+          isOpen ? "max-h-[calc(100dvh-4.5rem)] border-b border-slate-800" : "max-h-0"
+        }`}
+      >
+        <div className="rounded-b-[28px] border-b border-slate-700 bg-[rgba(2,6,23,0.82)] px-3 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3 shadow-[0_28px_80px_rgba(0,0,0,0.45)] backdrop-blur-2xl sm:px-4">
+          {navLinks.map((link) =>
+            locked ? (
+              <div
+                key={link.name}
+                aria-disabled="true"
+                className="mb-2 flex items-center justify-between gap-3 rounded-2xl border border-white/5 bg-white/5 px-4 py-4 text-slate-400"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10 text-slate-500">
+                    <link.icon size={18} />
+                  </span>
+                  <div>
+                    <h3 className="text-base font-semibold">{link.name}</h3>
+                    <p className="text-[11px] text-slate-500">Locked while pending</p>
+                  </div>
+                </div>
+                <span className="text-slate-600">›</span>
+              </div>
+            ) : (
+              <Link
+                key={link.name}
+                href={link.href}
+                className="mb-2 flex items-center justify-between gap-3 rounded-2xl border border-white/5 bg-white/5 px-4 py-4 text-slate-200 transition-all hover:border-orange-400/20 hover:bg-orange-500/10 hover:text-white"
+                onClick={() => setIsOpen(false)}
+              >
+                <div className="flex items-center gap-3">
+                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10 text-orange-200">
+                    <link.icon size={18} />
+                  </span>
+                  <div>
+                    <h3 className="text-base font-semibold">{link.name}</h3>
+                    <p className="text-[11px] text-slate-500">Open {link.name.toLowerCase()}</p>
+                  </div>
+                </div>
+                <span className="text-slate-500">›</span>
+              </Link>
+            ),
+          )}
+          <div className="mt-2 flex flex-col gap-3 border-t border-slate-800 pt-4 sm:hidden">
             {role !== "guest" ? (
-              <ProfileMenu mobile />
+              locked ? (
+                <LogoutButton />
+              ) : (
+                <ProfileMenu mobile />
+              )
             ) : (
               <>
                 <Button variant="ghost" className="w-full" href="/login">Login</Button>

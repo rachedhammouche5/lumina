@@ -1,3 +1,7 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import { Search, ShieldCheck, Trash2 } from "lucide-react";
 import type { AdminUser } from "../types";
 import { deleteUserAccount } from "@/features/users/actions/deleteUserAccount";
 
@@ -8,18 +12,20 @@ type AdminUsersSectionProps = {
   totalUsers?: number | null;
 };
 
+type RoleFilter = "all" | "student" | "teacher" | "teacher_pending" | "admin" | "unassigned";
+
 function roleClasses(role: string | null) {
   switch (role) {
     case "admin":
-      return "border-cyan-400/40 bg-cyan-500/10 text-cyan-300";
+      return "border-cyan-400/30 bg-cyan-500/10 text-cyan-200";
     case "teacher":
-      return "border-emerald-400/40 bg-emerald-500/10 text-emerald-300";
+      return "border-emerald-400/30 bg-emerald-500/10 text-emerald-200";
     case "student":
-      return "border-blue-400/40 bg-blue-500/10 text-blue-300";
+      return "border-sky-400/30 bg-sky-500/10 text-sky-200";
     case "teacher_pending":
-      return "border-amber-400/40 bg-amber-500/10 text-amber-300";
+      return "border-amber-400/30 bg-amber-500/10 text-amber-200";
     default:
-      return "border-slate-600 bg-slate-800 text-slate-300";
+      return "border-white/10 bg-white/[0.03] text-slate-300";
   }
 }
 
@@ -32,108 +38,139 @@ export default function AdminUsersSection({
   users,
   errorMessage,
   currentUserId,
-  totalUsers,
 }: AdminUsersSectionProps) {
-  const showingCount =
-    typeof totalUsers === "number" && totalUsers > users.length
-      ? `Showing ${users.length} of ${totalUsers} users.`
-      : null;
+  const [search, setSearch] = useState("");
+  const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
+
+  const filteredUsers = useMemo(() => {
+    const searchValue = search.trim().toLowerCase();
+    return users.filter((user) => {
+      const roleValue = user.role ?? "unassigned";
+      const matchesRole = roleFilter === "all" || roleValue === roleFilter;
+      if (!searchValue) return matchesRole;
+
+      const haystack = [user.full_name, user.email, user.id, roleValue]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      return matchesRole && haystack.includes(searchValue);
+    });
+  }, [roleFilter, search, users]);
+
+  const roleOptions: RoleFilter[] = [
+    "all",
+    "teacher_pending",
+    "teacher",
+    "student",
+    "admin",
+    "unassigned",
+  ];
 
   return (
-    <section className="rounded-2xl border border-slate-800 bg-slate-900/80 p-6 shadow-[0_20px_70px_rgba(2,6,23,0.55)]">
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-2">
-        <div className="space-y-1">
-          <h2 className="text-xl font-semibold text-white">User Accounts</h2>
-          <p className="text-sm text-slate-400">
-            Manage real accounts and remove access when needed.
-          </p>
-        </div>
-        <span className="rounded-md border border-slate-700 bg-slate-800 px-2 py-1 text-xs font-semibold text-slate-200">
-          {users.length}
-        </span>
+    <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-4 sm:p-5">
+      <div className="mb-4">
+        <h2 className="text-xl font-semibold text-white">Users</h2>
+        <p className="mt-1 text-sm text-slate-400">
+          Search accounts and remove access when needed.
+        </p>
       </div>
 
-      {showingCount ? (
-        <p className="mb-4 text-xs text-slate-500">{showingCount}</p>
-      ) : null}
+      <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <label className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 lg:min-w-[360px]">
+          <Search size={16} className="text-slate-500" />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by name, email, id, or role"
+            className="w-full bg-transparent text-sm text-white outline-none placeholder:text-slate-500"
+          />
+        </label>
+
+        <div className="flex flex-wrap gap-2">
+          {roleOptions.map((option) => (
+            <button
+              key={option}
+              type="button"
+              onClick={() => setRoleFilter(option)}
+              className={`rounded-full border px-3 py-2 text-xs font-medium capitalize transition ${
+                roleFilter === option
+                  ? "border-slate-300 bg-white text-slate-950"
+                  : "border-white/10 bg-slate-950/50 text-slate-300"
+              }`}
+            >
+              {option.replace(/_/g, " ")}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {errorMessage ? (
-        <p className="rounded-md border border-red-400/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
+        <p className="rounded-2xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
           Failed to load users. {errorMessage}
         </p>
-      ) : users.length === 0 ? (
-        <p className="rounded-md border border-emerald-400/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-300">
-          No user accounts found.
+      ) : filteredUsers.length === 0 ? (
+        <p className="rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3 text-sm text-slate-300">
+          No matching users.
         </p>
       ) : (
-        <ul className="space-y-3">
-          <li className="hidden items-center gap-4 rounded-lg border border-slate-800 bg-slate-950/60 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-400 md:grid md:grid-cols-[2.2fr_2fr_1fr_1fr_auto]">
-            <span>User</span>
-            <span>Email</span>
-            <span>Role</span>
-            <span className="text-right">Actions</span>
-          </li>
-          {users.map((user) => {
-            const isSelf = user.id === currentUserId;
-            const roleLabel = formatRole(user.role);
-            return (
-              <li
-                key={user.id}
-                className="rounded-xl border border-slate-700 bg-slate-900 p-4"
-              >
-                <div className="grid gap-3 md:grid-cols-[2.2fr_2fr_1fr_1fr_auto] md:items-center">
-                  <div className="space-y-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="text-lg font-semibold text-white">
-                        {user.full_name ?? "Unnamed user"}
-                      </h3>
-                      {isSelf ? (
-                        <span className="rounded-md border border-slate-600 bg-slate-800 px-2 py-1 text-xs font-semibold text-slate-200">
-                          You
-                        </span>
-                      ) : null}
-                    </div>
-                    <p className="text-xs text-slate-400">{user.id}</p>
-                  </div>
-
-                  <div className="text-sm text-slate-200">
-                    {user.email ?? "No email on file"}
-                  </div>
-
-                  <div>
-                    <span
-                      className={`inline-flex rounded-md border px-2 py-1 text-xs font-semibold uppercase tracking-wide ${roleClasses(
-                        user.role,
-                      )}`}
-                    >
-                      {roleLabel}
-                    </span>
-                  </div>
-
-                  
-
-                  <div className="flex justify-start md:justify-end">
-                    {isSelf ? (
-                      <span className="rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-xs font-semibold text-slate-400">
-                        Cannot delete self
+        <div className="overflow-x-auto">
+          <table className="min-w-[900px] w-full border-collapse text-left">
+            <thead>
+              <tr className="border-b border-white/10 text-xs uppercase tracking-[0.18em] text-slate-500">
+                <th className="pb-3 pr-4 font-medium">Name</th>
+                <th className="pb-3 pr-4 font-medium">Email</th>
+                <th className="pb-3 pr-4 font-medium">Role</th>
+                <th className="pb-3 font-medium">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredUsers.map((user) => {
+                const isSelf = user.id === currentUserId;
+                const roleLabel = formatRole(user.role);
+                return (
+                  <tr key={user.id} className="border-t border-white/10">
+                    <td className="py-4 pr-4 align-top">
+                      <div className="font-medium text-white">{user.full_name ?? "Unnamed user"}</div>
+                      <div className="mt-1 text-xs text-slate-500">{user.id}</div>
+                    </td>
+                    <td className="py-4 pr-4 align-top text-sm text-slate-300">
+                      {user.email ?? "No email on file"}
+                    </td>
+                    <td className="py-4 pr-4 align-top">
+                      <span
+                        className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${roleClasses(
+                          user.role,
+                        )}`}
+                      >
+                        {roleLabel}
                       </span>
-                    ) : (
-                      <form action={deleteUserAccount}>
-                        <input type="hidden" name="userId" value={user.id} />
-                        <button
-                          type="submit"
-                          className="rounded-lg bg-red-600 px-4 py-2 text-xs font-semibold text-white hover:bg-red-500"
-                        >
-                          Delete
-                        </button>
-                      </form>
-                    )}
-                  </div>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
+                    </td>
+                    <td className="py-4 align-top">
+                      {isSelf ? (
+                        <span className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-2 text-sm text-slate-300">
+                          <ShieldCheck size={16} />
+                          Cannot delete self
+                        </span>
+                      ) : (
+                        <form action={deleteUserAccount}>
+                          <input type="hidden" name="userId" value={user.id} />
+                          <button
+                            type="submit"
+                            className="inline-flex items-center gap-2 rounded-2xl border border-rose-400/20 bg-rose-500/10 px-4 py-2 text-sm text-rose-100 transition hover:border-rose-300/40 hover:bg-rose-500/20"
+                          >
+                            <Trash2 size={16} />
+                            Delete
+                          </button>
+                        </form>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       )}
     </section>
   );

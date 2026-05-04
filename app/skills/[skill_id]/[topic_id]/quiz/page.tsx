@@ -2,7 +2,6 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import QuizClient from "./QuizClient";
 import StreakCelebration from "@/app/features/streak/StreakCelebration";
-import router from "next/dist/shared/lib/router/router";
 
 export default async function QuizPage({
   params,
@@ -35,15 +34,17 @@ export default async function QuizPage({
             No questions yet
           </h2>
           <p className="mx-auto mt-3 max-w-sm text-sm leading-7 text-slate-400">
-            This topic doesn't have any quiz questions yet. Check back later.
+            This topic does not have any quiz questions yet. Check back later.
           </p>
         </div>
       </main>
     );
   }
 
-  // Shuffle and cap at 10
-  const shuffled = [...questions].sort(() => Math.random() - 0.5).slice(0, 10);
+  // Cap the session at 10 questions while keeping the order stable for the server render.
+  const shuffled = [...questions]
+    .sort((a, b) => a.qst_id.localeCompare(b.qst_id))
+    .slice(0, 10);
 
   // Normalize the nested responses
   const normalized = shuffled.map((q) => ({

@@ -69,25 +69,6 @@ export async function POST(request: Request) {
   }
 
   if (teacher) {
-    const { error: reqError } = await admin.from("teacher_requests").upsert(
-      {
-        user_id: user.id,
-        // full_name: user.user_metadata?.full_name ?? null,
-        status: "pending",
-      },
-      { onConflict: "user_id" },
-    );
-
-    if (reqError) {
-      console.error(
-        "[auth/finalize-signup] Teacher request failed:",
-        reqError.message,
-      );
-      return NextResponse.json(
-        { error: "Teacher request failed" },
-        { status: 500 },
-      );
-    }
     if (role !== "teacher" && role !== "admin") {
       const { error: pendingRoleError } = await admin.auth.admin.updateUserById(
         user.id,
@@ -111,14 +92,16 @@ export async function POST(request: Request) {
       }
     }
 
-    return NextResponse.json({ nextPath: `/${user.id}/apply` });
+    return NextResponse.json({ nextPath: "/teacher/apply" });
   }
 
   const nextPath =
     role === "admin"
       ? "/admin"
-      : role === "teacher" || role === "teacher_pending"
-        ? `/${user.id}`
+      : role === "teacher"
+        ? "/teacher"
+        : role === "teacher_pending"
+          ? "/teacher/apply"
         : "/student";
   return NextResponse.json({ nextPath });
 }

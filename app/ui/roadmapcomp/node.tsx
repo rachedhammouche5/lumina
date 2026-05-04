@@ -6,12 +6,12 @@ import { getGlowClass, getHoverClass } from "./actions";
 import Button from "../Button";
 
 export default function RoadmapNode({ data }: NodeProps) {
-  const { title, subtitle, status, degree = 0, icon: Icon = LucideAirVent, learnHref, quizHref } = data as RoadmapNodeData;
+  const { title, subtitle, status, degree = 0, icon: Icon = LucideAirVent, learnHref, quizHref, isRoot } = data as RoadmapNodeData;
   const styles = getNodeStyles(status, degree);
   const hoverClass = getHoverClass(status, degree) ?? "";
   const glowClass = getGlowClass(status, degree) ?? "";
 
-  const showKnowledgePanel = true;
+  const showKnowledgePanel = !isRoot;
 
   const router = useRouter();
   const isLocked = status === "locked";
@@ -154,7 +154,7 @@ export default function RoadmapNode({ data }: NodeProps) {
                       transition-all duration-150
                     "
                   >
-                    {isLocked ? "Unlock" : "Quiz Me"}
+                    {isLocked ? "Take Quiz" : "Quiz Me"}
                     <span>→</span>
                   </Button>
                 )}
