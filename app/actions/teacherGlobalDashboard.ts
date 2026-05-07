@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { getEffectiveStreak } from "@/app/features/streak/getEffectiveStreak";
 
 type TeacherSkill = {
   skl_id: string;
@@ -237,18 +238,19 @@ export async function getTeacherDashboardData(): Promise<TeacherDashboardData | 
         ? studentEnrollments.reduce((sum, enrollment) => sum + enrollment.progress, 0) / studentEnrollments.length
         : 0;
     const positiveReviews = studentReviews.filter((review) => review.rating >= 4).length;
+    const effectiveStreak = getEffectiveStreak(student.std_streak, student.std_last_activeDate);
     const engagementScore =
       avgScore * 0.5 +
       positiveReviews * 18 +
       studentReviews.length * 6 +
       avgProgress * 0.25 +
-      student.std_streak * 2;
+      effectiveStreak * 2;
 
     return {
       id: student.std_id,
       name: student.std_fullname,
       level: student.std_level,
-      streak: student.std_streak,
+      streak: effectiveStreak,
       avgScore: Math.round(avgScore),
       reviews: studentReviews.length,
       progress: Math.round(avgProgress),

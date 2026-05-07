@@ -46,7 +46,7 @@ export default function SkillFormModal({ teacher_id, editingSkill, onClose }: Pr
     setPreview(URL.createObjectURL(file));
   }
 
-  async function onSubmit(e: React.FormEvent) {
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
     setError(null);
@@ -82,8 +82,8 @@ export default function SkillFormModal({ teacher_id, editingSkill, onClose }: Pr
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-      <div className="w-full max-w-lg rounded-xl border border-slate-700 bg-slate-900 p-6 shadow-2xl">
-        <div className="mb-5 flex items-center justify-between">
+      <div className="w-full max-w-md rounded-xl border border-slate-700 bg-slate-900 p-4 shadow-2xl">
+        <div className="mb-3 flex items-center justify-between">
           <h3 className="text-lg font-semibold text-white">
             {isEdit ? "Edit Skill" : "Add Skill"}
           </h3>
@@ -96,15 +96,15 @@ export default function SkillFormModal({ teacher_id, editingSkill, onClose }: Pr
           </button>
         </div>
 
-        <form onSubmit={onSubmit} className="space-y-4">
+        <form onSubmit={onSubmit} className="space-y-3">
           {/* Image upload */}
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <label className="block text-sm font-medium text-slate-200">
               Cover Image
             </label>
             <div
               onClick={() => fileRef.current?.click()}
-              className="relative flex h-36 cursor-pointer items-center justify-center overflow-hidden rounded-lg border-2 border-dashed border-slate-600 bg-slate-800 transition hover:border-indigo-400"
+              className="relative flex h-24 cursor-pointer items-center justify-center overflow-hidden rounded-lg border-2 border-dashed border-slate-600 bg-slate-800 transition hover:border-indigo-400"
             >
               {preview ? (
                 <Image
@@ -139,7 +139,7 @@ export default function SkillFormModal({ teacher_id, editingSkill, onClose }: Pr
           </div>
 
           {/* Title */}
-          <div className="space-y-1">
+          <div className="space-y-1.5">
             <label htmlFor="skl-title" className="block text-sm font-medium text-slate-200">
               Title
             </label>
@@ -154,13 +154,13 @@ export default function SkillFormModal({ teacher_id, editingSkill, onClose }: Pr
           </div>
 
           {/* Description */}
-          <div className="space-y-1">
+          <div className="space-y-1.5">
             <label htmlFor="skl-desc" className="block text-sm font-medium text-slate-200">
               Description
             </label>
             <textarea
               id="skl-desc"
-              rows={3}
+              rows={2}
               value={form.description}
               onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
               required
@@ -170,7 +170,7 @@ export default function SkillFormModal({ teacher_id, editingSkill, onClose }: Pr
           </div>
 
           {/* Duration */}
-          <div className="space-y-1">
+          <div className="space-y-1.5">
             <label htmlFor="skl-dur" className="block text-sm font-medium text-slate-200">
               Duration (hours)
             </label>
@@ -188,7 +188,7 @@ export default function SkillFormModal({ teacher_id, editingSkill, onClose }: Pr
 
           {error && <p className="text-sm text-red-400">{error}</p>}
 
-          <div className="flex justify-end gap-3 pt-1">
+          <div className="flex justify-end gap-3 pt-0.5">
             <button
               type="button"
               onClick={onClose}

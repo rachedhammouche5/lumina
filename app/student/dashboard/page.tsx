@@ -4,6 +4,8 @@ import { getRole } from "@/features/utils/auth/getRole";
 import { Award, Flame, BookCheck, TrendingUp, TrendingDown, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import ProgressChart from "./_components/ProgressChart";
+import { getEffectiveStreak } from "@/app/features/streak/getEffectiveStreak";
+import { resetStreakIfBroken } from "@/app/features/streak/updateStreak";
 
 const weakPoints = [
   { skill: "Python", topic: "Pandas GroupBy", score: 48, href: "/courses/python-data-science/pandas-groupby" },
@@ -30,6 +32,8 @@ export default async function StudentDashboardPage() {
   const role = getRole(user);
   if (role !== "student") redirect("/");
 
+  await resetStreakIfBroken(user.id);
+
   const { data: student } = await supabase
   .from("Student")
   .select("std_streak,std_id,std_last_activeDate")
@@ -42,7 +46,7 @@ export default async function StudentDashboardPage() {
   .eq("student_id", student?.std_id)
   .eq("progress", 100);
 
-const streak = student?.std_streak ?? 0;
+const streak = getEffectiveStreak(student?.std_streak ?? 0, student?.std_last_activeDate);
 const skills = completedSkills ?? 0;
 
   const studentName =

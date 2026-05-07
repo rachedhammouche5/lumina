@@ -3,12 +3,11 @@ import RoadmapFlow from "@/app/ui/roadmapcomp/RoadmapFlow";
 import { createClient } from "@/lib/supabase/server";
 import type { TopicRow, ScoreRow } from "@/app/ui/roadmapcomp/types";
 import EnrollSection from "@/app/ui/roadmapcomp/EnrollSection";
-import { calculateRoadmapProgress, normalizeTopicScores } from "@/app/actions/roadmap";
+import { calculateRoadmapProgress } from "@/app/actions/roadmap";
 import CommentsSection from "@/app/ui/comments/CommentsSection";
-import { getSkillReviews } from "@/lib/reviews";  
+import { getSkillReviews } from "@/lib/reviews";
 import { getRole } from "@/features/utils/auth/getRole";
 import Rating from "@/app/ui/comments/Rating";
-import type { Difficulty } from "./[topic_id]/quiz/quiz.types";
 
 export default async function RoadmapPage({
   params,
@@ -132,17 +131,9 @@ export default async function RoadmapPage({
     .eq("skill_id", skill_id);
 
   const topics = (topicsData ?? []) as TopicRow[];
-  const topicIds = topics.map((topic) => topic.tpc_id);
-
-  const { data: quizData } = topicIds.length
-    ? await supabase
-        .from("quiz")
-        .select("tpc_id,difficulty")
-        .in("tpc_id", topicIds)
-    : { data: [] };
 
   // page.tsx
-const { data: scoresData } = studentId
+  const { data: scoresData } = studentId
     ? await supabase
         .from("score")
         .select("tpc_id, score")
@@ -150,108 +141,46 @@ const { data: scoresData } = studentId
     : { data: [] };
 
   const scores = (scoresData ?? []) as ScoreRow[];
-  const normalizedScores = normalizeTopicScores(scores, (quizData ?? []) as { tpc_id: string | null; difficulty: Difficulty }[]);
 
   const totalTopics = initialIsEnrolled ? topics.length : 0;
-  const progressValue = initialIsEnrolled && totalTopics > 0 ? calculateRoadmapProgress(topics, normalizedScores) : 0;
+  const progressValue = initialIsEnrolled && totalTopics > 0 ? calculateRoadmapProgress(topics, scores) : 0;
 
   return (
-    <main className="min-h-screen min-w-screen bg-slate-950 text-white flex flex-col items-center pt-16 md:pt-20 px-4 sm:px-6 relative overflow-hidden font-sans gap-3">
-      <EnrollSection
-        skill={skill}
-        isLoggedIn={!!user}
-        initialIsEnrolled={initialIsEnrolled}
-        progressValue={progressValue}
-      />
-      <div className="w-full max-w-[1400px]">
-        <h3 className="text-xl md:text-2xl font-black italic tracking-tight mb-4">
-          COURSE PATH
-        </h3>
-        <RoadmapFlow topics={topics} scores={normalizedScores} isEnrolled={initialIsEnrolled} />
-        <div className="mt-15">
-          <h3 className="text-xl md:text-2xl font-black italic tracking-tight mb-4 uppercase">
-          Rating & Reviews
-        </h3>
-          <div className="flex flex-col md:flex-row w-full gap-4">
-          <div className="mr-8">
-            <Rating comments={reviews} />
-          </div>
-
-          <CommentsSection 
-          initialComments={reviews}
-          skillId={resolvedSkillId}
-          currentUser={currentUser}
+    <main className="min-h-screen w-full bg-slate-950 text-white flex flex-col items-center pt-16 md:pt-20 px-4 sm:px-6">
+      <div className="w-full max-w-[1400px] space-y-10 pb-16">
+        <EnrollSection
+          skill={skill}
+          isLoggedIn={!!user}
+          initialIsEnrolled={initialIsEnrolled}
+          progressValue={progressValue}
         />
-        </div>
-        </div>
+
+        <section>
+          <div className="flex items-center gap-4 mb-5">
+            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-slate-700 to-transparent" />
+            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Course Path</span>
+            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-slate-700 to-transparent" />
+          </div>
+          <RoadmapFlow topics={topics} scores={scores} isEnrolled={initialIsEnrolled} />
+        </section>
+
+        <section>
+          <div className="flex items-center gap-4 mb-6">
+            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-slate-700 to-transparent" />
+            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Rating & Reviews</span>
+            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-slate-700 to-transparent" />
+          </div>
+          <div className="flex flex-col md:flex-row w-full gap-6">
+            <Rating comments={reviews} />
+            <CommentsSection
+              initialComments={reviews}
+              skillId={resolvedSkillId}
+              currentUser={currentUser}
+            />
+          </div>
+        </section>
       </div>
     </main>
   );
 }
 
-// import InfoCard from "@/app/ui/roadmapcomp/InfoCard";
-// import RoadmapFlow from "@/app/ui/roadmapcomp/RoadmapFlow";
-// import ProgressBar from "@/app/ui/roadmapcomp/ProgressBar";
-// import Button from "@/app/ui/Button";
-// import { dynamicRoadmapPage } from "@/app/actions/roadmap";
-// import { Enrollment } from "@/app/actions/enrollement";
-
-// export default async function RoadmapPage({ params }: { params: { std_id: string; skl_id: string } }) {
-//   const { skill, enrollment, topics = [], scores = [] } = await dynamicRoadmapPage(params.skl_id, params.std_id);
-
-//   const totalTopics = topics.length;
-//   const passedTopics = scores.filter((s) => s.score >= 50).length;
-//   const progressValue = totalTopics > 0 ? (passedTopics / totalTopics) * 100 : 0;
-
-//   return (
-//     <main className="min-h-screen min-w-screen bg-slate-950 text-white flex flex-col items-center pt-16 md:pt-20 px-4 sm:px-6 relative overflow-hidden font-sans gap-3">
-//       <div className="w-full justify-between flex flex-row pl-10 pr-10">
-//         <Button
-//           variant="outline"
-//           size="s"
-//           className="bg-linear-to-br from-slate-300/50 to-slate-500/10 border-2 border-slate-700/40"
-//           href={`/student/${params.std_id}/courses`}
-//         >
-//           {"<\t Back to courses"}
-//         </Button>
-//         {!enrollment ? (
-//           <form
-//             action={async () => {
-//               "use server";
-//               await Enrollment(params.skl_id, params.std_id);
-//             }}
-//           >
-//             <Button
-//               type="submit"
-//               variant="outline"
-//               size="s"
-//               className="bg-linear-to-br from-slate-300/50 to-slate-500/10 border-2 border-slate-700/40"
-//             >
-//               Enroll Now
-//             </Button>
-//           </form>
-//         ) : (
-//           <Button
-//             variant="outline"
-//             size="s"
-//             className="opacity-70 cursor-not-allowed pointer-events-none"
-//           >
-//             Enrolled
-//           </Button>
-//         )}
-//       </div>
-//       <div className="w-full max-w-[1400px] flex flex-col md:flex-row gap-5 mb-8 md:mb-10">
-//         <div className="w-full md:flex-[2]">
-//           <InfoCard title={skill?.skl_title} subtitle={skill?.skl_dscrptn} />
-//         </div>
-//         <div className="w-full md:flex-1">
-//           <ProgressBar title="Your Next Progres" value={progressValue} />
-//         </div>
-//       </div>
-//       <div className="w-full max-w-[1400px]">
-//         <h3 className="text-xl md:text-2xl font-black italic tracking-tight mb-4">COURSE PATH</h3>
-//         <RoadmapFlow topics={topics} scores={scores} />
-//       </div>
-//     </main>
-//   );
-// }

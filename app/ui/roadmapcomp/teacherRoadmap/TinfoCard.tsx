@@ -55,4 +55,4 @@ function TInfoCard({ title, subtitle, icon: Icon = GitBranch }: InfoCardProps) {
   );
 }
 
-export default InfoCard;
+export default TInfoCard;

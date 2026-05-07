@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { UserProfile, DEFAULT_PROFILE } from "../types";
+import { getEffectiveStreak } from "@/app/features/streak/getEffectiveStreak";
 
 export function useProfile() {
   const [profile, setProfile] = useState<UserProfile>(DEFAULT_PROFILE);
@@ -15,7 +16,7 @@ export function useProfile() {
 
       const { data: student } = await supabase
         .from("Student")
-        .select("std_fullname, std_streak, std_id")
+        .select("std_fullname, std_streak, std_id, std_last_activeDate")
         .eq("user_id", user.id)
         .single();
 
@@ -34,7 +35,7 @@ export function useProfile() {
       setProfile({
         name: student?.std_fullname || "Student",
         currentSkill: "Python",
-        streak: student?.std_streak || 0,
+        streak: getEffectiveStreak(student?.std_streak || 0, student?.std_last_activeDate),
         weakPoints: scores?.filter((s) => s.score < 70).map(map) || [],
         strongPoints: scores?.filter((s) => s.score >= 70).map(map) || [],
       });

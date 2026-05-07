@@ -32,7 +32,7 @@ const seriesConfig = [
 ] as const;
 
 export default function BaseAreaChart({ data }: { data?: ChartInput[] }) {
-  const chartData: ChartPoint[] = (data?.length ? data : demoData).map((item) => ({
+  const chartData: ChartPoint[] = (data?.length ? data : demoData as ChartInput[]).map((item) => ({
     name: item?.name ?? item?.date ?? item?.label ?? "Day",
     students: Number(item?.students ?? 0),
     likes: Number(item?.likes ?? 0),
