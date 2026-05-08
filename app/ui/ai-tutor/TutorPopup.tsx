@@ -20,7 +20,7 @@ const QUICK_PROMPTS = [
 
 export default function TutorPopup({ open, onClose }: Props) {
   const { profile, profileLoading } = useProfile();
-  const { messages, loading, sendMessage } = useChat(profile);
+  const { messages, loading, sendMessage } = useChat(profile, profileLoading);
   const [input, setInput] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 

@@ -3,25 +3,25 @@ import { Message, UserProfile } from "../types";
 
 import { buildSystemPrompt } from "@/app/ai-tutor/lib/Prompt";
 const uid = () => Math.random().toString(36).slice(2, 9);
-export function useChat(profile: UserProfile, profileLoading: boolean) {
+function buildInitialMessage(profile: UserProfile): Message {
+  const weakest = profile.weakPoints[0];
+  const content = weakest
+    ? `Hey ${profile.name}! 👋 I've analyzed your learning profile.\n\nYour weakest area right now is **${weakest.topic}** at ${weakest.score}% — let's work on that!`
+    : `Hey ${profile.name}! 👋 I'm your AI tutor for **${profile.currentSkill || "your course"}**. What would you like to learn today?`;
+
+  return { id: uid(), role: "assistant", content, timestamp: new Date() };
+}
+
+export function useChat(profile: UserProfile, profileLoading = false) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
-  const welcomed = useRef(false);
+  const initialized = useRef(false);
 
   useEffect(() => {
-    if (profileLoading || welcomed.current) return;
-    welcomed.current = true;
-    const weakest = profile.weakPoints[0];
-    const content = weakest
-      ? `Hey ${profile.name}! 👋 I've analyzed your learning profile.\n\nYour weakest area right now is **${weakest.topic}** at ${weakest.score}% — let's work on that!`
-      : `Hey ${profile.name}! 👋 I'm your AI tutor for **${profile.currentSkill}**. What would you like to learn today?`;
-    setMessages([{ id: uid(), role: "assistant", content, timestamp: new Date() }]);
+    if (profileLoading || initialized.current) return;
+    initialized.current = true;
+    setMessages([buildInitialMessage(profile)]);
   }, [profileLoading, profile]);
-
-
-  useEffect(() => {
-    setMessages(buildInitialMessages(profile));
-  }, [profile]);
 
   const sendMessage = useCallback(
     async (text: string) => {
@@ -64,6 +64,7 @@ export function useChat(profile: UserProfile, profileLoading: boolean) {
         const decoder = new TextDecoder();
         let aiText = "";
         const aiMsgId = uid();
+        let buffer = "";
 
         setMessages((prev) => [
           ...prev,
@@ -74,15 +75,20 @@ export function useChat(profile: UserProfile, profileLoading: boolean) {
           while (true) {
             const { done, value } = await reader.read();
             if (done) break;
-            const chunk = decoder.decode(value, { stream: true });
-            for (const line of chunk.split("\n")) {
-              if (line.startsWith("data: ")) {
+            buffer += decoder.decode(value, { stream: true });
+            const events = buffer.split("\n\n");
+            buffer = events.pop() ?? "";
+
+            for (const event of events) {
+              for (const line of event.split("\n")) {
+                if (!line.startsWith("data: ")) continue;
                 const data = line.slice(6);
-                if (data === "[DONE]") break;
+                if (data === "[DONE]") continue;
                 try {
                   const json = JSON.parse(data);
                   const delta =
                     json.delta?.text || json.choices?.[0]?.delta?.content || "";
+                  if (!delta) continue;
                   aiText += delta;
                   setMessages((prev) =>
                     prev.map((m) =>

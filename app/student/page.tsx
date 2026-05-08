@@ -3,7 +3,7 @@ import { createClient } from "../../lib/supabase/server";
 import { getRole } from "@/features/utils/auth/getRole";
 import Button from "@/app/ui/Button";
 import CourseCard from "@/app/ui/Skills/CourseCard";
-import { BookOpen, ChevronRight, Sparkles, TrendingUp } from "lucide-react";
+import { BookOpen, ChevronRight } from "lucide-react";
 import { calculateRoadmapProgress, normalizeTopicScores } from "@/app/actions/roadmap";
 import type { TopicRow, ScoreRow } from "@/app/ui/roadmapcomp/types";
 import type { Difficulty } from "@/app/skills/[skill_id]/[topic_id]/quiz/quiz.types";
@@ -15,12 +15,6 @@ export default async function studentPage() {
   const { data: { user }, error } = await supabase.auth.getUser();
   if (error) { console.error("Auth error:", error.message); redirect("/"); }
   if (!user) redirect("/");
-
-  const studentName =
-    (typeof user.user_metadata?.full_name === "string" && user.user_metadata.full_name.trim()) ||
-    (typeof user.user_metadata?.name === "string" && user.user_metadata.name.trim()) ||
-    (typeof user.email === "string" && user.email.split("@")[0]) ||
-    "Student";
 
   const role = getRole(user);
   if (role !== "student") redirect("/");
@@ -35,7 +29,7 @@ export default async function studentPage() {
   const studentId = student?.std_id ?? user.id;
 
   // --- Enrolled skills ---
-  const enrollSelect = "progress, Skill ( skl_id, skl_title, skl_dscrptn, skl_duration, skl_picture )";
+  const enrollSelect = "progress, Skill ( skl_id, skl_title, skl_dscrptn, skl_duration, skl_picture, teacher_id, Teacher ( tchr_fullname, tchr_pfp ) )";
   const fetchEnroll = (col: "studentId" | "student_id") =>
     supabase.from("enroll").select(enrollSelect).eq(col, studentId).order("progress", { ascending: false });
 
@@ -48,6 +42,7 @@ export default async function studentPage() {
   type RawSkill = {
     skl_id?: string; skl_title?: string; skl_dscrptn?: string | null;
     skl_duration?: number | null; skl_picture?: string | null;
+    Teacher?: { tchr_fullname?: string | null; tchr_pfp?: string | null } | { tchr_fullname?: string | null; tchr_pfp?: string | null }[] | null;
   };
   type RawEnrollRow = { progress: number; Skill?: RawSkill | RawSkill[] | null };
 
@@ -55,6 +50,18 @@ export default async function studentPage() {
   const enrolledSkillIds = enrolledRows
     .map((row) => { const s = Array.isArray(row.Skill) ? row.Skill[0] : row.Skill; return s?.skl_id ?? null; })
     .filter((id): id is string => Boolean(id));
+
+  const { data: reviewRows } = enrolledSkillIds.length
+    ? await supabase.from("review").select("skill_id, rating").in("skill_id", enrolledSkillIds)
+    : { data: [] };
+
+  const reviewStats = new Map<string, { total: number; count: number }>();
+  (reviewRows ?? []).forEach((row) => {
+    const next = reviewStats.get(row.skill_id) ?? { total: 0, count: 0 };
+    next.total += row.rating ?? 0;
+    next.count += 1;
+    reviewStats.set(row.skill_id, next);
+  });
 
   // --- Topics & scores for real progress ---
   const { data: allTopicsData } = enrolledSkillIds.length
@@ -87,6 +94,8 @@ export default async function studentPage() {
     const title = skill?.skl_title ?? "Untitled skill";
     const skillTopics = topicsBySkill.get(id) ?? [];
     const realProgress = calculateRoadmapProgress(skillTopics, normalizedScores);
+    const teacherRow = skill?.Teacher ? (Array.isArray(skill.Teacher) ? skill.Teacher[0] : skill.Teacher) : null;
+    const stats = reviewStats.get(id);
 
     return {
       id,
@@ -94,12 +103,16 @@ export default async function studentPage() {
       description: skill?.skl_dscrptn ?? "No description yet.",
       image: skill?.skl_picture ?? undefined,
       progress: realProgress,
+      teacher: teacherRow
+        ? {
+            name: teacherRow.tchr_fullname ?? "Teacher",
+            avatar: teacherRow.tchr_pfp ?? null,
+          }
+        : null,
+      rating: stats && stats.count > 0 ? stats.total / stats.count : null,
+      reviewCount: stats?.count ?? 0,
     };
   });
-
-  // Stats
-  const completedCount = enrolledSkills.filter((s) => s.progress === 100).length;
-  const inProgressCount = enrolledSkills.filter((s) => s.progress > 0 && s.progress < 100).length;
 
   return (
     <main className="relative min-h-screen overflow-x-hidden bg-slate-950 pt-24 pb-20 px-4 sm:px-6 text-white">
@@ -181,6 +194,9 @@ export default async function studentPage() {
                   description={skill.description}
                   image={skill.image}
                   progress={skill.progress}
+                  teacher={skill.teacher}
+                  rating={skill.rating}
+                  reviewCount={skill.reviewCount}
                 />
               ))}
             </div>
@@ -211,30 +227,6 @@ function SectionHeader({ label }: { label: string }) {
       <div className="h-4 w-1 rounded-full bg-orange-500" />
       <h2 className="text-lg font-black tracking-tight">{label}</h2>
       <div className="flex-1 h-px bg-gradient-to-r from-white/8 to-transparent" />
-    </div>
-  );
-}
-
-function StatPill({
-  icon,
-  label,
-  value,
-  accent = false,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: number;
-  accent?: boolean;
-}) {
-  return (
-    <div className={`flex items-center gap-2 px-3 py-2 rounded-2xl border text-sm ${
-      accent
-        ? "bg-orange-500/10 border-orange-500/20 text-orange-400"
-        : "bg-slate-800/50 border-white/6 text-slate-400"
-    }`}>
-      {icon}
-      <span className="font-bold tabular-nums">{value}</span>
-      <span className="text-[10px] uppercase tracking-wider font-medium opacity-70">{label}</span>
     </div>
   );
 }

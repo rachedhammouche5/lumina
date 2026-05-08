@@ -9,6 +9,12 @@ type Course = {
   title: string;
   description: string;
   image?: string | null;
+  teacher?: {
+    name: string;
+    avatar?: string | null;
+  } | null;
+  rating?: number | null;
+  reviewCount?: number;
 };
 
 export default function CourseSearchClient() {
@@ -135,6 +141,9 @@ export default function CourseSearchClient() {
                 title={course.title}
                 description={course.description}
                 image={course.image ?? undefined}
+                teacher={course.teacher ?? null}
+                rating={course.rating ?? null}
+                reviewCount={course.reviewCount}
               />
             ))}
       </div>

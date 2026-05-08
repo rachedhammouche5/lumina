@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, BookOpen } from "lucide-react";
+import { ArrowRight, BookOpen, Star } from "lucide-react";
 
 interface CourseCardProps {
   id: string;
@@ -8,6 +8,12 @@ interface CourseCardProps {
   image?: string;
   compact?: boolean;
   progress?: number;
+  teacher?: {
+    name: string;
+    avatar?: string | null;
+  } | null;
+  rating?: number | null;
+  reviewCount?: number;
 }
 
 const GRADIENTS = [
@@ -27,7 +33,17 @@ export function hashTitle(title: string): number {
 
 export { GRADIENTS };
 
-function CourseCard({ id, title, description, image, compact = false, progress }: CourseCardProps) {
+function CourseCard({
+  id,
+  title,
+  description,
+  image,
+  compact = false,
+  progress,
+  teacher,
+  rating,
+  reviewCount,
+}: CourseCardProps) {
   const g = GRADIENTS[hashTitle(title)];
   const isEnrolled = typeof progress === "number";
   const initials = title
@@ -90,6 +106,48 @@ function CourseCard({ id, title, description, image, compact = false, progress }
             {description}
           </p>
         </div>
+
+        {(teacher?.name || typeof rating === "number") && (
+          <div className="flex items-center justify-between gap-3 rounded-2xl border border-white/5 bg-black/15 px-3 py-2">
+            <div className="flex min-w-0 items-center gap-2">
+              {teacher?.avatar ? (
+                <img
+                  src={teacher.avatar}
+                  alt={teacher.name}
+                  className="h-9 w-9 flex-shrink-0 rounded-xl object-cover ring-1 ring-white/10"
+                />
+              ) : (
+                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-white/8 text-[11px] font-bold text-white/80 ring-1 ring-white/10">
+                  {(teacher?.name ?? "Teacher")
+                    .split(" ")
+                    .filter(Boolean)
+                    .map((part) => part[0])
+                    .join("")
+                    .slice(0, 2)
+                    .toUpperCase()}
+                </div>
+              )}
+              <div className="min-w-0">
+                <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-slate-500">
+                  Teacher
+                </p>
+                <p className="truncate text-[12px] font-semibold text-white">
+                  {teacher?.name ?? "Teacher"}
+                </p>
+              </div>
+            </div>
+
+            {typeof rating === "number" && (
+              <div className="flex items-center gap-1 rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-[10px] font-bold text-amber-300">
+                <Star size={10} className="fill-current" />
+                <span>{rating.toFixed(1)}</span>
+                {typeof reviewCount === "number" && (
+                  <span className="text-amber-200/70">({reviewCount})</span>
+                )}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Footer */}
         {isEnrolled ? (
