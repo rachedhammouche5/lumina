@@ -31,7 +31,6 @@ export default async function StudentDashboardPage() {
   const role = getRole(user);
   if (role !== "student") redirect("/");
 
-  await resetStreakIfBroken(user.id);
 
   const { data: student } = await supabase
     .from("Student")
