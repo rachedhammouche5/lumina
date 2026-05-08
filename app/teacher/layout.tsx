@@ -44,7 +44,7 @@ export default async function TeacherLayout({
   return (
     <>
       <NavBar />
-      <main className="pt-10">
+      <main className="pt-10 pb-28 lg:pb-0">
         {isRejected ? (
           <div className="text-red-500 p-4 text-center">
             <p className="font-semibold">Your teacher request was rejected.</p>

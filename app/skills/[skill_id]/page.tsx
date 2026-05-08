@@ -134,6 +134,7 @@ export default async function RoadmapPage({
 
   // page.tsx
   const { data: scoresData } = studentId
+  const { data: scoresData } = studentId
     ? await supabase
         .from("score")
         .select("tpc_id, score")

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ArrowRight, BookOpen } from "lucide-react";
 
 interface CourseCardProps {
@@ -37,8 +38,9 @@ function CourseCard({ id, title, description, image, compact = false, progress }
     .join("");
 
   return (
-    <a
+    <Link
       href={`/skills/${id}`}
+      prefetch={true}
       className="group relative flex flex-col bg-slate-900/50 backdrop-blur-md border border-white/5 rounded-[2rem] overflow-hidden transition-all duration-500 hover:border-orange-500/25 hover:shadow-[0_8px_48px_rgba(249,115,22,0.1)] hover:-translate-y-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500/50"
     >
       {/* Thumbnail */}
@@ -116,7 +118,7 @@ function CourseCard({ id, title, description, image, compact = false, progress }
           </div>
         )}
       </div>
-    </a>
+    </Link>
   );
 }
 

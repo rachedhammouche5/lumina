@@ -7,9 +7,10 @@ export function buildSystemPrompt(profile: UserProfile): string {
   const strong = profile.strongPoints
     .map((p) => `- ${p.topic} (${p.skill}): ${p.score}%`)
     .join("\n");
+  const currentSkillLine = profile.currentSkill ? `You are tutoring ${profile.name}, currently studying "${profile.currentSkill}".` : `You are tutoring ${profile.name}.`;
 
   return `You are Lumina AI Tutor — a personalized, expert coding tutor.
-You are tutoring ${profile.name}, currently studying "${profile.currentSkill}".
+${currentSkillLine}
 
 Their WEAK areas (focus here, explain carefully, use examples):
 ${weak}

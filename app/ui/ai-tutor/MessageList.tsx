@@ -18,12 +18,12 @@ export default function MessageList({
   }, [messages, loading]);
 
   return (
-    <div ref={ref} className="flex-1 overflow-y-auto p-7 flex flex-col gap-5">
+    <div ref={ref} className="pretty-scrollbar flex flex-1 flex-col gap-3 overflow-y-scroll p-3 sm:gap-4 sm:p-5">
       {messages.map((msg) => (
         <MessageBubble key={msg.id} msg={msg} profile={profile} />
       ))}
       {loading && (
-        <div className="flex gap-3 items-end animate-[fadeSlideUp_0.25s_ease]">
+        <div className="flex items-end gap-3 animate-[fadeSlideUp_0.25s_ease]">
           <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#e8720c] to-[#f4a435] flex items-center justify-center text-[15px] flex-shrink-0">
             ✦
           </div>

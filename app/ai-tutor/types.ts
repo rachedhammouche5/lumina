@@ -24,7 +24,7 @@ export interface ScoreWithTopic {
 
 export const DEFAULT_PROFILE: UserProfile = {
   name: "Student",
-  currentSkill: "Python",
+  currentSkill: "",
   weakPoints: [],
   strongPoints: [],
   streak: 0,

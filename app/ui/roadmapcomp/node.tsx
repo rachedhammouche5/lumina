@@ -6,14 +6,12 @@ import { getGlowClass, getHoverClass } from "./actions";
 import Button from "../Button";
 
 export default function RoadmapNode({ data }: NodeProps) {
-  const { title, subtitle, status, degree = 0, icon: Icon = LucideAirVent, learnHref, quizHref } = data as RoadmapNodeData;
+  const { title, subtitle, status, degree = 0, icon: Icon = LucideAirVent, learnHref, quizHref, isRoot } = data as RoadmapNodeData;
   const styles = getNodeStyles(status, degree);
   const hoverClass = getHoverClass(status, degree) ?? "";
   const glowClass = getGlowClass(status, degree) ?? "";
 
-  const isRoot = !data.parentId;
   const showKnowledgePanel = !isRoot;
-
 
   const router = useRouter();
   const isLocked = status === "locked";
@@ -33,8 +31,8 @@ export default function RoadmapNode({ data }: NodeProps) {
       : status === "unlocked"
         ? "hover:-translate-y-2 transition-transform duration-300 hover:shadow-[0_0_42px_rgba(59,130,246,0.55)] hover:saturate-125"
         : "hover:-translate-y-1 transition-transform duration-300 hover:shadow-[0_0_26px_rgba(0,0,0,0.45)]";
-  const stackingClassName = isLocked ? "z-30" : "z-10";
-  const baseClassName = `group relative ${stackingClassName} flex flex-col h-36 w-44 md:h-44 md:w-52 bg-[#0F111A]/90 backdrop-blur-xl rounded-3xl p-4 items-center border-2 transition-all duration-500 transform-gpu will-change-transform pointer-events-auto ${styles.container} ${shadowClass} ${hoverClass} ${glowClass}`;
+
+  const baseClassName = `group relative flex flex-col h-36 w-44 md:h-44 md:w-52 bg-[#0F111A]/90 backdrop-blur-xl rounded-3xl p-4 items-center border-2 transition-all duration-500 transform-gpu will-change-transform pointer-events-auto ${styles.container} ${shadowClass} ${hoverClass} ${glowClass}`;
   const interactiveClassName = isPointer
     ? `cursor-pointer ${hoverMotionClass}`
     : `cursor-not-allowed ${hoverMotionClass}`;
@@ -119,7 +117,9 @@ export default function RoadmapNode({ data }: NodeProps) {
             </div>
 
             <p className="text-[11px] text-slate-200/80 leading-relaxed mb-3">
-              Already know this topic?
+              {isLocked
+                ? "Prove your knowledge to unlock this topic."
+                : "Already know this topic?"}
             </p>
 
             <div className="flex flex-col gap-[7px]">
@@ -154,7 +154,7 @@ export default function RoadmapNode({ data }: NodeProps) {
                       transition-all duration-150
                     "
                   >
-                    Quiz Me
+                    {isLocked ? "Take Quiz" : "Quiz Me"}
                     <span>→</span>
                   </Button>
                 )}

@@ -1,5 +1,7 @@
 import { LucideIcon } from "lucide-react";
+import type { Node } from "@xyflow/react";
 
+export type RoadmapNode = Node<RoadmapNodeData, "roadmap">;
 export type RoadmapStatus = "completed" | "locked" | "unlocked";
 
 export type RoadmapNodeData = {
@@ -13,9 +15,10 @@ export type RoadmapNodeData = {
   learnHref?: string;
   quizHref?: string;
   onAddChild?: () => void;
-  onPreview?: () => void;
-  onAddQuiz?: () => void;
+  onManageTopic?: () => void;
+  onModifyQuiz?: () => void;
   onRemove?: () => void;
+  isRoot?: boolean;
 };
 
 // Minimal Supabase row shapes we rely on for the roadmap

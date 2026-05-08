@@ -1,18 +1,27 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Message, UserProfile } from "../types";
 
 import { buildSystemPrompt } from "@/app/ai-tutor/lib/Prompt";
 const uid = () => Math.random().toString(36).slice(2, 9);
-export function useChat(profile: UserProfile) {
-  const [messages, setMessages] = useState<Message[]>([
+
+function buildInitialMessages(profile: UserProfile): Message[] {
+  return [
     {
       id: uid(),
       role: "assistant",
-      content: `Hey ${profile.name}! 👋 I've analyzed your learning profile.\n\nYour weakest area right now is **Pandas GroupBy** at 48% — let's fix that!`,
+      content: `Hey ${profile.name}! 👋 I've analyzed your learning profile.\n\nYour weakest area right now is **${profile.weakPoints[0]?.topic ?? "your current material"}**. Let's fix that together.`,
       timestamp: new Date(),
     },
-  ]);
+  ];
+}
+
+export function useChat(profile: UserProfile) {
+  const [messages, setMessages] = useState<Message[]>(() => buildInitialMessages(profile));
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    setMessages(buildInitialMessages(profile));
+  }, [profile]);
 
   const sendMessage = useCallback(
     async (text: string) => {

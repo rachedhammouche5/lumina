@@ -53,24 +53,29 @@ export default function BaseAreaChart({ data }: { data?: ChartInput[] }) {
         </defs>
 
         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#ffffff05" />
-        <XAxis 
-          dataKey="name" 
-          axisLine={false} 
-          tickLine={false} 
-          tick={{ fill: '#64748b', fontSize: 12 }} 
-          dy={10} 
+        <XAxis
+          dataKey="name"
+          axisLine={false}
+          tickLine={false}
+          tick={{ fill: "#64748b", fontSize: 11 }}
+          dy={10}
         />
         <YAxis hide={true} />
 
         <Tooltip
-          contentStyle={{ 
-            backgroundColor: '#0f172a', 
-            border: '1px solid rgba(250, 113, 0, 0.1)', 
-            borderRadius: '12px' 
+          contentStyle={{
+            backgroundColor: "#0f172a",
+            border: "1px solid rgba(250, 113, 0, 0.1)",
+            borderRadius: "12px",
           }}
-          itemStyle={{ fontSize: '12px' }}
+          itemStyle={{ fontSize: "12px" }}
         />
-        <Legend verticalAlign="top" align="right" iconType="circle" wrapperStyle={{ paddingBottom: '20px' }} />
+        <Legend
+          verticalAlign="top"
+          align="right"
+          iconType="circle"
+          wrapperStyle={{ paddingBottom: "16px", fontSize: "12px" }}
+        />
 
         {seriesConfig.map((s) => (
           <Area
