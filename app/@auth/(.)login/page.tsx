@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { X } from "lucide-react";
 import LoginPageView from "@/app/ui/auth/LoginPageView";
@@ -37,8 +37,6 @@ export default function LoginModal() {
     };
   }, []);
 
-
-
   return (
     <div
       className={`fixed inset-0 z-[2000] bg-black/55 backdrop-blur-sm flex items-center justify-center p-4 transition-opacity duration-200 ${
@@ -54,7 +52,9 @@ export default function LoginModal() {
         aria-modal="true"
         aria-label="Login modal"
         className={`relative w-full max-w-2xl outline-none transition-all duration-200 ${
-          isOpen ? "translate-y-0 scale-100 opacity-100" : "translate-y-2 scale-95 opacity-0"
+          isOpen
+            ? "translate-y-0 scale-100 opacity-100"
+            : "translate-y-2 scale-95 opacity-0"
         }`}
         onClick={(e) => e.stopPropagation()}
       >
@@ -67,7 +67,9 @@ export default function LoginModal() {
           <X size={16} />
         </button>
 
-        <LoginPageView />
+        <Suspense fallback={<div>Loading...</div>}>
+          <LoginPageView />
+        </Suspense>
       </div>
     </div>
   );

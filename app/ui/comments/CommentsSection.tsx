@@ -32,13 +32,21 @@ export default function CommentsSection({ initialComments, skillId, currentUser 
   const hasMoreComments = visibleCount < comments.length
 
   const handleAddComment = async (content: string, parentId?: string, rating = 5) => {
-    await addComment(skillId, content, parentId, rating)
-    router.refresh()
+    try {
+      await addComment(skillId, content, parentId, rating)
+      router.refresh()
+    } catch (err) {
+      console.error("[CommentsSection] addComment failed:", err)
+    }
   }
 
   const handleLike = async (reviewId: string) => {
-    await likeComment(reviewId, skillId)
-    router.refresh()
+    try {
+      await likeComment(reviewId, skillId)
+      router.refresh()
+    } catch (err) {
+      console.error("[CommentsSection] likeComment failed:", err)
+    }
   }
 
   return (

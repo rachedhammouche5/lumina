@@ -27,14 +27,16 @@ export async function addComment(skillId: string, content: string, parentId?: st
         const { data: student } = await supabase
             .from("Student")
             .select("std_id")
-            .eq("user_id", user.id)
+            .eq("std_id", user.id)
             .maybeSingle();
 
         authorId = student?.std_id ?? null;
     }
 
     if (!authorId) {
-        return { success: false, error: isTeacher ? "Teacher profile not found" : "Student profile not found" };
+        const msg = isTeacher ? "Teacher profile not found" : "Student profile not found";
+        console.error("[addComment]", msg, "user.id:", user.id);
+        throw new Error(msg);
     }
 
     // 3. Insert the review
@@ -47,8 +49,8 @@ export async function addComment(skillId: string, content: string, parentId?: st
     });
 
     if (error) {
-        console.error("Error adding comment:", error);
-        return { success: false, error: error.message };
+        console.error("[addComment] DB insert error:", error);
+        throw new Error(error.message);
     }
 
     // 4. Refresh the page data
