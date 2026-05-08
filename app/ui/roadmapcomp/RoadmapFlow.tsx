@@ -16,12 +16,14 @@ export default function RoadmapFlow({
   topics = [],
   scores = [],
   root,
-  isEnrolled = true,
+  forceUnlocked = false,
+  forceLocked = false,
 }: {
   topics?: TopicRow[];
   scores?: ScoreRow[];
   root?: { id: string; title: string; subtitle?: string };
-  isEnrolled?: boolean;
+  forceUnlocked?: boolean;
+  forceLocked?: boolean;
 }) {
   const [isMobile, setIsMobile] = useState(false);
 
@@ -33,7 +35,17 @@ export default function RoadmapFlow({
     return () => query.removeEventListener("change", update);
   }, []);
 
-  const { nodes, edges, width, height } = generateRoadmapElements(topics, scores, root, isEnrolled);
+  const { nodes, edges, width, height } = generateRoadmapElements(
+    topics,
+    scores,
+    root,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    forceUnlocked,
+    forceLocked,
+  );
 
   // Keep the viewport constrained while still allowing a comfortable drag margin.
   const margin = 220;

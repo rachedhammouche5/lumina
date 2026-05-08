@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { ContentType, Skill, Topic } from "@/lib/database.types";
-import { deleteContent, updateTopic, uploadContentFile } from "./actions";
+import { deleteContent, generateQuizFromContent, updateTopic, uploadContentFile } from "./actions";
 
 type ManagedContent = {
   id: string;
@@ -44,10 +45,12 @@ export default function ContentManagerPanel({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [generatingId, setGeneratingId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingDraft, setEditingDraft] = useState<ManagedContent | null>(null);
   const [newDraft, setNewDraft] = useState<DraftContent>(EMPTY_DRAFT);
   const [creating, setCreating] = useState(false);
+  const router = useRouter();
 
   const selectedTopic = useMemo(
     () => topics.find((topic) => topic.tpc_id === selectedTopicId) ?? null,
@@ -164,6 +167,39 @@ export default function ContentManagerPanel({
       setError(deleteError instanceof Error ? deleteError.message : "Failed to delete content.");
     } finally {
       setSavingId(null);
+    }
+  };
+
+  const handleGenerateQuiz = async (content: ManagedContent) => {
+    if (!selectedTopic) {
+      setError("Select a topic first.");
+      return;
+    }
+    if (!content.value?.trim()) {
+      setError("This content does not have readable text to generate from.");
+      return;
+    }
+
+    setError("");
+    setGeneratingId(content.id);
+    try {
+      const result = await generateQuizFromContent({
+        skillId: skill.skl_id,
+        topicId: selectedTopic.tpc_id,
+        contentTitle: content.title,
+        contentValue: content.value.trim(),
+        contentType: content.type,
+      });
+
+      if ("error" in result && result.error) {
+        throw new Error(result.error);
+      }
+
+      router.refresh();
+    } catch (generateError) {
+      setError(generateError instanceof Error ? generateError.message : "Failed to generate quiz.");
+    } finally {
+      setGeneratingId(null);
     }
   };
 
@@ -389,6 +425,14 @@ export default function ContentManagerPanel({
                     </div>
 
                     <div className="mt-3 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                      <button
+                        type="button"
+                        onClick={() => void handleGenerateQuiz(content)}
+                        disabled={Boolean(editingId) || generatingId === content.id}
+                        className="inline-flex h-11 items-center justify-center rounded-xl border border-violet-400/40 bg-violet-500/10 px-3 text-sm font-semibold text-violet-100 transition hover:bg-violet-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {generatingId === content.id ? "Generating..." : "Generate quiz"}
+                      </button>
                       <button
                         type="button"
                         onClick={() => startEdit(content)}

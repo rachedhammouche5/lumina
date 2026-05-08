@@ -17,11 +17,13 @@ export default function EnrollSection({
   isLoggedIn,
   initialIsEnrolled,
   progressValue,
+  canEnroll,
 }: {
   skill: SkillCardData;
   isLoggedIn: boolean;
   initialIsEnrolled: boolean;
   progressValue: number;
+  canEnroll: boolean;
 }) {
   const [isEnrolled, setIsEnrolled] = useState(initialIsEnrolled);
   const [progress, setProgress] = useState(progressValue);
@@ -39,6 +41,7 @@ export default function EnrollSection({
           skillId={skill.skl_id}
           isLoggedIn={isLoggedIn}
           isEnrolled={isEnrolled}
+          canEnroll={canEnroll}
           setIsEnrolled={setIsEnrolled}
         />
       </div>
@@ -55,6 +58,11 @@ export default function EnrollSection({
           </div>
         )}
       </div>
+      {!canEnroll && (
+        <div className="rounded-2xl border border-amber-500/20 bg-amber-500/8 px-4 py-3 text-sm text-amber-100">
+          Teachers can explore this course, read the roadmap, and join the discussion, but enrollment is disabled.
+        </div>
+      )}
     </div>
   );
 }

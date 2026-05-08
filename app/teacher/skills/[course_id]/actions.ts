@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 import { writeFile, mkdir } from "fs/promises"
 import path from "path"
+import { GoogleGenerativeAI } from "@google/generative-ai"
 import { ContentType } from "@/lib/database.types"
 import { indexTopicContents } from "@/lib/ai/content-ingestion"
 type TopicContentInput = {
@@ -172,6 +173,49 @@ type QuizAnswerInput = {
   correct: boolean
 }
 
+type GeneratedQuiz = {
+  question: string
+  answers: QuizAnswerInput[]
+}
+
+function parseGeneratedQuiz(raw: string): GeneratedQuiz {
+  const cleaned = raw.startsWith("```")
+    ? raw.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "")
+    : raw;
+
+  const parsed = JSON.parse(cleaned) as GeneratedQuiz;
+  if (!parsed.question?.trim()) {
+    throw new Error("Generated question was empty.");
+  }
+  if (!Array.isArray(parsed.answers) || parsed.answers.length !== 4) {
+    throw new Error("Generated quiz must have exactly four answers.");
+  }
+
+  const normalizedAnswers = parsed.answers.map((answer) => ({
+    text: answer.text?.trim() ?? "",
+    correct: Boolean(answer.correct),
+  }));
+
+  const hasCorrect = normalizedAnswers.some((answer) => answer.correct);
+  if (!hasCorrect) {
+    normalizedAnswers[0].correct = true;
+  } else {
+    let foundCorrect = false;
+    normalizedAnswers.forEach((answer) => {
+      if (answer.correct && !foundCorrect) {
+        foundCorrect = true;
+        return;
+      }
+      answer.correct = false;
+    });
+  }
+
+  return {
+    question: parsed.question.trim(),
+    answers: normalizedAnswers,
+  };
+}
+
 export async function addQuizzes(
   topicId: string,
   teacherId: string | null,
@@ -222,6 +266,82 @@ export async function addQuizzes(
 
   revalidatePath(`/teacher/courses`);
   return { ok: true };
+}
+
+export async function generateQuizFromContent(args: {
+  skillId: string;
+  topicId: string;
+  contentTitle: string;
+  contentValue: string;
+  contentType: ContentType;
+}) {
+  const { skillId, topicId, contentTitle, contentValue, contentType } = args;
+
+  if (!process.env.GEMINI_API_KEY) {
+    return { error: "Missing Gemini API key." };
+  }
+
+  const supabase = await createClient();
+
+  const { data: topic } = await supabase
+    .from("Topic")
+    .select("tpc_title, tpc_description")
+    .eq("tpc_id", topicId)
+    .maybeSingle();
+
+  const prompt = `You are helping a teacher generate a multiple-choice quiz question from course content.
+
+Return valid JSON only in this exact shape:
+{
+  "question": "string",
+  "answers": [
+    {"text": "string", "correct": true},
+    {"text": "string", "correct": false},
+    {"text": "string", "correct": false},
+    {"text": "string", "correct": false}
+  ]
+}
+
+Rules:
+- Base the question directly on the content.
+- Use exactly 4 answers.
+- Make the question classroom-friendly and concise.
+
+Topic title: ${topic?.tpc_title ?? "Untitled topic"}
+Topic description: ${topic?.tpc_description ?? "No description"}
+Content title: ${contentTitle}
+Content type: ${contentType}
+Content text:
+${contentValue}`;
+
+  try {
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({
+      model: process.env.AI_TUTOR_MODEL?.trim() || "gemini-2.5-flash-lite",
+    });
+
+    const result = await model.generateContent(prompt);
+    const raw = result.response.text().trim();
+    const generated = parseGeneratedQuiz(raw);
+
+    const insertResult = await addQuizzes(topicId, null, [
+      {
+        question: generated.question,
+        difficulty: "medium",
+        answers: generated.answers,
+      },
+    ]);
+
+    if ("error" in insertResult) {
+      return insertResult;
+    }
+
+    revalidatePath(`/teacher/skills/${skillId}`);
+    return { ok: true, question: generated.question };
+  } catch (error) {
+    console.error("[generateQuizFromContent]", error);
+    return { error: error instanceof Error ? error.message : "Failed to generate quiz." };
+  }
 }
 export async function deleteContent(contentId: string, skillId: string) {
   const supabase = await createClient();

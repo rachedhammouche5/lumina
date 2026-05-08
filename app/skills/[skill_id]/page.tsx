@@ -20,12 +20,15 @@ export default async function RoadmapPage({
   } = await supabase.auth.getUser();
   const { skill_id } = await params;
   const role = getRole(user);
+  const isTeacher = role === "teacher" || role === "teacher_pending";
+  const canEnroll = role === "student";
 
   const { data: skill } = await supabase
     .from("Skill")
     .select("*")
     .eq("skl_id", skill_id)
     .single();
+  const skillTeacherId = skill?.teacher_id ?? null;
 
   let initialIsEnrolled = false;
   let studentId: string | null = null;
@@ -81,7 +84,7 @@ export default async function RoadmapPage({
     }
   }
 
-  if (user && (role === "teacher" || role === "teacher_pending")) {
+  if (user && isTeacher) {
     const { data: teacher, error: teacherError } = await supabase
       .from("Teacher")
       .select("tchr_id, tchr_fullname, tchr_pfp")
@@ -103,6 +106,10 @@ export default async function RoadmapPage({
       };
     }
   }
+
+  const canTeacherPreview = Boolean(isTeacher && skillTeacherId && currentUser?.id === skillTeacherId);
+  const forceLocked = Boolean(isTeacher && !canTeacherPreview);
+  const forceUnlocked = Boolean(canTeacherPreview);
 
   if (!currentUser && user) {
     const fallbackName =
@@ -153,6 +160,7 @@ export default async function RoadmapPage({
           isLoggedIn={!!user}
           initialIsEnrolled={initialIsEnrolled}
           progressValue={progressValue}
+          canEnroll={canEnroll}
         />
 
         <section>
@@ -161,7 +169,12 @@ export default async function RoadmapPage({
             <span className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Course Path</span>
             <div className="h-px flex-1 bg-gradient-to-r from-transparent via-slate-700 to-transparent" />
           </div>
-          <RoadmapFlow topics={topics} scores={scores} isEnrolled={initialIsEnrolled} />
+          <RoadmapFlow
+            topics={topics}
+            scores={scores}
+            forceUnlocked={forceUnlocked}
+            forceLocked={forceLocked}
+          />
         </section>
 
         <section>
@@ -183,4 +196,3 @@ export default async function RoadmapPage({
     </main>
   );
 }
-

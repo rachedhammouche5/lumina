@@ -13,6 +13,7 @@ const getNavLinks = (role: Role) => {
   if (role === "teacher") return [
     { name: "Home", href: "/teacher", icon: House },
     { name: "My Skills", href: "/teacher/skills", icon: LibraryBig },
+    { name: "Explore Skills", href: "/skills", icon: Blocks },
     { name: "Dashboard", href: "/teacher/dashboard", icon: Blocks },
   ];
   if (role === "student") return [

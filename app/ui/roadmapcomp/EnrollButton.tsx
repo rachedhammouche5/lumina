@@ -3,17 +3,19 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Enrollment } from "@/app/actions/enrollement";
-import { CheckCircle2, LogIn, Loader2 } from "lucide-react";
+import { CheckCircle2, LogIn, Loader2, ShieldAlert } from "lucide-react";
 
 export default function EnrollButton({
   skillId,
   isLoggedIn,
   isEnrolled,
+  canEnroll,
   setIsEnrolled,
 }: {
   skillId: string;
   isLoggedIn: boolean;
   isEnrolled: boolean;
+  canEnroll: boolean;
   setIsEnrolled: (value: boolean) => void;
 }) {
   const router = useRouter();
@@ -37,6 +39,15 @@ export default function EnrollButton({
         <LogIn size={14} />
         Log in to enroll
       </button>
+    );
+  }
+
+  if (!canEnroll) {
+    return (
+      <div className="inline-flex items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-1.5 text-sm font-semibold text-amber-200">
+        <ShieldAlert size={14} />
+        Browse only for teachers
+      </div>
     );
   }
 

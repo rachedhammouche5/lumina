@@ -123,10 +123,6 @@ export default function CommentCard({ comment, currentUser, onLike, onReply }: C
                         {reply.user.role === "teacher" ? "Teacher" : "Student"}
                       </span>
                       <span className="text-[10px] text-slate-500">{formatDistanceToNow(reply.createdAt)}</span>
-                      <span className="inline-flex items-center gap-0.5 text-[10px]">
-                        {renderStars(reply.rating)}
-                        <span className="ml-1 text-slate-500">{reply.rating}/5</span>
-                      </span>
                     </div>
                     <p className="text-sm text-slate-400 mt-0.5">{reply.content}</p>
                   </div>

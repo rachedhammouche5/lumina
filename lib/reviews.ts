@@ -45,24 +45,7 @@ const getLikeCount = (row: ReviewQueryRow) => {
 export async function getSkillReviews(skillId: string) {
   const supabase = await createClient();
 
-  const { data: skill } = await supabase
-    .from("Skill")
-    .select("teacher_id")
-    .eq("skl_id", skillId)
-    .maybeSingle();
-
-  const teacherId = skill?.teacher_id ?? null;
-  let teacherProfile: TeacherProfile | null = null;
-
-  if (teacherId) {
-    const { data: teacher } = await supabase
-      .from("Teacher")
-      .select("tchr_id, tchr_fullname, tchr_pfp")
-      .eq("tchr_id", teacherId)
-      .maybeSingle();
-
-    teacherProfile = teacher ?? null;
-  }
+  const teacherAuthorIds = new Set<string>();
 
   const { data, error } = await supabase
     .from("review")
@@ -77,20 +60,43 @@ export async function getSkillReviews(skillId: string) {
   if (error || !data) return [];
 
   const rows = data as ReviewQueryRow[];
+  const authorIds = [...new Set(rows.map((row) => row.studentId).filter(Boolean))];
+
+  const teacherProfiles = new Map<string, TeacherProfile>();
+  if (authorIds.length > 0) {
+    const { data: teacherRows } = await supabase
+      .from("Teacher")
+      .select("tchr_id, tchr_fullname, tchr_pfp")
+      .in("tchr_id", authorIds);
+
+    (teacherRows ?? []).forEach((teacher) => {
+      teacherAuthorIds.add(teacher.tchr_id);
+      teacherProfiles.set(teacher.tchr_id, teacher);
+    });
+  }
+
   const mainComments = rows.filter((item) => !item.parent_id);
   const allReplies = rows.filter((item) => item.parent_id);
 
   const buildAuthor = (row: ReviewQueryRow): { id: string; name: string; pfp: string | null; initials: string; role: CommentRole } => {
-    const isTeacher = row.studentId === teacherId;
-    const teacherName = teacherProfile?.tchr_fullname || "Teacher";
+    const isTeacher = teacherAuthorIds.has(row.studentId);
     const studentName = row.Student?.std_fullname || "Anonymous";
-    const displayName = isTeacher ? teacherName : studentName;
+    const teacherProfile = teacherProfiles.get(row.studentId);
+    const displayName = isTeacher
+      ? teacherProfile?.tchr_fullname || row.Student?.std_fullname || "Teacher"
+      : studentName;
 
     return {
       id: row.studentId,
       name: displayName,
-      pfp: isTeacher ? teacherProfile?.tchr_pfp || null : row.Student?.std_pfp || null,
-      initials: initialsFromName(isTeacher ? teacherProfile?.tchr_fullname : row.Student?.std_fullname),
+      pfp: isTeacher
+        ? teacherProfile?.tchr_pfp || row.Student?.std_pfp || null
+        : row.Student?.std_pfp || null,
+      initials: initialsFromName(
+        isTeacher
+          ? teacherProfile?.tchr_fullname || row.Student?.std_fullname
+          : row.Student?.std_fullname,
+      ),
       role: isTeacher ? "teacher" : "student",
     };
   };
@@ -114,4 +120,3 @@ export async function getSkillReviews(skillId: string) {
       })),
   }));
 }
-

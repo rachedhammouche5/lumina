@@ -4,6 +4,65 @@ import { createClient } from "@/lib/supabase/server";
 import { getRole } from "@/features/utils/auth/getRole";
 import { revalidatePath } from "next/cache";
 
+type TeacherRow = {
+    tchr_id: string;
+    tchr_fullname: string;
+    tchr_email: string;
+    user_id: string | null;
+};
+
+type StudentRow = {
+    std_id: string;
+    std_fullname: string;
+    std_email: string;
+    user_id: string | null;
+};
+
+async function resolveAuthorId(supabase: Awaited<ReturnType<typeof createClient>>, role: ReturnType<typeof getRole>, userId: string) {
+    const isTeacher = role === "teacher" || role === "teacher_pending";
+
+    if (isTeacher) {
+        const { data: teacher } = await supabase
+            .from("Teacher")
+            .select("tchr_id, tchr_fullname, tchr_email, user_id")
+            .eq("user_id", userId)
+            .maybeSingle() as { data: TeacherRow | null };
+
+        if (!teacher) return { authorId: null, isTeacher: true };
+
+        const { data: teacherMirror } = await supabase
+            .from("Student")
+            .select("std_id")
+            .eq("std_id", teacher.tchr_id)
+            .maybeSingle() as { data: Pick<StudentRow, "std_id"> | null };
+
+        if (!teacherMirror) {
+            const { error: insertError } = await supabase.from("Student").insert({
+                std_id: teacher.tchr_id,
+                std_fullname: teacher.tchr_fullname,
+                std_email: teacher.tchr_email,
+                std_level: "master",
+                user_id: teacher.user_id ?? userId,
+            });
+
+            if (insertError) {
+                console.error("[addComment] Failed to create teacher mirror student:", insertError);
+                return { authorId: null, isTeacher: true };
+            }
+        }
+
+        return { authorId: teacher.tchr_id, isTeacher: true };
+    }
+
+    const { data: student } = await supabase
+        .from("Student")
+        .select("std_id, std_fullname, std_email, user_id")
+        .or(`user_id.eq.${userId},std_id.eq.${userId}`)
+        .maybeSingle() as { data: StudentRow | null };
+
+    return { authorId: student?.std_id ?? null, isTeacher: false };
+}
+
 export async function addComment(skillId: string, content: string, parentId?: string, rating: number = 5) {
     const supabase = await createClient();
     
@@ -11,27 +70,7 @@ export async function addComment(skillId: string, content: string, parentId?: st
     if (!user) return { success: false, error: "Not authenticated" };
 
     const role = getRole(user);
-    const isTeacher = role === "teacher" || role === "teacher_pending";
-
-    let authorId: string | null = null;
-
-    if (isTeacher) {
-        const { data: teacher } = await supabase
-            .from("Teacher")
-            .select("tchr_id")
-            .eq("tchr_id", user.id)
-            .maybeSingle();
-
-        authorId = teacher?.tchr_id ?? null;
-    } else {
-        const { data: student } = await supabase
-            .from("Student")
-            .select("std_id")
-            .eq("std_id", user.id)
-            .maybeSingle();
-
-        authorId = student?.std_id ?? null;
-    }
+    const { authorId, isTeacher } = await resolveAuthorId(supabase, role, user.id);
 
     if (!authorId) {
         const msg = isTeacher ? "Teacher profile not found" : "Student profile not found";

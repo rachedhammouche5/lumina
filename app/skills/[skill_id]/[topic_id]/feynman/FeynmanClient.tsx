@@ -46,7 +46,7 @@ interface Props {
 
 type Phase = "input" | "loading" | "result";
 
-export default function FeynmanClient({ topicId, skillId, topicTitle, skillTitle }: Props) {
+export default function FeynmanClient({ topicId, skillId, topicTitle, topicDescription, skillTitle }: Props) {
   const [phase, setPhase] = useState<Phase>("input");
   const [explanation, setExplanation] = useState("");
   const [result, setResult] = useState<FeynmanResult | null>(null);
@@ -116,6 +116,11 @@ export default function FeynmanClient({ topicId, skillId, topicTitle, skillTitle
             <p className="text-[11px] font-bold uppercase tracking-widest text-violet-400">Feynman AI Coach</p>
             <h1 className="mt-1 text-2xl font-black tracking-tight text-white">{topicTitle}</h1>
             <p className="mt-1 text-sm text-zinc-500">{skillTitle}</p>
+            {topicDescription ? (
+              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-zinc-400">
+                {topicDescription}
+              </p>
+            ) : null}
           </div>
         </div>
 
@@ -142,6 +147,12 @@ export default function FeynmanClient({ topicId, skillId, topicTitle, skillTitle
               {interimText && (
                 <p className="mt-2 px-1 text-xs italic text-violet-300/40 animate-pulse">
                   {interimText}...
+                </p>
+              )}
+
+              {error && (
+                <p className="mt-2 rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-200">
+                  {error}
                 </p>
               )}
 
@@ -197,7 +208,11 @@ export default function FeynmanClient({ topicId, skillId, topicTitle, skillTitle
                     ))}
                   </div>
                 </div>
-                <span className="text-xs text-zinc-600">{explanation.length} characters</span>
+                <span className="text-xs text-zinc-600">
+                  {explanation.length} characters
+                  {charsLeft > 0 ? ` · ${charsLeft} more to evaluate` : ""}
+                  {!isSupported ? " · mic unavailable" : ""}
+                </span>
               </div>
             </div>
 

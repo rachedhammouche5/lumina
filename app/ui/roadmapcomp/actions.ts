@@ -79,12 +79,12 @@ export const generateRoadmapElements = (
   topics: TopicRow[] = [],
   scores: ScoreRow[] = [],
   root?: { id: string; title: string; subtitle?: string },
-  isEnrolled = true,
   onAddChild?: (parentId: string | null) => void,
   onManageTopic?: (topicId: string) => void,
   onModifyQuizTopic?: (topicId: string) => void,
   onRemoveTopic?: (topicId: string) => void,
   forceUnlocked = false,
+  forceLocked = false,
 ): { nodes: Node<RoadmapNodeData>[]; edges: Edge[]; width: number; height: number } => {
     const graph = buildTopicGraph(topics, scores);
     const degreeMemo = new Map<string, number>();
@@ -144,7 +144,9 @@ export const generateRoadmapElements = (
             : 0;
         const rootStatus: RoadmapStatus = forceUnlocked
             ? "unlocked"
-            : getRootStatus(graph);
+            : forceLocked
+              ? "locked"
+              : getRootStatus(graph);
 
         nodes.push({
             id: root.id,
@@ -167,7 +169,11 @@ export const generateRoadmapElements = (
 
     topics.forEach((topic) => {
         const effectiveDegree = computeDegree(topic.tpc_id);
-        const currentStatus: RoadmapStatus = forceUnlocked ? "unlocked" : topicStatus(topic.tpc_id);
+        const currentStatus: RoadmapStatus = forceUnlocked
+            ? "unlocked"
+            : forceLocked
+              ? "locked"
+              : topicStatus(topic.tpc_id);
 
         nodes.push({
             id: topic.tpc_id,
@@ -200,7 +206,7 @@ export const generateRoadmapElements = (
                 id: `e-${root.id}-${t.tpc_id}`,
                 source: root.id,
                 target: t.tpc_id,
-                animated: isTopicPassed(t.tpc_id, graph, passMemo),
+                animated: forceLocked ? false : isTopicPassed(t.tpc_id, graph, passMemo),
             }),
         );
     }
@@ -212,7 +218,7 @@ export const generateRoadmapElements = (
                 id: `e-${t.parent_id}-${t.tpc_id}`,
                 source: t.parent_id as string,
                 target: t.tpc_id,
-                animated: isTopicPassed(t.tpc_id, graph, passMemo),
+                animated: forceLocked ? false : isTopicPassed(t.tpc_id, graph, passMemo),
             }),
         );
 
