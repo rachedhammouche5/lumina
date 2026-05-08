@@ -6,6 +6,7 @@ type SyncInput = {
   userId: string;
   email: string | null;
   fullName: string | null | undefined;
+  photoUrl?: string | null;
 };
 
 export async function syncRoleTables(
@@ -15,6 +16,7 @@ export async function syncRoleTables(
 ) {
   const fullName = (input.fullName ?? "").trim() || "Unknown User";
   const safeEmail = input.email ?? `${input.userId}@missing-email.local`;
+  const photoUrl = input.photoUrl ?? null;
 
   if (role === "student") {
     const { error: upsertStudentError } = await adminClient
@@ -25,13 +27,13 @@ export async function syncRoleTables(
           user_id: input.userId,
           std_fullname: fullName,
           std_email: safeEmail,
+          ...(photoUrl ? { std_pfp: photoUrl } : {}),
         },
         { onConflict: "std_id" },
       );
 
     if (upsertStudentError) throw upsertStudentError;
 
-    
     const { error: deleteTeacherError } = await adminClient
       .from("Teacher")
       .delete()
@@ -49,6 +51,7 @@ export async function syncRoleTables(
         user_id: input.userId,
         tchr_fullname: fullName,
         tchr_email: safeEmail,
+        ...(photoUrl ? { tchr_pfp: photoUrl } : {}),
       },
       { onConflict: "tchr_id" },
     );
