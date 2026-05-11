@@ -18,6 +18,7 @@ type ProfileEnrollRow = {
   Skill?: { skl_title?: string } | { skl_title?: string }[] | null;
 };
 
+// This helper safely handles whether Skill is an object or an array [cite: 48, 57]
 const getSkillTitle = (skill: ProfileEnrollRow["Skill"]) => {
   const current = Array.isArray(skill) ? skill[0] : skill;
   return current?.skl_title ?? "";
@@ -63,7 +64,7 @@ export function useProfile() {
 
         const map = (s: ProfileScoreRow) => ({
           topic: s.Topic?.tpc_title || "",
-          skill: s.Topic?.Skill?.skl_title || "",
+          skill: getSkillTitle(s.Topic?.Skill) || "", 
           score: Math.round(s.score),
         });
 
@@ -77,6 +78,8 @@ export function useProfile() {
           weakPoints: scoreRows.filter((s) => s.score < 70).map(map),
           strongPoints: scoreRows.filter((s) => s.score >= 70).map(map),
         });
+      } catch (error) {
+        console.error("Error fetching profile:", error);
       } finally {
         setProfileLoading(false);
       }

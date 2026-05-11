@@ -49,11 +49,11 @@ export default function RoadmapFlow({
     topics,
     scores,
     root,
-    isEnrolled,
     onAddChild,
     onManageTopic,
     onModifyQuizTopic,
     onRemoveTopic,
+    isEnrolled,
     forceUnlocked,
   );
 
