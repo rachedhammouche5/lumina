@@ -6,6 +6,7 @@ import CourseCard from "@/app/ui/Skills/CourseCard";
 import { BookOpen, ChevronRight } from "lucide-react";
 import { calculateRoadmapProgress, normalizeTopicScores } from "@/app/actions/roadmap";
 import type { TopicRow, ScoreRow } from "@/app/ui/roadmapcomp/types";
+import { buildTopicGraph, getTopicStatus } from "@/app/ui/roadmapcomp/progression";
 import type { Difficulty } from "@/app/skills/[skill_id]/[topic_id]/quiz/quiz.types";
 import RecommendedSkills from "@/components/RecommendedSkills";
 
@@ -45,6 +46,14 @@ export default async function studentPage() {
     Teacher?: { tchr_fullname?: string | null; tchr_pfp?: string | null } | { tchr_fullname?: string | null; tchr_pfp?: string | null }[] | null;
   };
   type RawEnrollRow = { progress: number; Skill?: RawSkill | RawSkill[] | null };
+
+  type ContinueCard = {
+    skillTitle: string;
+    topicTitle: string;
+    href: string;
+    progress: number;
+    isComplete: boolean;
+  };
 
   const enrolledRows = (enrolledData ?? []) as RawEnrollRow[];
   const enrolledSkillIds = enrolledRows
@@ -114,6 +123,59 @@ export default async function studentPage() {
     };
   });
 
+  const scoreByTopicId = new Map(normalizedScores.map((row) => [row.tpc_id, row.score]));
+
+  const buildContinueCard = (skillId: string, skillTitle: string): ContinueCard | null => {
+    const skillTopics = topicsBySkill.get(skillId) ?? [];
+    if (!skillTopics.length) {
+      return {
+        skillTitle,
+        topicTitle: "Open the roadmap to pick up where you left off",
+        href: `/skills/${skillId}`,
+        progress: 0,
+        isComplete: false,
+      };
+    }
+
+    const skillScores = normalizedScores.filter((row) => skillTopics.some((topic) => topic.tpc_id === row.tpc_id));
+    const graph = buildTopicGraph(skillTopics, skillScores);
+    const sortedTopics = [...skillTopics].sort((a, b) => {
+      const aStatus = getTopicStatus(a.tpc_id, graph);
+      const bStatus = getTopicStatus(b.tpc_id, graph);
+      const statusRank = { unlocked: 0, locked: 1, completed: 2 } as const;
+
+      if (statusRank[aStatus] !== statusRank[bStatus]) {
+        return statusRank[aStatus] - statusRank[bStatus];
+      }
+
+      const aScore = scoreByTopicId.get(a.tpc_id) ?? 0;
+      const bScore = scoreByTopicId.get(b.tpc_id) ?? 0;
+      if (aScore !== bScore) return aScore - bScore;
+
+      return a.tpc_title.localeCompare(b.tpc_title);
+    });
+
+    const nextTopic = sortedTopics.find((topic) => (scoreByTopicId.get(topic.tpc_id) ?? 0) < 100) ?? sortedTopics[0];
+    const progress = calculateRoadmapProgress(skillTopics, skillScores);
+    const isComplete = progress >= 100;
+
+    return {
+      skillTitle,
+      topicTitle: nextTopic?.tpc_title ?? skillTitle,
+      href: nextTopic ? `/skills/${skillId}/${nextTopic.tpc_id}` : `/skills/${skillId}`,
+      progress,
+      isComplete,
+    };
+  };
+
+  const activeEnrollment = enrolledSkills.find((skill) => skill.progress > 0 && skill.progress < 100)
+    ?? enrolledSkills.find((skill) => skill.progress < 100)
+    ?? enrolledSkills[0];
+
+  const continueCard = activeEnrollment
+    ? buildContinueCard(activeEnrollment.id, activeEnrollment.title)
+    : null;
+
   return (
     <main className="relative min-h-screen overflow-x-hidden bg-slate-950 pt-24 pb-20 px-4 sm:px-6 text-white">
 
@@ -158,14 +220,27 @@ export default async function studentPage() {
             <div className="relative z-10 flex flex-col md:flex-row gap-5 md:items-center">
               <div className="flex-1">
                 <p className="text-[9px] font-bold tracking-[0.2em] uppercase text-orange-400/70 mb-1">Resume where you stopped</p>
-                <h2 className="text-xl md:text-2xl font-black tracking-tight mb-1">Continue Where You Left Off</h2>
-                <p className="text-xs uppercase tracking-widest text-white/50 mb-5">Domain Title / Subdomain Title</p>
+                <h2 className="text-xl md:text-2xl font-black tracking-tight mb-1">
+                  {continueCard?.isComplete ? "Review Your Completed Path" : "Continue Where You Left Off"}
+                </h2>
+                <p className="text-xs uppercase tracking-widest text-white/50 mb-5">
+                  {continueCard ? `${continueCard.skillTitle} / ${continueCard.topicTitle}` : "No enrolled skills yet"}
+                </p>
                 <div className="flex items-center gap-3">
-                  <Button variant="primary" size="m" className="rounded-xl flex-shrink-0">
-                    Resume Learning <ChevronRight size={15} className="ml-1" />
+                  <Button
+                    variant="primary"
+                    size="m"
+                    href={continueCard?.href ?? "/skills"}
+                    className="rounded-xl flex-shrink-0"
+                  >
+                    {continueCard?.isComplete ? "Review Roadmap" : "Resume Learning"}
+                    <ChevronRight size={15} className="ml-1" />
                   </Button>
                   <div className="h-2 flex-1 rounded-full bg-slate-800/80">
-                    <div className="h-2 w-[65%] rounded-full bg-gradient-to-r from-orange-500 to-amber-300 shadow-[0_0_8px_rgba(249,115,22,0.4)]" />
+                    <div
+                      className="h-2 rounded-full bg-gradient-to-r from-orange-500 to-amber-300 shadow-[0_0_8px_rgba(249,115,22,0.4)]"
+                      style={{ width: `${continueCard?.progress ?? 0}%` }}
+                    />
                   </div>
                 </div>
               </div>
@@ -173,7 +248,7 @@ export default async function studentPage() {
               <div className="md:w-[200px] h-[110px] rounded-2xl border border-orange-200/20 bg-orange-200/8 flex items-center justify-center relative flex-shrink-0">
                 <BookOpen className="text-orange-300/60" size={50} />
                 <span className="absolute -top-3 -right-3 h-13 w-13 h-[52px] w-[52px] rounded-full bg-gradient-to-br from-orange-500 to-amber-400 text-white font-bold text-base flex items-center justify-center shadow-lg shadow-orange-500/30">
-                  65%
+                  {continueCard?.progress ?? 0}%
                 </span>
               </div>
             </div>
