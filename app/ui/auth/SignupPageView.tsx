@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import Input from "../Input";
 import Button from "../Button";
+import { validateStrongPassword } from "./passwordPolicy";
 
 export default function SignupPageView() {
   const router = useRouter();
@@ -35,8 +36,9 @@ export default function SignupPageView() {
       return;
     }
 
-    if (password.length < 8) {
-      setError("Password must be at least 8 characters.");
+    const passwordError = validateStrongPassword(password);
+    if (passwordError) {
+      setError(passwordError);
       return;
     }
 
@@ -169,15 +171,17 @@ export default function SignupPageView() {
               <label className="mb-1 block text-xs text-slate-300">
                 Password
               </label>
-              <Input
-                type={showPassword ? "text" : "password"}
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                icon={<Lock size={16} />}
-                rightElement={
-                  <button
-                    type="button"
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  icon={<Lock size={16} />}
+                  minLength={8}
+                  autoComplete="new-password"
+                  rightElement={
+                    <button
+                      type="button"
                     onClick={() => setShowPassword((v) => !v)}
                     className="text-slate-400 hover:text-white"
                     aria-label="Toggle password visibility"
@@ -193,15 +197,17 @@ export default function SignupPageView() {
               <label className="mb-1 block text-xs text-slate-300">
                 Confirm password
               </label>
-              <Input
-                type={showConfirmPassword ? "text" : "password"}
-                placeholder="Confirm password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                icon={<Lock size={16} />}
-                rightElement={
-                  <button
-                    type="button"
+                <Input
+                  type={showConfirmPassword ? "text" : "password"}
+                  placeholder="Confirm password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  icon={<Lock size={16} />}
+                  minLength={8}
+                  autoComplete="new-password"
+                  rightElement={
+                    <button
+                      type="button"
                     onClick={() => setShowConfirmPassword((v) => !v)}
                     className="text-slate-400 hover:text-white"
                     aria-label="Toggle confirm password visibility"
@@ -230,6 +236,9 @@ export default function SignupPageView() {
               />
                I want to become a teacher
             </label>
+            <p className="text-xs text-slate-400">
+              Use at least 8 characters with uppercase, lowercase, a number, and a symbol.
+            </p>
  
 
             <Button
@@ -290,4 +299,3 @@ function GoogleIcon() {
     </svg>
   );
 }
-

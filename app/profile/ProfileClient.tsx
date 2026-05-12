@@ -7,6 +7,7 @@ import Button from "@/app/ui/Button";
 import Input from "@/app/ui/Input";
 import { createClient } from "@/lib/supabase/client";
 import { deleteAccount } from "./actions";
+import { validateStrongPassword } from "@/app/ui/auth/passwordPolicy";
 
 type ProfileClientProps = {
   name: string;
@@ -64,14 +65,15 @@ export default function ProfileClient({
     setLoading(true);
     setStatus(null);
 
-    if (password.length < 8) {
-      setStatus({ type: "error", message: "Password must be at least 8 characters long." });
+    if (password !== confirmPassword) {
+      setStatus({ type: "error", message: "Passwords do not match." });
       setLoading(false);
       return;
     }
 
-    if (password !== confirmPassword) {
-      setStatus({ type: "error", message: "Passwords do not match." });
+    const passwordError = validateStrongPassword(password);
+    if (passwordError) {
+      setStatus({ type: "error", message: passwordError });
       setLoading(false);
       return;
     }
@@ -190,7 +192,7 @@ export default function ProfileClient({
 
       setPhotoStatus({ type: "success", message: "Profile photo updated." });
       setPhotoLoading(false);
-    } catch (err) {
+    } catch {
       setPhotoStatus({ type: "error", message: "Failed to upload photo." });
       setPhotoLoading(false);
     }
@@ -356,6 +358,8 @@ export default function ProfileClient({
                     onChange={(event) => setPassword(event.target.value)}
                     placeholder="New password"
                     icon={<Lock size={16} />}
+                    minLength={8}
+                    autoComplete="new-password"
                     rightElement={
                       <button
                         type="button"
@@ -378,9 +382,15 @@ export default function ProfileClient({
                     onChange={(event) => setConfirmPassword(event.target.value)}
                     placeholder="Confirm password"
                     icon={<Lock size={16} />}
+                    minLength={8}
+                    autoComplete="new-password"
                     required
                   />
                 </div>
+
+                <p className="text-xs text-slate-400">
+                  Use at least 8 characters with uppercase, lowercase, a number, and a symbol.
+                </p>
 
                 {status ? (
                   <p className={status.type === "error" ? "text-sm text-red-400" : "text-sm text-emerald-300"}>
