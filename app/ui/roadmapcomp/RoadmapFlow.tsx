@@ -16,12 +16,14 @@ export default function RoadmapFlow({
   topics = [],
   scores = [],
   root,
+  isEnrolled = true,
   forceUnlocked = false,
   forceLocked = false,
 }: {
   topics?: TopicRow[];
   scores?: ScoreRow[];
   root?: { id: string; title: string; subtitle?: string };
+  isEnrolled?: boolean;
   forceUnlocked?: boolean;
   forceLocked?: boolean;
 }) {
@@ -43,6 +45,7 @@ export default function RoadmapFlow({
     undefined,
     undefined,
     undefined,
+    isEnrolled,
     forceUnlocked,
     forceLocked,
   );

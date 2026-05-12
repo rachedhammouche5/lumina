@@ -172,6 +172,7 @@ export default async function RoadmapPage({
           <RoadmapFlow
             topics={topics}
             scores={scores}
+            isEnrolled={initialIsEnrolled}
             forceUnlocked={forceUnlocked}
             forceLocked={forceLocked}
           />

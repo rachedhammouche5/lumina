@@ -83,15 +83,18 @@ export const generateRoadmapElements = (
   onManageTopic?: (topicId: string) => void,
   onModifyQuizTopic?: (topicId: string) => void,
   onRemoveTopic?: (topicId: string) => void,
+  isEnrolled = true,
   forceUnlocked = false,
   forceLocked = false,
 ): { nodes: Node<RoadmapNodeData>[]; edges: Edge[]; width: number; height: number } => {
     const graph = buildTopicGraph(topics, scores);
     const degreeMemo = new Map<string, number>();
     const passMemo = new Map<string, boolean>();
+    const isAccessLocked = forceLocked || !isEnrolled;
 
     const computeDegree = (topicId: string) => getTopicAggregateDegree(topicId, graph, degreeMemo);
-    const topicStatus = (topicId: string) => getTopicStatus(topicId, graph);
+    const topicStatus = (topicId: string) =>
+      forceUnlocked ? "unlocked" : isAccessLocked ? "locked" : getTopicStatus(topicId, graph);
     const allTopicsEffectiveCompleted =
       graph.topLevelTopicIds.length > 0 &&
       graph.topLevelTopicIds.every((topicId) => isTopicPassed(topicId, graph, passMemo));
@@ -144,7 +147,7 @@ export const generateRoadmapElements = (
             : 0;
         const rootStatus: RoadmapStatus = forceUnlocked
             ? "unlocked"
-            : forceLocked
+            : isAccessLocked
               ? "locked"
               : getRootStatus(graph);
 
@@ -169,11 +172,7 @@ export const generateRoadmapElements = (
 
     topics.forEach((topic) => {
         const effectiveDegree = computeDegree(topic.tpc_id);
-        const currentStatus: RoadmapStatus = forceUnlocked
-            ? "unlocked"
-            : forceLocked
-              ? "locked"
-              : topicStatus(topic.tpc_id);
+        const currentStatus: RoadmapStatus = topicStatus(topic.tpc_id);
 
         nodes.push({
             id: topic.tpc_id,
@@ -206,7 +205,7 @@ export const generateRoadmapElements = (
                 id: `e-${root.id}-${t.tpc_id}`,
                 source: root.id,
                 target: t.tpc_id,
-                animated: forceLocked ? false : isTopicPassed(t.tpc_id, graph, passMemo),
+                animated: isAccessLocked ? false : isTopicPassed(t.tpc_id, graph, passMemo),
             }),
         );
     }
@@ -218,7 +217,7 @@ export const generateRoadmapElements = (
                 id: `e-${t.parent_id}-${t.tpc_id}`,
                 source: t.parent_id as string,
                 target: t.tpc_id,
-                animated: forceLocked ? false : isTopicPassed(t.tpc_id, graph, passMemo),
+                animated: isAccessLocked ? false : isTopicPassed(t.tpc_id, graph, passMemo),
             }),
         );
 
