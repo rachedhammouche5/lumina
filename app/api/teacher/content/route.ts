@@ -1,7 +1,15 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { ContentType } from "@/lib/database.types";
+
+const STORAGE_BUCKET = "content-files";
+
+function storagePathFromUrl(url: string): string | null {
+  const prefix = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${STORAGE_BUCKET}/`;
+  return url.startsWith(prefix) ? url.slice(prefix.length) : null;
+}
 
 const ALLOWED_TYPES: ContentType[] = ["video", "docs", "mindmap", "audio", "pdf"];
 
@@ -136,12 +144,23 @@ export async function DELETE(request: Request) {
   }
 
   const supabase = await createClient();
+
+  const { data: contentRow } = await supabase
+    .from("Content")
+    .select("cntnt_value")
+    .eq("cntnt_id", contentId)
+    .maybeSingle();
+
   await supabase.from("content_chunks").delete().eq("content_id", contentId);
   const { error } = await supabase.from("Content").delete().eq("cntnt_id", contentId);
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+
+  const storagePath = storagePathFromUrl(contentRow?.cntnt_value ?? "");
+  if (storagePath) createAdminClient().storage.from(STORAGE_BUCKET).remove([storagePath]);
+
   if (skillId) revalidatePath(`/teacher/skills/${skillId}`);
 
   return NextResponse.json({ ok: true });

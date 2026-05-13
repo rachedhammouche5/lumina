@@ -1,12 +1,26 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { revalidatePath } from "next/cache"
-import { writeFile, mkdir } from "fs/promises"
-import path from "path"
 import { GoogleGenerativeAI } from "@google/generative-ai"
 import { ContentType } from "@/lib/database.types"
 import { indexTopicContents } from "@/lib/ai/content-ingestion"
+
+const STORAGE_BUCKET = "content-files"
+
+function storagePathFromUrl(url: string): string | null {
+  const prefix = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${STORAGE_BUCKET}/`
+  return url.startsWith(prefix) ? url.slice(prefix.length) : null
+}
+
+async function removeStorageFile(url: string | null | undefined) {
+  if (!url) return
+  const storagePath = storagePathFromUrl(url)
+  if (!storagePath) return
+  const admin = createAdminClient()
+  await admin.storage.from(STORAGE_BUCKET).remove([storagePath])
+}
 type TopicContentInput = {
   id?: string
   title: string
@@ -20,16 +34,23 @@ export async function uploadContentFile(formData: FormData) {
 
   if (!file || !file.name) return { error: "No file provided" }
 
+  const safeFilename = file.name.replace(/[^a-zA-Z0-9._-]/g, "_")
+  const storagePath = `${type}/${Date.now()}-${safeFilename}`
+
   const bytes = await file.arrayBuffer()
-  const buffer = Buffer.from(bytes)
+  const admin = createAdminClient()
 
-  const folder = path.join(process.cwd(), "public", "uploads", type)
-  await mkdir(folder, { recursive: true }) 
+  const { error: uploadError } = await admin.storage
+    .from(STORAGE_BUCKET)
+    .upload(storagePath, bytes, { contentType: file.type, upsert: false })
 
-  const filename = `${Date.now()}-${file.name}`
-  await writeFile(path.join(folder, filename), buffer)
+  if (uploadError) return { error: uploadError.message }
 
-  return { url: `/uploads/${type}/${filename}` }
+  const { data: { publicUrl } } = admin.storage
+    .from(STORAGE_BUCKET)
+    .getPublicUrl(storagePath)
+
+  return { url: publicUrl }
 }
 
 export async function addTopic(
@@ -346,6 +367,12 @@ ${contentValue}`;
 export async function deleteContent(contentId: string, skillId: string) {
   const supabase = await createClient();
 
+  const { data: contentRow } = await supabase
+    .from("Content")
+    .select("cntnt_value")
+    .eq("cntnt_id", contentId)
+    .maybeSingle()
+
   await supabase.from("content_chunks").delete().eq("content_id", contentId);
 
   const { error } = await supabase
@@ -354,6 +381,8 @@ export async function deleteContent(contentId: string, skillId: string) {
     .eq("cntnt_id", contentId);
 
   if (error) return { error: error.message };
+
+  await removeStorageFile(contentRow?.cntnt_value)
 
   revalidatePath(`/teacher/skills/${skillId}`);
   return { success: true };
@@ -382,7 +411,7 @@ export async function deleteTopic(topicId: string, skillId: string) {
 
   const { data: contentToDelete } = await supabase
     .from("Content")
-    .select("cntnt_id")
+    .select("cntnt_id, cntnt_value")
     .in("tpc_id", idsToDelete);
   const contentIds = (contentToDelete ?? []).map((c) => c.cntnt_id);
   if (contentIds.length > 0) {
@@ -391,6 +420,14 @@ export async function deleteTopic(topicId: string, skillId: string) {
 
   await supabase.from("Content").delete().in("tpc_id", idsToDelete);
   const { error } = await supabase.from("Topic").delete().in("tpc_id", idsToDelete);
+
+  // Clean up storage files (fire-and-forget, non-blocking)
+  const storagePaths = (contentToDelete ?? [])
+    .map((c) => storagePathFromUrl(c.cntnt_value ?? ""))
+    .filter((p): p is string => p !== null)
+  if (storagePaths.length > 0) {
+    createAdminClient().storage.from(STORAGE_BUCKET).remove(storagePaths)
+  }
 
   if (error) return { error: error.message };
 
