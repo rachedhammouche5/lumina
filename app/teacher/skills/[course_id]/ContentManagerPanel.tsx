@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ContentType, Skill, Topic } from "@/lib/database.types";
-import { deleteContent, generateQuizFromContent, updateTopic, uploadContentFile } from "./actions";
+import { deleteContent, generateQuizFromContent, updateTopic, getUploadUrl } from "./actions";
 
 type ManagedContent = {
   id: string;
@@ -92,14 +92,19 @@ export default function ContentManagerPanel({
   const resolveValue = async (draft: DraftContent) => {
     if (!isFileType(draft.type)) return draft.value.trim();
     if (!draft.file) return draft.value.trim();
-    const formData = new FormData();
-    formData.append("file", draft.file);
-    formData.append("type", draft.type);
-    const upload = await uploadContentFile(formData);
-    if (upload.error || !upload.url) {
-      throw new Error(upload.error ?? "File upload failed.");
-    }
-    return upload.url;
+
+    const result = await getUploadUrl(draft.file.name, draft.type);
+    if ("error" in result) throw new Error(result.error);
+
+    // Upload directly from the browser — file never goes through Next.js
+    const uploadRes = await fetch(result.signedUrl, {
+      method: "PUT",
+      headers: { "Content-Type": draft.file.type },
+      body: draft.file,
+    });
+    if (!uploadRes.ok) throw new Error(`Storage upload failed: ${uploadRes.statusText}`);
+
+    return result.publicUrl;
   };
 
   const handleUpdate = async (content: ManagedContent) => {

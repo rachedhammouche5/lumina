@@ -28,32 +28,27 @@ type TopicContentInput = {
   value: string | null
 }
 
-export async function uploadContentFile(formData: FormData) {
+// Returns a signed upload URL — the browser uploads directly to Supabase Storage,
+// so the file never passes through Next.js (avoids Vercel's body size limit).
+export async function getUploadUrl(filename: string, type: string) {
   try {
-    const file = formData.get("file") as File
-    const type = formData.get("type") as string
-
-    if (!file || !file.name) return { error: "No file provided" }
-
-    const safeFilename = file.name.replace(/[^a-zA-Z0-9._-]/g, "_")
+    const safeFilename = filename.replace(/[^a-zA-Z0-9._-]/g, "_")
     const storagePath = `${type}/${Date.now()}-${safeFilename}`
-
-    const bytes = await file.arrayBuffer()
     const admin = createAdminClient()
 
-    const { error: uploadError } = await admin.storage
+    const { data, error } = await admin.storage
       .from(STORAGE_BUCKET)
-      .upload(storagePath, bytes, { contentType: file.type, upsert: false })
+      .createSignedUploadUrl(storagePath)
 
-    if (uploadError) return { error: uploadError.message }
+    if (error) return { error: error.message }
 
     const { data: { publicUrl } } = admin.storage
       .from(STORAGE_BUCKET)
       .getPublicUrl(storagePath)
 
-    return { url: publicUrl }
+    return { signedUrl: data.signedUrl, publicUrl }
   } catch (err) {
-    return { error: err instanceof Error ? err.message : "Upload failed" }
+    return { error: err instanceof Error ? err.message : "Failed to get upload URL" }
   }
 }
 
