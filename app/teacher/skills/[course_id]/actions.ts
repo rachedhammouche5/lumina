@@ -29,28 +29,32 @@ type TopicContentInput = {
 }
 
 export async function uploadContentFile(formData: FormData) {
-  const file = formData.get("file") as File
-  const type = formData.get("type") as string
+  try {
+    const file = formData.get("file") as File
+    const type = formData.get("type") as string
 
-  if (!file || !file.name) return { error: "No file provided" }
+    if (!file || !file.name) return { error: "No file provided" }
 
-  const safeFilename = file.name.replace(/[^a-zA-Z0-9._-]/g, "_")
-  const storagePath = `${type}/${Date.now()}-${safeFilename}`
+    const safeFilename = file.name.replace(/[^a-zA-Z0-9._-]/g, "_")
+    const storagePath = `${type}/${Date.now()}-${safeFilename}`
 
-  const bytes = await file.arrayBuffer()
-  const admin = createAdminClient()
+    const bytes = await file.arrayBuffer()
+    const admin = createAdminClient()
 
-  const { error: uploadError } = await admin.storage
-    .from(STORAGE_BUCKET)
-    .upload(storagePath, bytes, { contentType: file.type, upsert: false })
+    const { error: uploadError } = await admin.storage
+      .from(STORAGE_BUCKET)
+      .upload(storagePath, bytes, { contentType: file.type, upsert: false })
 
-  if (uploadError) return { error: uploadError.message }
+    if (uploadError) return { error: uploadError.message }
 
-  const { data: { publicUrl } } = admin.storage
-    .from(STORAGE_BUCKET)
-    .getPublicUrl(storagePath)
+    const { data: { publicUrl } } = admin.storage
+      .from(STORAGE_BUCKET)
+      .getPublicUrl(storagePath)
 
-  return { url: publicUrl }
+    return { url: publicUrl }
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Upload failed" }
+  }
 }
 
 export async function addTopic(
