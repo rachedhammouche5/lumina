@@ -28,7 +28,7 @@ export default async function TeacherLayout({
   return (
     <>
       <NavBar />
-      <main className="pt-10 pb-28 lg:pb-0">
+      <main className="min-h-screen bg-slate-950 pt-10 pb-28 lg:pb-0">
         {children}
       </main>
     </>
