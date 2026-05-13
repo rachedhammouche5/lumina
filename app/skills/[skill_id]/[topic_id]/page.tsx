@@ -20,6 +20,7 @@ import {
 import Button from "@/app/ui/Button";
 import StreakCelebration from "@/app/features/streak/StreakCelebration";
 import { buildTopicGraph, getTopicStatus } from "@/app/ui/roadmapcomp/progression";
+import TrackVisit from "./TrackVisit";
 
 const contentTypeMeta: Record<
   ContentType,
@@ -126,6 +127,7 @@ export default async function TopicLearningPage({
   return (
     <main className="min-h-screen overflow-x-hidden bg-slate-950 px-4 pb-16 pt-24 text-white sm:px-6">
       <StreakCelebration />
+      {user && <TrackVisit skillId={skill_id} topicId={topic_id} />}
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-8">
         <section className="relative overflow-hidden rounded-[32px] border border-slate-500 bg-gradient-to-br from-slate-700 to-transparent p-6 shadow-slate-500/40 shadow-[0_20px_60px]">
           <div className="flex flex-col lg:flex-row gap-10 items-start justify-between">

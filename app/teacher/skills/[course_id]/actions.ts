@@ -346,6 +346,8 @@ ${contentValue}`;
 export async function deleteContent(contentId: string, skillId: string) {
   const supabase = await createClient();
 
+  await supabase.from("content_chunks").delete().eq("content_id", contentId);
+
   const { error } = await supabase
     .from("Content")
     .delete()
@@ -376,6 +378,15 @@ export async function deleteTopic(topicId: string, skillId: string) {
     const childIds = (children ?? []).map((child) => child.tpc_id);
     queue.push(...childIds);
     idsToDelete.push(...childIds);
+  }
+
+  const { data: contentToDelete } = await supabase
+    .from("Content")
+    .select("cntnt_id")
+    .in("tpc_id", idsToDelete);
+  const contentIds = (contentToDelete ?? []).map((c) => c.cntnt_id);
+  if (contentIds.length > 0) {
+    await supabase.from("content_chunks").delete().in("content_id", contentIds);
   }
 
   await supabase.from("Content").delete().in("tpc_id", idsToDelete);

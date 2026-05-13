@@ -96,6 +96,10 @@ export async function PATCH(request: Request) {
   }
 
   const supabase = await createClient();
+
+  // Remove stale chunks — content has changed and needs re-ingestion
+  await supabase.from("content_chunks").delete().eq("content_id", contentId);
+
   const { data, error } = await supabase
     .from("Content")
     .update({
@@ -132,6 +136,7 @@ export async function DELETE(request: Request) {
   }
 
   const supabase = await createClient();
+  await supabase.from("content_chunks").delete().eq("content_id", contentId);
   const { error } = await supabase.from("Content").delete().eq("cntnt_id", contentId);
 
   if (error) {

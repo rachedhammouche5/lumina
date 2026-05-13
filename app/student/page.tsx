@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { createClient } from "../../lib/supabase/server";
 import { getRole } from "@/features/utils/auth/getRole";
 import Button from "@/app/ui/Button";
@@ -6,7 +7,6 @@ import CourseCard from "@/app/ui/Skills/CourseCard";
 import { BookOpen, ChevronRight } from "lucide-react";
 import { calculateRoadmapProgress, normalizeTopicScores } from "@/app/actions/roadmap";
 import type { TopicRow, ScoreRow } from "@/app/ui/roadmapcomp/types";
-import { buildTopicGraph, getTopicStatus } from "@/app/ui/roadmapcomp/progression";
 import type { Difficulty } from "@/app/skills/[skill_id]/[topic_id]/quiz/quiz.types";
 import RecommendedSkills from "@/components/RecommendedSkills";
 
@@ -53,6 +53,7 @@ export default async function studentPage() {
     href: string;
     progress: number;
     isComplete: boolean;
+    isNew?: boolean;
   };
 
   const enrolledRows = (enrolledData ?? []) as RawEnrollRow[];
@@ -123,58 +124,47 @@ export default async function studentPage() {
     };
   });
 
-  const scoreByTopicId = new Map(normalizedScores.map((row) => [row.tpc_id, row.score]));
+  // Read last visited topic from cookie set by TrackVisit on the content page
+  const cookieStore = await cookies();
+  const lastVisitRaw = cookieStore.get("lumina_last_visit")?.value;
+  let lastVisit: { skillId: string; topicId: string } | null = null;
+  if (lastVisitRaw) {
+    try { lastVisit = JSON.parse(lastVisitRaw); } catch { /* ignore */ }
+  }
 
-  const buildContinueCard = (skillId: string, skillTitle: string): ContinueCard | null => {
-    const skillTopics = topicsBySkill.get(skillId) ?? [];
-    if (!skillTopics.length) {
-      return {
-        skillTitle,
-        topicTitle: "Open the roadmap to pick up where you left off",
-        href: `/skills/${skillId}`,
-        progress: 0,
-        isComplete: false,
-      };
-    }
-
-    const skillScores = normalizedScores.filter((row) => skillTopics.some((topic) => topic.tpc_id === row.tpc_id));
-    const graph = buildTopicGraph(skillTopics, skillScores);
-    const sortedTopics = [...skillTopics].sort((a, b) => {
-      const aStatus = getTopicStatus(a.tpc_id, graph);
-      const bStatus = getTopicStatus(b.tpc_id, graph);
-      const statusRank = { unlocked: 0, locked: 1, completed: 2 } as const;
-
-      if (statusRank[aStatus] !== statusRank[bStatus]) {
-        return statusRank[aStatus] - statusRank[bStatus];
-      }
-
-      const aScore = scoreByTopicId.get(a.tpc_id) ?? 0;
-      const bScore = scoreByTopicId.get(b.tpc_id) ?? 0;
-      if (aScore !== bScore) return aScore - bScore;
-
-      return a.tpc_title.localeCompare(b.tpc_title);
-    });
-
-    const nextTopic = sortedTopics.find((topic) => (scoreByTopicId.get(topic.tpc_id) ?? 0) < 100) ?? sortedTopics[0];
-    const progress = calculateRoadmapProgress(skillTopics, skillScores);
-    const isComplete = progress >= 100;
-
-    return {
-      skillTitle,
-      topicTitle: nextTopic?.tpc_title ?? skillTitle,
-      href: nextTopic ? `/skills/${skillId}/${nextTopic.tpc_id}` : `/skills/${skillId}`,
-      progress,
-      isComplete,
-    };
-  };
-
-  const activeEnrollment = enrolledSkills.find((skill) => skill.progress > 0 && skill.progress < 100)
-    ?? enrolledSkills.find((skill) => skill.progress < 100)
-    ?? enrolledSkills[0];
-
-  const continueCard = activeEnrollment
-    ? buildContinueCard(activeEnrollment.id, activeEnrollment.title)
+  // Validate: must be enrolled in that skill and topic must exist under it
+  const lastVisitSkill = lastVisit
+    ? enrolledSkills.find((s) => s.id === lastVisit!.skillId)
     : null;
+  const lastVisitTopic = lastVisit && lastVisitSkill
+    ? allTopics.find((t) => t.tpc_id === lastVisit!.topicId && t.skill_id === lastVisit!.skillId)
+    : null;
+
+  let continueCard: ContinueCard | null;
+
+  if (lastVisitSkill && lastVisitTopic) {
+    const skillTopics = topicsBySkill.get(lastVisitSkill.id) ?? [];
+    const skillScores = normalizedScores.filter((row) =>
+      skillTopics.some((t) => t.tpc_id === row.tpc_id)
+    );
+    const progress = calculateRoadmapProgress(skillTopics, skillScores);
+    continueCard = {
+      skillTitle: lastVisitSkill.title,
+      topicTitle: lastVisitTopic.tpc_title,
+      href: `/skills/${lastVisitSkill.id}/${lastVisitTopic.tpc_id}`,
+      progress,
+      isComplete: progress >= 100,
+    };
+  } else {
+    continueCard = {
+      skillTitle: "",
+      topicTitle: "",
+      href: "/skills",
+      progress: 0,
+      isComplete: false,
+      isNew: true,
+    };
+  }
 
   return (
     <main className="relative min-h-screen overflow-x-hidden bg-slate-950 pt-24 pb-20 px-4 sm:px-6 text-white">
@@ -221,10 +211,16 @@ export default async function studentPage() {
               <div className="flex-1">
                 <p className="text-[9px] font-bold tracking-[0.2em] uppercase text-orange-400/70 mb-1">Resume where you stopped</p>
                 <h2 className="text-xl md:text-2xl font-black tracking-tight mb-1">
-                  {continueCard?.isComplete ? "Review Your Completed Path" : "Continue Where You Left Off"}
+                  {continueCard?.isNew
+                    ? "Start Your Learning Journey"
+                    : continueCard?.isComplete
+                      ? "Review Your Completed Path"
+                      : "Continue Where You Left Off"}
                 </h2>
                 <p className="text-xs uppercase tracking-widest text-white/50 mb-5">
-                  {continueCard ? `${continueCard.skillTitle} / ${continueCard.topicTitle}` : "No enrolled skills yet"}
+                  {continueCard?.isNew
+                    ? "You haven't accessed any content yet — explore skills to get started"
+                    : `${continueCard?.skillTitle} / ${continueCard?.topicTitle}`}
                 </p>
                 <div className="flex items-center gap-3">
                   <Button
@@ -233,23 +229,31 @@ export default async function studentPage() {
                     href={continueCard?.href ?? "/skills"}
                     className="rounded-xl flex-shrink-0"
                   >
-                    {continueCard?.isComplete ? "Review Roadmap" : "Resume Learning"}
+                    {continueCard?.isNew
+                      ? "Browse Skills"
+                      : continueCard?.isComplete
+                        ? "Review Roadmap"
+                        : "Resume Learning"}
                     <ChevronRight size={15} className="ml-1" />
                   </Button>
-                  <div className="h-2 flex-1 rounded-full bg-slate-800/80">
-                    <div
-                      className="h-2 rounded-full bg-gradient-to-r from-orange-500 to-amber-300 shadow-[0_0_8px_rgba(249,115,22,0.4)]"
-                      style={{ width: `${continueCard?.progress ?? 0}%` }}
-                    />
-                  </div>
+                  {!continueCard?.isNew && (
+                    <div className="h-2 flex-1 rounded-full bg-slate-800/80">
+                      <div
+                        className="h-2 rounded-full bg-gradient-to-r from-orange-500 to-amber-300 shadow-[0_0_8px_rgba(249,115,22,0.4)]"
+                        style={{ width: `${continueCard?.progress ?? 0}%` }}
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
 
               <div className="md:w-[200px] h-[110px] rounded-2xl border border-orange-200/20 bg-orange-200/8 flex items-center justify-center relative flex-shrink-0">
                 <BookOpen className="text-orange-300/60" size={50} />
-                <span className="absolute -top-3 -right-3 h-13 w-13 h-[52px] w-[52px] rounded-full bg-gradient-to-br from-orange-500 to-amber-400 text-white font-bold text-base flex items-center justify-center shadow-lg shadow-orange-500/30">
-                  {continueCard?.progress ?? 0}%
-                </span>
+                {!continueCard?.isNew && (
+                  <span className="absolute -top-3 -right-3 h-13 w-13 h-[52px] w-[52px] rounded-full bg-gradient-to-br from-orange-500 to-amber-400 text-white font-bold text-base flex items-center justify-center shadow-lg shadow-orange-500/30">
+                    {continueCard?.progress ?? 0}%
+                  </span>
+                )}
               </div>
             </div>
           </article>
