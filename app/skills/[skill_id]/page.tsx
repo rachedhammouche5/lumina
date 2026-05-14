@@ -184,7 +184,7 @@ export default async function RoadmapPage({
             <span className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Rating & Reviews</span>
             <div className="h-px flex-1 bg-gradient-to-r from-transparent via-slate-700 to-transparent" />
           </div>
-          <div className="flex flex-col md:flex-row w-full gap-6">
+          <div className="flex flex-col md:flex-row w-full gap-6 items-start">
             <Rating comments={reviews} />
             <CommentsSection
               initialComments={reviews}

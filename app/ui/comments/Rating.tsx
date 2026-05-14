@@ -11,10 +11,10 @@ export default function Rating({ comments }: RatingProps) {
   const total = comments.length;
 
   return (
-    <section className=" flex flex-1 mt-10 justify-center items-center max-h-60 rounded-3xl border border-white/10 bg-gradient-to-br from-white/[0.05] via-white/[0.03] to-transparent p-5 shadow-[0_20px_80px_rgba(0,0,0,0.25)]">
-      <div className="flex flex-col gap-6 my-5 md:flex-row md:items-center md:justify-between h-30">
+    <section className="flex flex-1 rounded-3xl border border-white/10 bg-gradient-to-br from-white/[0.05] via-white/[0.03] to-transparent p-5 shadow-[0_20px_80px_rgba(0,0,0,0.25)]">
+      <div className="flex w-full flex-col gap-6 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-4">
-          <div className="flex h-20 w-20 items-center justify-center rounded-2xl border border-orange-500/20 bg-orange-500/10 text-5xl text-orange-400">
+          <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl border border-orange-500/20 bg-orange-500/10 text-5xl text-orange-400">
             ★
           </div>
           <div>
@@ -31,7 +31,7 @@ export default function Rating({ comments }: RatingProps) {
           </div>
         </div>
 
-        <div className="grid gap-2 text-sm text-slate-300 md:min-w-[280px]">
+        <div className="grid w-full gap-2 text-sm text-slate-300 md:min-w-[280px] md:max-w-xs">
           {STAR_LEVELS.map((level) => {
             const count = counts[level] ?? 0;
             const percent = total ? Math.round((count / total) * 100) : 0;
