@@ -20,18 +20,14 @@ export async function syncRoleTables(
   const photoUrl = input.photoUrl ?? null;
 
   if (role === "teacher") {
-    const { error } = await adminClient
-      .from("Teacher")
-      .upsert(
-        {
-          tchr_id: cleanUserId,
-          user_id: cleanUserId,
-          tchr_fullname: fullName,
-          tchr_email: safeEmail,
-          ...(photoUrl ? { tchr_pfp: photoUrl } : {}),
-        },
-        { onConflict: "tchr_id" },
-      );
+    // Use RPC to bypass PostgREST type-inference issue with uuid tchr_id column
+    const { error } = await adminClient.rpc("upsert_teacher", {
+      p_tchr_id: cleanUserId,
+      p_user_id: cleanUserId,
+      p_fullname: fullName,
+      p_email: safeEmail,
+      p_photo_url: photoUrl,
+    });
 
     if (error) throw error;
     return;
@@ -53,6 +49,7 @@ export async function syncRoleTables(
 
     if (error) throw error;
 
-    await adminClient.from("Teacher").delete().eq("tchr_id", cleanUserId);
+    // Use RPC to avoid the same uuid vs text issue on delete
+    await adminClient.rpc("delete_teacher", { p_tchr_id: cleanUserId });
   }
 }

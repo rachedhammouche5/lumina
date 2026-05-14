@@ -56,6 +56,7 @@ export async function reviewTeacherRequest(formData: FormData) {
     photo_url?: string | null;
   } | null = null;
 
+  console.log("[reviewTeacherRequest] step 1 — lookup request for", requestUserId);
   const requestLookup = await adminClient
     .from("teacher_requests")
     .select("status,email,full_name,photo_url")
@@ -92,6 +93,7 @@ export async function reviewTeacherRequest(formData: FormData) {
     throw new Error("Teacher request is not pending");
   }
 
+  console.log("[reviewTeacherRequest] step 2 — get auth user");
   const { data: targetUserResult, error: targetUserError } =
     await adminClient.auth.admin.getUserById(requestUserId);
 
@@ -102,6 +104,7 @@ export async function reviewTeacherRequest(formData: FormData) {
   const nextRole: "student" | "teacher" =
     decision === "approved" ? "teacher" : "student";
 
+  console.log("[reviewTeacherRequest] step 3 — update auth role to", nextRole);
   const { error: roleError } = await adminClient.auth.admin.updateUserById(
     requestUserId,
     {
@@ -133,38 +136,19 @@ export async function reviewTeacherRequest(formData: FormData) {
         : null),
   };
 
+  console.log("[reviewTeacherRequest] step 4 — syncRoleTables as", decision === "approved" ? "teacher" : "student");
   await syncRoleTables(adminClient, profileInput, decision === "approved" ? "teacher" : "student");
+  console.log("[reviewTeacherRequest] step 4 done");
 
-  const fullUpdatePayload = {
-    status: decision,
-    admin_note: adminNote || null,
-  };
+  console.log("[reviewTeacherRequest] step 5 — finalize_teacher_request via RPC");
+  const { error: finalizeError } = await adminClient.rpc("finalize_teacher_request", {
+    p_user_id: requestUserId,
+    p_decision: decision,
+    p_admin_note: adminNote || null,
+  });
 
-  let updateRequestError: { code?: string; message: string } | null = null;
-
-  const updateResponse = await adminClient
-    .from("teacher_requests")
-    .update(fullUpdatePayload)
-    .eq("user_id", requestUserId)
-    .eq("status", "pending");
-
-  updateRequestError = updateResponse.error;
-
-  if (
-    updateRequestError?.code === "42703" ||
-    updateRequestError?.message?.includes("admin_note")
-  ) {
-    const fallbackUpdateResponse = await adminClient
-      .from("teacher_requests")
-      .update({ status: decision })
-      .eq("user_id", requestUserId)
-      .eq("status", "pending");
-
-    updateRequestError = fallbackUpdateResponse.error;
-  }
-
-  if (updateRequestError) {
-    throw updateRequestError;
+  if (finalizeError) {
+    throw finalizeError;
   }
 
   
