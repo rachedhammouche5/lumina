@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Topic, Skill, Content, ContentType } from "@/lib/database.types";
-import { addTopic, updateTopic, uploadContentFile, deleteContent } from "./actions";
+import { addTopic, updateTopic, getUploadUrl, deleteContent } from "./actions";
 import {Trash2} from "lucide-react";
 
 type ContentInput = {
@@ -115,12 +115,10 @@ export default function AddTopicForm({
     const resolvedContents = await Promise.all(
       form.contents.map(async (content) => {
         if (content.file) {
-          const fd = new FormData();
-          fd.append("file", content.file);
-          fd.append("type", content.type);
-          const result = await uploadContentFile(fd);
+          const result = await getUploadUrl(content.file.name, content.type);
           if (result.error) { console.error(result.error); return content; }
-          return { ...content, value: result.url ?? null };
+          await fetch(result.signedUrl!, { method: "PUT", body: content.file });
+          return { ...content, value: result.publicUrl ?? null };
         }
         return content;
       }),

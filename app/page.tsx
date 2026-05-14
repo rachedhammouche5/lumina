@@ -3,6 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import HomeLanding from "@/app/ui/HomeLanding";
 import { getRole } from "@/features/utils/auth/getRole";
 
+export const dynamic = 'force-dynamic';
+
 export default async function Page() {
   const supabase = await createClient();
   const {
