@@ -85,7 +85,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "fk_content"
+            foreignKeyName: "content_chunks_content_id_fkey"
             columns: ["content_id"]
             isOneToOne: false
             referencedRelation: "Content"
@@ -95,21 +95,37 @@ export type Database = {
       }
       enroll: {
         Row: {
+          last_content_type: string | null
+          last_topic_id: string | null
+          last_visited_at: string | null
           progress: number
           skill_id: string
           student_id: string
         }
         Insert: {
+          last_content_type?: string | null
+          last_topic_id?: string | null
+          last_visited_at?: string | null
           progress: number
           skill_id: string
           student_id: string
         }
         Update: {
+          last_content_type?: string | null
+          last_topic_id?: string | null
+          last_visited_at?: string | null
           progress?: number
           skill_id?: string
           student_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "enroll_last_topic_id_fkey"
+            columns: ["last_topic_id"]
+            isOneToOne: false
+            referencedRelation: "Topic"
+            referencedColumns: ["tpc_id"]
+          },
           {
             foreignKeyName: "enroll_skill_id_fkey"
             columns: ["skill_id"]

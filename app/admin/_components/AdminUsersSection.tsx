@@ -1,9 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Search, ShieldCheck, Trash2 } from "lucide-react";
+import { Search, ShieldCheck } from "lucide-react";
 import type { AdminUser } from "../types";
-import { deleteUserAccount } from "@/features/users/actions/deleteUserAccount";
+import AdminDeleteUserForm from "./AdminDeleteUserForm";
 
 type AdminUsersSectionProps = {
   users: AdminUser[];
@@ -153,16 +153,7 @@ export default function AdminUsersSection({
                           Cannot delete self
                         </span>
                       ) : (
-                        <form action={deleteUserAccount}>
-                          <input type="hidden" name="userId" value={user.id} />
-                          <button
-                            type="submit"
-                            className="inline-flex items-center gap-2 rounded-2xl border border-rose-400/20 bg-rose-500/10 px-4 py-2 text-sm text-rose-100 transition hover:border-rose-300/40 hover:bg-rose-500/20"
-                          >
-                            <Trash2 size={16} />
-                            Delete
-                          </button>
-                        </form>
+                        <AdminDeleteUserForm userId={user.id} buttonLabel="Delete" />
                       )}
                     </td>
                   </tr>

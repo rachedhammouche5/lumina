@@ -7,11 +7,20 @@ import { createClient as createAdminClient } from "@supabase/supabase-js";
 
 export async function deleteUserAccount(formData: FormData) {
   const userIdValue = formData.get("userId");
+  const confirmDeleteValue = formData.get("confirmDelete");
   const userId =
     typeof userIdValue === "string" ? userIdValue.trim() : "";
+  const isConfirmed =
+    confirmDeleteValue === "on" ||
+    confirmDeleteValue === "true" ||
+    confirmDeleteValue === "1";
 
-  if (!userId) {
+ try { if (!userId) {
     throw new Error("Missing user id");
+  }
+
+  if (!isConfirmed) {
+    throw new Error("Please confirm account deletion");
   }
 
   const supabase = await createClient();
@@ -78,4 +87,14 @@ export async function deleteUserAccount(formData: FormData) {
   revalidatePath("/admin/teachers");
   revalidatePath("/admin/students");
   revalidatePath("/admin/dashboards");
+  return { success: true };
+} catch (error: unknown) {
+  console.error("[deleteUserAccount] Error deleting user account:", error);
+  return {
+    error:
+      error instanceof Error
+        ? error.message
+        : "An unexpected error occurred while deleting the account",
+  };
+}
 }

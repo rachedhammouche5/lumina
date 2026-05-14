@@ -78,6 +78,7 @@ function LoginPageViewContent() {
     } = await supabase.auth.getUser();
 
     const role = user?.app_metadata?.role;
+    const wantsTeacher = Boolean(user?.user_metadata?.wants_teacher);
 
     if (role === "student") router.replace("/student");
     else if (role === "teacher") {
@@ -85,6 +86,19 @@ function LoginPageViewContent() {
     } else if (role === "teacher_pending") {
       router.replace("/teacher/apply");
     } else if (role === "admin") router.replace("/admin");
+    else if (wantsTeacher) {
+      const res = await fetch("/auth/finalize-signup", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ teacher: true }),
+      });
+
+      if (res.ok) {
+        router.replace("/teacher/apply");
+      } else {
+        router.replace("/");
+      }
+    }
     else router.replace("/");
 
     router.refresh();

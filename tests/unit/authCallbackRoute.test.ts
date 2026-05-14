@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
   exchangeCodeForSession: vi.fn(),
   getUser: vi.fn(),
   updateUserById: vi.fn(),
+  from: vi.fn(),
 }));
 
 vi.mock("@/lib/supabase/server", () => ({
@@ -28,6 +29,11 @@ describe("GET /auth/callback", () => {
     process.env.SUPABASE_SERVICE_ROLE_KEY = "service-role-key";
 
     mocks.createServerClient.mockResolvedValue({
+      from: vi.fn(() => ({
+        update: vi.fn().mockReturnValue({
+          eq: vi.fn().mockResolvedValue({ error: null }),
+        }),
+      })),
       auth: {
         exchangeCodeForSession: mocks.exchangeCodeForSession,
         getUser: mocks.getUser,
@@ -35,6 +41,7 @@ describe("GET /auth/callback", () => {
     });
 
     mocks.createAdminClient.mockReturnValue({
+      from: mocks.from,
       auth: {
         admin: {
           updateUserById: mocks.updateUserById,
@@ -44,6 +51,12 @@ describe("GET /auth/callback", () => {
 
     mocks.exchangeCodeForSession.mockResolvedValue({ error: null });
     mocks.updateUserById.mockResolvedValue({ error: null });
+    mocks.from.mockReturnValue({
+      upsert: vi.fn().mockResolvedValue({ error: null }),
+      delete: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ error: null }),
+      }),
+    });
   });
 
   test("redirects to login when callback has no code", async () => {
@@ -87,8 +100,33 @@ describe("GET /auth/callback", () => {
     );
   });
 
+  test("routes a teacher signup to the application page when wants_teacher is stored in metadata", async () => {
+    mocks.getUser.mockResolvedValue({
+      data: {
+        user: {
+          id: "user-3",
+          app_metadata: {},
+          user_metadata: { wants_teacher: true },
+        },
+      },
+    });
+
+    const response = await GET(
+      new Request(
+        "http://localhost:3000/auth/callback?code=test-code",
+      ) as NextRequest,
+    );
+
+    expect(mocks.updateUserById).toHaveBeenCalledWith("user-3", {
+      app_metadata: { role: "teacher_pending" },
+    });
+    expect(response.headers.get("location")).toBe(
+      "http://localhost:3000/teacher/apply",
+    );
+  });
+
   test.each([
-    { role: "teacher", destination: "/user-2" },
+    { role: "teacher", destination: "/teacher" },
     { role: "admin", destination: "/admin" },
   ])(
     "redirects existing $role user to $destination",

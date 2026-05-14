@@ -50,6 +50,7 @@ export default function SignupPageView() {
       options: {
         data: {
           full_name: fullName,
+          wants_teacher: teacher,
         },
       },
     });
@@ -64,27 +65,30 @@ export default function SignupPageView() {
       await supabase.auth.signOut({ scope: "global" });
     }
     if (data.session) {
-  const res = await fetch("/auth/finalize-signup", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ teacher }),
-  });
+      const res = await fetch("/auth/finalize-signup", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ teacher }),
+      });
 
-  if (!res.ok) {
-    setError("Account created, but setup failed.");
-    setLoading(false);
-    return;
-  }
-  
-  const payload = (await res.json()) as { nextPath?: string };
-  router.replace(payload.nextPath ?? "/student");
-  router.refresh();
-  setLoading(false);
-  return;
-}
+      if (!res.ok) {
+        setError("Account created, but setup failed.");
+        setLoading(false);
+        return;
+      }
+      
+      const payload = (await res.json()) as { nextPath?: string };
+      router.replace(payload.nextPath ?? "/student");
+      router.refresh();
+      setLoading(false);
+      return;
+    }
 
-
-    // setSuccess("Account created. Check your email to confirm your signup.");
+    setSuccess(
+      teacher
+        ? "Account created. Check your email to confirm the signup, then sign in to continue your teacher application."
+        : "Account created. Check your email to confirm your signup.",
+    );
     setLoading(false);
   }
 

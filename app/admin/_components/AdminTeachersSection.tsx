@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { Search, ShieldCheck, Trash2 } from "lucide-react";
+import { Search, ShieldCheck } from "lucide-react";
 import type { AdminTeacher } from "../types";
-import { deleteUserAccount } from "@/features/users/actions/deleteUserAccount";
+import AdminDeleteUserForm from "./AdminDeleteUserForm";
 
 type AdminTeachersSectionProps = {
   teachers: AdminTeacher[];
@@ -101,16 +101,7 @@ export default function AdminTeachersSection({
                         <ShieldCheck size={16} />
                         Edit
                       </Link>
-                      <form action={deleteUserAccount}>
-                        <input type="hidden" name="userId" value={teacher.id} />
-                        <button
-                          type="submit"
-                          className="inline-flex items-center gap-2 rounded-2xl border border-rose-400/20 bg-rose-500/10 px-4 py-2 text-sm text-rose-100 transition hover:border-rose-300/40 hover:bg-rose-500/20"
-                        >
-                          <Trash2 size={16} />
-                          Remove
-                        </button>
-                      </form>
+                      <AdminDeleteUserForm userId={teacher.id} buttonLabel="Remove" />
                     </div>
                   </td>
                 </tr>
