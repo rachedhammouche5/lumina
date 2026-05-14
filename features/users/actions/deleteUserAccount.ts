@@ -7,11 +7,20 @@ import { createClient as createAdminClient } from "@supabase/supabase-js";
 
 export async function deleteUserAccount(formData: FormData) {
   const userIdValue = formData.get("userId");
+  const confirmDeleteValue = formData.get("confirmDelete");
   const userId =
     typeof userIdValue === "string" ? userIdValue.trim() : "";
+  const isConfirmed =
+    confirmDeleteValue === "on" ||
+    confirmDeleteValue === "true" ||
+    confirmDeleteValue === "1";
 
   if (!userId) {
     throw new Error("Missing user id");
+  }
+
+  if (!isConfirmed) {
+    throw new Error("Please confirm account deletion");
   }
 
   const supabase = await createClient();

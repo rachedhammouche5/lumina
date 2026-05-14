@@ -5,7 +5,6 @@ import { syncRoleTables } from "@/features/users/actions/syncTables";
 export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
-  const wantsTeacher = url.searchParams.get("wants_teacher") === "1";
   const intent = url.searchParams.get("intent");
   const isLoginFlow = intent === "login";
   if (!code) {
@@ -36,6 +35,9 @@ export async function GET(request: NextRequest) {
   }
 
   let role = user.app_metadata?.role as string | undefined;
+  const wantsTeacher =
+    url.searchParams.get("wants_teacher") === "1" ||
+    Boolean((user.user_metadata as { wants_teacher?: boolean } | undefined)?.wants_teacher);
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
