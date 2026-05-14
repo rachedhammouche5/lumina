@@ -15,16 +15,35 @@ export async function syncRoleTables(
   role: SyncRole,
 ) {
   const fullName = (input.fullName ?? "").trim() || "Unknown User";
-  const safeEmail = input.email ?? `${input.userId}@missing-email.local`;
+  const cleanUserId = input.userId.trim();
+  const safeEmail = input.email ?? `${cleanUserId}@missing-email.local`;
   const photoUrl = input.photoUrl ?? null;
 
+  if (role === "teacher") {
+    const { error } = await adminClient
+      .from("Teacher")
+      .upsert(
+        {
+          tchr_id: cleanUserId,
+          user_id: cleanUserId,
+          tchr_fullname: fullName,
+          tchr_email: safeEmail,
+          ...(photoUrl ? { tchr_pfp: photoUrl } : {}),
+        },
+        { onConflict: "tchr_id" },
+      );
+
+    if (error) throw error;
+    return;
+  }
+
   if (role === "student") {
-    const { error: upsertStudentError } = await adminClient
+    const { error } = await adminClient
       .from("Student")
       .upsert(
         {
-          std_id: input.userId,
-          user_id: input.userId,
+          std_id: cleanUserId,
+          user_id: cleanUserId,
           std_fullname: fullName,
           std_email: safeEmail,
           ...(photoUrl ? { std_pfp: photoUrl } : {}),
@@ -32,36 +51,8 @@ export async function syncRoleTables(
         { onConflict: "std_id" },
       );
 
-    if (upsertStudentError) throw upsertStudentError;
+    if (error) throw error;
 
-    const { error: deleteTeacherError } = await adminClient
-      .from("Teacher")
-      .delete()
-      .eq("tchr_id", input.userId);
-
-    if (deleteTeacherError) throw deleteTeacherError;
-    return;
+    await adminClient.from("Teacher").delete().eq("tchr_id", cleanUserId);
   }
-
-  const { error: upsertTeacherError } = await adminClient
-    .from("Teacher")
-    .upsert(
-      {
-        tchr_id: input.userId,
-        user_id: input.userId,
-        tchr_fullname: fullName,
-        tchr_email: safeEmail,
-        ...(photoUrl ? { tchr_pfp: photoUrl } : {}),
-      },
-      { onConflict: "tchr_id" },
-    );
-
-  if (upsertTeacherError) throw upsertTeacherError;
-
-  const { error: deleteStudentError } = await adminClient
-    .from("Student")
-    .delete()
-    .eq("std_id", input.userId);
-
-  if (deleteStudentError) throw deleteStudentError;
 }

@@ -10,6 +10,7 @@ type ReviewDecision = "approved" | "rejected";
 
 export async function reviewTeacherRequest(formData: FormData) {
   const requestUserIdValue = formData.get("requestUserId");
+  
   const decisionValue = formData.get("decision");
   const adminNoteValue = formData.get("adminNote");
 
@@ -48,16 +49,16 @@ export async function reviewTeacherRequest(formData: FormData) {
 
   const adminClient = createAdminClient(supabaseUrl, serviceRoleKey);
 
-  const requestLookupColumns = "status,email,full_name";
   let requestRow: {
     status?: string | null;
     email?: string | null;
     full_name?: string | null;
+    photo_url?: string | null;
   } | null = null;
 
   const requestLookup = await adminClient
     .from("teacher_requests")
-    .select(requestLookupColumns)
+    .select("status,email,full_name,photo_url")
     .eq("user_id", requestUserId)
     .single();
 
@@ -77,6 +78,7 @@ export async function reviewTeacherRequest(formData: FormData) {
         status: fallbackLookup.data?.status ?? null,
         email: null,
         full_name: null,
+        photo_url: null,
       };
     } else {
       throw requestLookup.error;
@@ -113,28 +115,25 @@ export async function reviewTeacherRequest(formData: FormData) {
     throw roleError;
   }
 
-  if (decision === "approved") {
-    await syncRoleTables(
-      adminClient,
-      {
-        userId: requestUserId,
-        email: requestRow?.email ?? targetUserResult.user.email ?? null,
-        fullName:
-          requestRow?.full_name ??
-          (typeof targetUserResult.user.user_metadata?.full_name === "string"
-            ? targetUserResult.user.user_metadata.full_name
-            : null) ??
-          (typeof targetUserResult.user.user_metadata?.name === "string"
-            ? targetUserResult.user.user_metadata.name
-            : null),
-        photoUrl:
-          typeof targetUserResult.user.user_metadata?.photo_url === "string"
-            ? targetUserResult.user.user_metadata.photo_url
-            : null,
-      },
-      "teacher",
-    );
-  }
+  const profileInput = {
+    userId: requestUserId,
+    email: requestRow?.email ?? targetUserResult.user.email ?? null,
+    fullName:
+      requestRow?.full_name ??
+      (typeof targetUserResult.user.user_metadata?.full_name === "string"
+        ? targetUserResult.user.user_metadata.full_name
+        : null) ??
+      (typeof targetUserResult.user.user_metadata?.name === "string"
+        ? targetUserResult.user.user_metadata.name
+        : null),
+    photoUrl:
+      requestRow?.photo_url ??
+      (typeof targetUserResult.user.user_metadata?.photo_url === "string"
+        ? targetUserResult.user.user_metadata.photo_url
+        : null),
+  };
+
+  await syncRoleTables(adminClient, profileInput, decision === "approved" ? "teacher" : "student");
 
   const fullUpdatePayload = {
     status: decision,
