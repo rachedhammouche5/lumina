@@ -85,7 +85,7 @@ function useStreakCompletion() {
     inFlight.current = true;
     try {
       const result = await updateStreakForCurrentUser();
-      if (result) {
+      if (result?.updated) {
         triggerStreakCelebration({
           previous: result.previous,
           current: result.current,
@@ -237,25 +237,29 @@ export function AudioPlayer({ src, title }: { src: string; title: string }) {
 
 // ─── PDF Card ──────────────────────────────────────────────────────────────────
 
+function getPdfProxySrc(href: string | null): string | null {
+  if (!href) return null;
+  // Route through /api/pdf so the browser always receives application/pdf
+  // regardless of whether the file is local or in Supabase Storage.
+  return `/api/pdf?path=${encodeURIComponent(href)}`;
+}
+
 export function PdfCard({ content }: { content: Content }) {
   const href = getContentHref(content);
+  const iframeSrc = getPdfProxySrc(href);
   const [open, setOpen] = useState(false);
   const handleStreak = useStreakCompletion();
+
   useEffect(() => {
-    if (open) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-    return () => {
-      document.body.style.overflow = "";
-    };
+    document.body.style.overflow = open ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
   }, [open]);
+
   return (
     <>
       {/* Card */}
       <button
-        onClick={() => href && setOpen(true)}
+        onClick={() => iframeSrc && setOpen(true)}
         className="flex w-full items-center gap-3 rounded-2xl border border-emerald-400/20 bg-emerald-500/5 px-4 py-3 text-left transition hover:bg-emerald-500/10 hover:border-emerald-400/40"
       >
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-300">
@@ -266,17 +270,17 @@ export function PdfCard({ content }: { content: Content }) {
             {content.cntnt_title}
           </p>
           <p className="text-xs text-slate-400 mt-0.5">
-            {href ? "Click to view PDF" : "No file attached"}
+            {iframeSrc ? "Click to view PDF" : "No file attached"}
           </p>
         </div>
-        {href && (
+        {iframeSrc && (
           <ExternalLink size={15} className="shrink-0 text-emerald-300/60" />
         )}
       </button>
 
       {/* Full viewport modal */}
-      {open && href && (
-        <div className="fixed inset-0 z-51 flex flex-col bg-black">
+      {open && iframeSrc && (
+        <div className="fixed inset-0 z-[51] flex flex-col bg-black">
           {/* Toolbar */}
           <div className="flex items-center justify-between border-b border-white/10 bg-slate-900 px-4 py-3">
             <p className="font-semibold text-white">{content.cntnt_title}</p>
@@ -293,10 +297,10 @@ export function PdfCard({ content }: { content: Content }) {
 
           {/* PDF viewer */}
           <iframe
-            src={href}
-            className="flex-1 w-full"
-            style={{ colorScheme: "dark" }}
+            src={iframeSrc}
+            className="flex-1 w-full border-none"
             title={content.cntnt_title}
+            allow="fullscreen"
           />
         </div>
       )}

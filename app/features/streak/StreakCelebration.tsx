@@ -31,7 +31,7 @@ export default function StreakCelebration() {
 
   useEffect(() => {
     if (!payload) return;
-    const timer = setTimeout(() => setPayload(null), 5000);
+    const timer = setTimeout(() => setPayload(null), 2500);
     return () => clearTimeout(timer);
   }, [animationKey, payload]);
 
@@ -81,11 +81,11 @@ export default function StreakCelebration() {
             transform: translateY(16px) scale(0.8);
             opacity: 0;
           }
-          18% {
+          20% {
             transform: translateY(0) scale(1.08);
             opacity: 1;
           }
-          82% {
+          70% {
             transform: translateY(-4px) scale(1);
             opacity: 1;
           }
@@ -98,10 +98,10 @@ export default function StreakCelebration() {
           0% {
             opacity: 0;
           }
-          12% {
+          15% {
             opacity: 1;
           }
-          88% {
+          75% {
             opacity: 1;
           }
           100% {
@@ -168,18 +168,13 @@ export default function StreakCelebration() {
           }
         }
         .streak-pop {
-          animation: streakPop 4.8s ease forwards;
+          animation: streakPop 2.5s ease forwards;
         }
         .streak-ring {
-          animation: streakRing 4.6s ease-out forwards;
-        }
-        .streak-flame {
-          animation: flameFlicker 1s ease-in-out infinite;
-          filter: drop-shadow(0 0 18px rgba(249, 115, 22, 0.7))
-            drop-shadow(0 0 40px rgba(251, 146, 60, 0.55));
+          animation: streakRing 2.3s ease-out forwards;
         }
         .streak-backdrop {
-          animation: streakBackdrop 4.8s ease forwards;
+          animation: streakBackdrop 2.5s ease forwards;
         }
         .streak-text {
           text-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
@@ -188,7 +183,7 @@ export default function StreakCelebration() {
           background: radial-gradient(circle, rgba(251, 146, 60, 0.9), transparent 55%),
             radial-gradient(circle, rgba(253, 186, 116, 0.7), transparent 60%);
           filter: blur(0.5px);
-          animation: sparksFloat 2.2s ease-out infinite;
+          animation: sparksFloat 1.2s ease-out infinite;
         }
         .streak-flame {
           animation: flameWaver 1.1s ease-in-out infinite, flamePulse 1.7s ease-in-out infinite;

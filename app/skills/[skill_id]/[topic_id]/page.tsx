@@ -19,7 +19,6 @@ import {
 } from "./content-sections";
 import Button from "@/app/ui/Button";
 import StreakCelebration from "@/app/features/streak/StreakCelebration";
-import { buildTopicGraph, getTopicStatus } from "@/app/ui/roadmapcomp/progression";
 import TrackVisit from "./TrackVisit";
 
 const contentTypeMeta: Record<
@@ -82,12 +81,6 @@ export default async function TopicLearningPage({
 
   if (!skill || !topic) notFound();
 
-  if (user) {
-    await supabase
-      .from("Student")
-      .update({ std_last_activeDate: new Date().toISOString() })
-      .eq("user_id", user.id);
-  }
   // ── Access gate ─────────────────────────────────────────────────────────────
   if (user) {
     const { data: student } = await supabase
@@ -106,11 +99,6 @@ export default async function TopicLearningPage({
 
       if (!enrollment) redirect(`/skills/${skill_id}`);
 
-      // Check if this is a leaf topic (no children → always accessible)
-      const { count: childCount } = await supabase
-        .from("Topic")
-        .select("tpc_id", { count: "exact", head: true })
-        .eq("parent_id", topic_id);
     }
   }
   // ── End access gate ─────────────────────────────────────────────────────────

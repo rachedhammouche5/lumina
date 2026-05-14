@@ -151,10 +151,6 @@ export async function GET(request: NextRequest) {
         "student",
       );
     }
-    await supabase
-      .from("Student")
-      .update({ std_last_activeDate: new Date().toISOString() })
-      .eq("std_id", user.id);
   }
 
   const destination =

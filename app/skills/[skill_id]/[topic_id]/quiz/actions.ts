@@ -98,11 +98,6 @@ export async function saveQuizScore(
 
   if (saveError) return { error: saveError.message };
 
-  await supabase
-    .from("Student")
-    .update({ std_last_activeDate: new Date().toISOString() })
-    .eq("std_id", student.std_id);
-
   revalidatePath(`/skills/${skillId}`);
   revalidatePath(`/skills/${skillId}/${topicId}`);
   return { success: true };

@@ -153,7 +153,7 @@ useEffect(() => {
     const [estimates] = await Promise.all([
       adaptiveUnlock(topicId, skillId, percentage, simplifiedAnswers),
       updateStreak().then(result => {
-        if (result) triggerStreakCelebration({ previous: result.previous, current: result.current });
+        if (result?.updated) triggerStreakCelebration({ previous: result.previous, current: result.current });
       }),
       completeSkill(topicId, skillId),
     ]);
