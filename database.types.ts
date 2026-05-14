@@ -445,6 +445,7 @@ export type Database = {
           certification_url: string | null
           created_at: string | null
           cv_url: string | null
+          email: string | null
           full_name: string | null
           gov_id_url: string | null
           id: string
@@ -458,6 +459,7 @@ export type Database = {
           certification_url?: string | null
           created_at?: string | null
           cv_url?: string | null
+          email?: string | null
           full_name?: string | null
           gov_id_url?: string | null
           id?: string
@@ -471,6 +473,7 @@ export type Database = {
           certification_url?: string | null
           created_at?: string | null
           cv_url?: string | null
+          email?: string | null
           full_name?: string | null
           gov_id_url?: string | null
           id?: string
@@ -564,6 +567,15 @@ export type Database = {
         Args: { teacher_id_param: string }
         Returns: number
       }
+      handle_teacher_sync: {
+        Args: {
+          p_email: string
+          p_fullname: string
+          p_pfp?: string
+          p_user_id: string
+        }
+        Returns: undefined
+      }
       match_chunks: {
         Args: {
           filter_level?: string
@@ -580,6 +592,24 @@ export type Database = {
           similarity: number
           token_count: number
         }[]
+      }
+      sync_teacher_data: {
+        Args: {
+          target_email: string
+          target_fullname: string
+          target_pfp: string
+          target_user_id: string
+        }
+        Returns: undefined
+      }
+      sync_teacher_request_to_teacher: {
+        Args: {
+          email: string
+          full_name: string
+          photo_url: string
+          teacher_user_id: string
+        }
+        Returns: undefined
       }
     }
     Enums: {

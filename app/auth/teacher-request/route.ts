@@ -95,6 +95,7 @@ export async function POST(request: Request) {
     cv_url: cvUrl,
     motivation,
     status: "pending" as const,
+    created_at: new Date().toISOString(),
   };
 
   const { error } = existingRequest

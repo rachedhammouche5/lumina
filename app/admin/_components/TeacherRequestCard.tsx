@@ -20,17 +20,8 @@ function statusClasses(status: TeacherRequestStatus) {
   }
 }
 
-function DocLink({
-  href,
-  label,
-}: {
-  href: string | null;
-  label: string;
-}) {
-  if (!href) {
-    return <span className="text-slate-500">-</span>;
-  }
-
+function DocLink({ href, label }: { href: string | null; label: string }) {
+  if (!href) return <span className="text-slate-500">-</span>;
   return (
     <a
       href={href}
@@ -44,7 +35,7 @@ function DocLink({
 }
 
 export default function TeacherRequestCard({ request }: TeacherRequestCardProps) {
-  const isPending = request.status === "pending";
+  const isRequestPending = request.status === "pending";
 
   return (
     <tr className="border-t border-white/10">
@@ -52,15 +43,9 @@ export default function TeacherRequestCard({ request }: TeacherRequestCardProps)
         <div className="font-semibold text-white">{request.full_name ?? "Unnamed"}</div>
         <div className="mt-1 text-xs text-slate-500">{request.user_id}</div>
       </td>
+      <td className="py-4 pr-4 align-top text-sm text-slate-300">{request.email}</td>
       <td className="py-4 pr-4 align-top text-sm text-slate-300">
-        {request.email ?? "No email on file"}
-      </td>
-      <td className="py-4 pr-4 align-top text-sm text-slate-300">
-        <span
-          className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${statusClasses(
-            request.status,
-          )}`}
-        >
+        <span className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${statusClasses(request.status)}`}>
           {request.status}
         </span>
       </td>
@@ -80,13 +65,13 @@ export default function TeacherRequestCard({ request }: TeacherRequestCardProps)
       </td>
       <td className="py-4 align-top">
         <div className="space-y-2">
-          {isPending ? (
+          {isRequestPending ? (
             <form action={reviewTeacherRequest} className="space-y-2">
               <input type="hidden" name="requestUserId" value={request.user_id} />
               <input
                 name="adminNote"
                 placeholder="Note"
-                className="w-full rounded-xl border border-white/10 bg-slate-950/60 px-3 py-2 text-sm text-white outline-none placeholder:text-slate-500"
+                className="w-full rounded-xl border border-white/10 bg-slate-950/60 px-3 py-2 text-sm text-white outline-none placeholder:text-slate-500 disabled:opacity-50"
                 required
               />
               <div className="flex flex-wrap gap-2">
@@ -94,7 +79,7 @@ export default function TeacherRequestCard({ request }: TeacherRequestCardProps)
                   type="submit"
                   name="decision"
                   value="approved"
-                  className={`rounded-xl border px-3 py-2 text-xs font-semibold uppercase tracking-wide ${statusClasses("approved")}`}
+                  className={`rounded-xl border px-3 py-2 text-xs font-semibold uppercase tracking-wide disabled:opacity-50 ${statusClasses("approved")}`}
                 >
                   Approve
                 </button>
@@ -102,17 +87,16 @@ export default function TeacherRequestCard({ request }: TeacherRequestCardProps)
                   type="submit"
                   name="decision"
                   value="rejected"
-                  className={`rounded-xl border px-3 py-2 text-xs font-semibold uppercase tracking-wide ${statusClasses("rejected")}`}
+                  className={`rounded-xl border px-3 py-2 text-xs font-semibold uppercase tracking-wide disabled:opacity-50 ${statusClasses("rejected")}`}
                 >
                   Reject
                 </button>
               </div>
             </form>
           ) : (
-            <p className="text-xs leading-5 text-slate-400">
-              {request.admin_note ? `Note: ${request.admin_note}` : "Reviewed request."}
-              {request.reviewed_at ? ` Reviewed at ${new Date(request.reviewed_at).toLocaleString()}.` : ""}
-            </p>
+            <div className="text-xs leading-5 text-slate-400">
+              <p>{request.admin_note ? `Note: ${request.admin_note}` : "Reviewed."}</p>
+            </div>
           )}
 
           <form action={deleteTeacherRequest}>
@@ -129,4 +113,4 @@ export default function TeacherRequestCard({ request }: TeacherRequestCardProps)
       </td>
     </tr>
   );
-}
+} 
