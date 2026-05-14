@@ -15,7 +15,7 @@ export async function deleteUserAccount(formData: FormData) {
     confirmDeleteValue === "true" ||
     confirmDeleteValue === "1";
 
-  if (!userId) {
+ try { if (!userId) {
     throw new Error("Missing user id");
   }
 
@@ -87,4 +87,14 @@ export async function deleteUserAccount(formData: FormData) {
   revalidatePath("/admin/teachers");
   revalidatePath("/admin/students");
   revalidatePath("/admin/dashboards");
+  return { success: true };
+} catch (error: unknown) {
+  console.error("[deleteUserAccount] Error deleting user account:", error);
+  return {
+    error:
+      error instanceof Error
+        ? error.message
+        : "An unexpected error occurred while deleting the account",
+  };
+}
 }

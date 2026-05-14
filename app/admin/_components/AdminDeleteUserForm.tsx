@@ -28,16 +28,15 @@ export default function AdminDeleteUserForm({
     formData.set("confirmDelete", "true");
 
     setErrorMessage(null);
-    startTransition(() => {
-      void deleteUserAccount(formData)
-        .then((result) => {
-          if (result && "error" in result) {
-            setErrorMessage(result.error);
-          }
-        })
-        .catch((error: unknown) => {
-          setErrorMessage(error instanceof Error ? error.message : "Failed to delete account");
-        });
+    startTransition(async () => {
+      try {
+        const result = await deleteUserAccount(formData);
+        if (result && "error" in result) {
+          setErrorMessage(result.error || "Failed to delete account");
+        }
+      } catch (error: unknown) {
+        setErrorMessage(error instanceof Error ? error.message : "Failed to delete account");
+      }
     });
   };
 
