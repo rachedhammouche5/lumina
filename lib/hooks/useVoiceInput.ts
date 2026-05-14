@@ -64,7 +64,9 @@ export function useVoiceInput(onFinalTranscript: (text: string) => void): UseVoi
   const requestPermission = useCallback(async () => {
     console.log('🎤 requestPermission function called');
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: { noiseSuppression: true, echoCancellation: true, autoGainControl: true },
+      });
       console.log('Manual microphone access granted');
       stream.getTracks().forEach(track => track.stop());
       
@@ -109,13 +111,19 @@ export function useVoiceInput(onFinalTranscript: (text: string) => void): UseVoi
     r.continuous = true;
     r.interimResults = true;
     r.lang = langRef.current;
+    r.maxAlternatives = 3;
 
     r.onresult = (e: any) => {
       let interim = "";
       for (let i = e.resultIndex; i < e.results.length; i++) {
         const result = e.results[i];
         if (result.isFinal) {
-          onFinalRef.current(result[0].transcript.trim());
+          // Pick the alternative with the highest confidence
+          let best = result[0];
+          for (let a = 1; a < result.length; a++) {
+            if (result[a].confidence > best.confidence) best = result[a];
+          }
+          onFinalRef.current(best.transcript.trim());
           setInterimText("");
         } else {
           interim += result[0].transcript;
@@ -126,6 +134,8 @@ export function useVoiceInput(onFinalTranscript: (text: string) => void): UseVoi
 
     r.onerror = (e: any) => {
       if (e.error === "aborted") return;
+      // no-speech on mobile is common during pauses — just let onend auto-restart
+      if (e.error === "no-speech") return;
       shouldRestartRef.current = false;
       setVoiceState("error");
       setVoiceError(ERROR_MAP[e.error] || `Error: ${e.error}`);
@@ -154,9 +164,10 @@ export function useVoiceInput(onFinalTranscript: (text: string) => void): UseVoi
     // Always try to get user media first - this will prompt if needed
     try {
       console.log('Requesting microphone access...');
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: { noiseSuppression: true, echoCancellation: true, autoGainControl: true },
+      });
       console.log('Microphone access granted');
-      // Stop the stream immediately since we don't need it for speech recognition
       stream.getTracks().forEach(track => track.stop());
       
       // Update permission state
