@@ -34,6 +34,51 @@ export async function GET(request: Request) {
   return NextResponse.json({ questions });
 }
 
+export async function PATCH(request: Request) {
+  const body = await request.json();
+  const { questionId, question, difficulty, answers, skillId } = body as {
+    questionId?: string;
+    question?: string;
+    difficulty?: string;
+    answers?: { text: string; correct: boolean }[];
+    skillId?: string;
+  };
+
+  if (!questionId || !question?.trim() || !difficulty || !Array.isArray(answers) || answers.length !== 4) {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
+
+  const supabase = await createClient();
+
+  const { error: quizError } = await supabase
+    .from("quiz")
+    .update({ question: question.trim(), difficulty })
+    .eq("qst_id", questionId);
+
+  if (quizError) return NextResponse.json({ error: quizError.message }, { status: 500 });
+
+  const { error: deleteError } = await supabase
+    .from("q_response")
+    .delete()
+    .eq("quizId", questionId);
+
+  if (deleteError) return NextResponse.json({ error: deleteError.message }, { status: 500 });
+
+  const newResponses = answers.map((a) => ({
+    rspns_id: crypto.randomUUID(),
+    quizId: questionId,
+    response: a.text.trim(),
+    isCorrect: Boolean(a.correct),
+  }));
+
+  const { error: insertError } = await supabase.from("q_response").insert(newResponses);
+  if (insertError) return NextResponse.json({ error: insertError.message }, { status: 500 });
+
+  if (skillId) revalidatePath(`/teacher/skills/${skillId}`);
+
+  return NextResponse.json({ ok: true });
+}
+
 export async function DELETE(request: Request) {
   const body = await request.json();
   const questionId = body?.questionId as string | undefined;

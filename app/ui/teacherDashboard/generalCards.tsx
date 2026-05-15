@@ -3,7 +3,7 @@ import { User, Flame, Star } from "lucide-react";
 export default function GeneralCards({ stats }: { stats: { totalStudents: number, avgRating: number, countStreak: number } }) {
     const cardsData = [
         { 
-            title: "Total Students", 
+            title: "Enrolled Students",
             value: stats.totalStudents, 
             icon: User, 
             textColor: "text-orange-300", 

@@ -88,6 +88,8 @@ export async function saveQuizScore(
   if (existing && existing.score >= score) {
     revalidatePath(`/skills/${skillId}`);
     revalidatePath(`/skills/${skillId}/${topicId}`);
+    revalidatePath(`/skills/${skillId}`);
+    revalidatePath(`/skills/${skillId}/${topicId}`);
     return { success: true };
   }
 

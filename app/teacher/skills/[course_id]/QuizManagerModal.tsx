@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Skill, Topic } from "@/lib/database.types";
+import EditQuizForm from "./EditQuizForm";
 
 type QuizResponse = {
   id: string;
@@ -33,6 +34,7 @@ export default function QuizManagerModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
   const [refreshFlag, setRefreshFlag] = useState(0);
+  const [editingQuestion, setEditingQuestion] = useState<QuizQuestion | null>(null);
 
   const selectedTopic = useMemo(
     () => topics.find((topic) => topic.tpc_id === selectedTopicId) ?? null,
@@ -102,6 +104,7 @@ export default function QuizManagerModal({
   };
 
   return (
+    <>
     <div className="grid gap-4 lg:grid-cols-[280px_1fr]">
       <div className="rounded-3xl border border-slate-700 bg-linear-to-br from-slate-700/80 via-slate-950 to-transparent p-3 shadow-2xl shadow-black/20 sm:p-4">
         <p className="text-[11px] uppercase tracking-[0.22em] text-orange-300 sm:text-xs">Quiz topic</p>
@@ -173,14 +176,24 @@ export default function QuizManagerModal({
                     <span className="w-fit rounded-full border border-orange-400/20 bg-orange-500/10 px-2.5 py-1 text-[11px] uppercase tracking-[0.16em] text-orange-200">
                       {question.difficulty}
                     </span>
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteQuestion(question.id)}
-                      className="inline-flex h-10 items-center justify-center rounded-xl border border-red-500/40 bg-red-500/10 px-3 text-sm font-semibold text-red-200 transition hover:bg-red-500/20"
-                      disabled={loading}
-                    >
-                      Remove question
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setEditingQuestion(question)}
+                        className="inline-flex h-10 items-center justify-center rounded-xl border border-sky-500/40 bg-sky-500/10 px-3 text-sm font-semibold text-sky-200 transition hover:bg-sky-500/20"
+                        disabled={loading}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteQuestion(question.id)}
+                        className="inline-flex h-10 items-center justify-center rounded-xl border border-red-500/40 bg-red-500/10 px-3 text-sm font-semibold text-red-200 transition hover:bg-red-500/20"
+                        disabled={loading}
+                      >
+                        Remove
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -205,5 +218,18 @@ export default function QuizManagerModal({
         )}
       </div>
     </div>
+
+    {editingQuestion && (
+      <EditQuizForm
+        skillId={skill.skl_id}
+        question={editingQuestion}
+        onClose={() => setEditingQuestion(null)}
+        onSaved={() => {
+          setEditingQuestion(null);
+          setRefreshFlag((prev) => prev + 1);
+        }}
+      />
+    )}
+    </>
   );
 }

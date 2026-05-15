@@ -156,17 +156,19 @@ export default async function StudentDashboardPage() {
     href: `/skills/${row.Topic?.skill_id ?? ""}/${row.tpc_id ?? ""}`,
   });
 
-  const weakPoints = topicScores
-    .filter((row) => row.score < 70)
+  const weakPointsAll = topicScores.filter((row) => row.score < 70);
+  const weakPoints = weakPointsAll
     .sort((a, b) => a.score - b.score)
     .slice(0, 3)
     .map(mapScore);
 
-  const strongPoints = topicScores
-    .filter((row) => row.score >= 70)
+  const strongPointsAll = topicScores.filter((row) => row.score >= 70);
+  const strongPoints = strongPointsAll
     .sort((a, b) => b.score - a.score)
     .slice(0, 3)
     .map(mapScore);
+
+  const totalQuizzesTaken = topicScores.length;
 
   const chartData = enrollments.map((row, index) => ({
     name: `${getSkillTitle(row.Skill)} ${index + 1}`,
@@ -218,9 +220,9 @@ export default async function StudentDashboardPage() {
             </div>
             <div className="relative">
               <p className="mb-0.5 text-xs font-medium text-slate-500">Strong topics</p>
-              <p className="text-2xl font-bold text-white">{strongPoints.length}</p>
+              <p className="text-2xl font-bold text-white">{strongPointsAll.length}</p>
               <p className="mt-0.5 text-xs text-slate-500">
-                {strongPoints.length === 0 ? "Take quizzes to track progress!" : "Topics scored at 70% or higher"}
+                {strongPointsAll.length === 0 ? "Take quizzes to track progress!" : "Topics scored at 70% or higher"}
               </p>
             </div>
           </article>
@@ -249,9 +251,13 @@ export default async function StudentDashboardPage() {
               <Medal size={18} className="text-emerald-400" />
             </div>
             <div className="relative">
-              <p className="mb-0.5 text-xs font-medium text-slate-500">Badges earned</p>
-              <p className="text-2xl font-bold text-white">8 badges</p>
-              <p className="mt-0.5 text-xs text-slate-500">Latest: Consistent Learner</p>
+              <p className="mb-0.5 text-xs font-medium text-slate-500">Quizzes taken</p>
+              <p className="text-2xl font-bold text-white">
+                {totalQuizzesTaken} {totalQuizzesTaken === 1 ? "quiz" : "quizzes"}
+              </p>
+              <p className="mt-0.5 text-xs text-slate-500">
+                {totalQuizzesTaken === 0 ? "Take your first quiz!" : "Keep it up!"}
+              </p>
             </div>
           </article>
         </section>
@@ -355,6 +361,7 @@ export default async function StudentDashboardPage() {
             </div>
           </div>
         </section>
+
       </div>
     </main>
   );

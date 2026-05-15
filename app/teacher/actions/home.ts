@@ -46,9 +46,10 @@ export async function getTeacherHomeData(userId: string): Promise<TeacherHomeDat
   let quizzesCount = 0;
   let activeLearnersCount = 0;
   let lastActivities: TeacherHomeActivity[] = [];
+  let allRatings: { rating: number }[] = [];
 
   if (skillIds.length > 0) {
-    const [{ count: topicCount }, { count: enrollCount }, { data: recentReviews }] = await Promise.all([
+    const [{ count: topicCount }, { count: enrollCount }, { data: recentReviews }, { data: ratingsData }] = await Promise.all([
       supabase
         .from("Topic")
         .select("tpc_id", { count: "exact", head: true })
@@ -63,10 +64,15 @@ export async function getTeacherHomeData(userId: string): Promise<TeacherHomeDat
         .in("skill_id", skillIds)
         .order("time", { ascending: false })
         .limit(6),
+      supabase
+        .from("review")
+        .select("rating")
+        .in("skill_id", skillIds),
     ]);
 
     topicsCount = topicCount ?? 0;
     activeLearnersCount = enrollCount ?? 0;
+    allRatings = (ratingsData ?? []) as { rating: number }[];
 
     const { data: topicRows } = await supabase
       .from("Topic")
@@ -105,8 +111,8 @@ export async function getTeacherHomeData(userId: string): Promise<TeacherHomeDat
 
   const totalHours = skillRows.reduce((sum, item) => sum + (item.skl_duration ?? 0), 0);
   const avgRating =
-    lastActivities.length > 0
-      ? (lastActivities.reduce((sum, item) => sum + item.rating, 0) / lastActivities.length).toFixed(1)
+    allRatings.length > 0
+      ? (allRatings.reduce((sum, item) => sum + (item.rating ?? 0), 0) / allRatings.length).toFixed(1)
       : "0.0";
 
   return {
