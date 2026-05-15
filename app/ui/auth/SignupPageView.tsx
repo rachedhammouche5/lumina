@@ -52,6 +52,7 @@ export default function SignupPageView() {
           full_name: fullName,
           wants_teacher: teacher,
         },
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
       },
     });
 
@@ -86,8 +87,8 @@ export default function SignupPageView() {
 
     setSuccess(
       teacher
-        ? "Account created. Check your email to confirm the signup, then sign in to continue your teacher application."
-        : "Account created. Check your email to confirm your signup.",
+        ? "Account created! Check your email and click the confirmation link — you'll be redirected automatically."
+        : "Account created! Check your email and click the confirmation link — you'll be signed in automatically.",
     );
     setLoading(false);
   }
@@ -124,158 +125,115 @@ export default function SignupPageView() {
     <div
       className={`w-full overflow-hidden rounded-2xl border border-slate-600 bg-linear-to-br from-slate-700 to-slate-900 shadow-2xl shadow-slate-800/70 transition-all duration-300 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"}`}
     >
-      <div className="grid grid-cols-1 md:grid-cols-[44%_56%]">
-        <div
-          className={`relative hidden md:block transition-all duration-500 ${mounted ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-3"}`}
-        >
-          <img
-            src="/orangecyan.jpg"
-            alt="Authentication visual"
-            className="h-full w-full object-cover object-center"
-          />
+      <div className="grid grid-cols-1 md:grid-cols-[35%_65%]">
+        <div className={`relative hidden md:block transition-all duration-500 ${mounted ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-3"}`}>
+          <img src="/orangecyan.jpg" alt="Authentication visual" className="h-full w-full object-cover object-center" />
           <div className="absolute inset-0 bg-gradient-to-br from-slate-950/75 via-slate-950/35 to-orange-500/20" />
-          <div className="absolute top-5 left-5 right-5">
-            
-          </div>
         </div>
+      <div className="p-5">
+        <h2 className="text-xl font-black tracking-tight text-white">Create account</h2>
 
-        <div
-          className={`p-5 sm:p-6 transition-all duration-500 ${mounted ? "opacity-100 translate-x-0" : "opacity-0 translate-x-3"}`}
-        >
-          <h2 className="text-2xl font-black tracking-tight text-white">
-            Create account
-          </h2>
+        <form className="mt-3 space-y-2" onSubmit={onSubmit}>
+          <div>
+            <label className="mb-0.5 block text-xs text-slate-300">Name</label>
+            <Input
+              type="text"
+              placeholder="John Doe"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              icon={<User size={16} />}
+              required
+            />
+          </div>
 
-          <form className="mt-4 space-y-3" onSubmit={onSubmit}>
+          <div>
+            <label className="mb-0.5 block text-xs text-slate-300">Email</label>
+            <Input
+              type="email"
+              placeholder="email@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              icon={<Mail size={16} />}
+              required
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="mb-1 block text-xs text-slate-300">Name</label>
+              <label className="mb-0.5 block text-xs text-slate-300">Password</label>
               <Input
-                type="text"
-                placeholder="John Doe"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                icon={<User size={16} />}
-                required
-              />
-            </div>
-
-            <div>
-              <label className="mb-1 block text-xs text-slate-300">Email</label>
-              <Input
-                type="email"
-                placeholder="email@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                icon={<Mail size={16} />}
-                required
-              />
-            </div>
-
-            <div>
-              <label className="mb-1 block text-xs text-slate-300">
-                Password
-              </label>
-                <Input
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  icon={<Lock size={16} />}
-                  minLength={8}
-                  autoComplete="new-password"
-                  rightElement={
-                    <button
-                      type="button"
-                    onClick={() => setShowPassword((v) => !v)}
-                    className="text-slate-400 hover:text-white"
-                    aria-label="Toggle password visibility"
-                  >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                type={showPassword ? "text" : "password"}
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                icon={<Lock size={16} />}
+                minLength={8}
+                autoComplete="new-password"
+                rightElement={
+                  <button type="button" onClick={() => setShowPassword((v) => !v)} className="text-slate-400 hover:text-white" aria-label="Toggle password visibility">
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 }
                 required
               />
             </div>
-
             <div>
-              <label className="mb-1 block text-xs text-slate-300">
-                Confirm password
-              </label>
-                <Input
-                  type={showConfirmPassword ? "text" : "password"}
-                  placeholder="Confirm password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  icon={<Lock size={16} />}
-                  minLength={8}
-                  autoComplete="new-password"
-                  rightElement={
-                    <button
-                      type="button"
-                    onClick={() => setShowConfirmPassword((v) => !v)}
-                    className="text-slate-400 hover:text-white"
-                    aria-label="Toggle confirm password visibility"
-                  >
-                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              <label className="mb-0.5 block text-xs text-slate-300">Confirm password</label>
+              <Input
+                type={showConfirmPassword ? "text" : "password"}
+                placeholder="Confirm"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                icon={<Lock size={16} />}
+                minLength={8}
+                autoComplete="new-password"
+                rightElement={
+                  <button type="button" onClick={() => setShowConfirmPassword((v) => !v)} className="text-slate-400 hover:text-white" aria-label="Toggle confirm password visibility">
+                    {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 }
                 required
               />
             </div>
+          </div>
 
-            <label className="flex items-center gap-2 text-sm text-slate-300">
-              <input
-                type="checkbox"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-                className="flex items-center gap-2 text-sm text-slate-300"
-              />
+          <p className="text-[11px] text-slate-500">Min. 8 characters with uppercase, lowercase, number and symbol.</p>
+
+          <div className="flex items-center gap-4">
+            <label className="flex items-center gap-1.5 text-xs text-slate-300">
+              <input type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} />
               Remember me
             </label>
-            <label className="flex items-center gap-2 text-sm text-slate-300">
-              <input
-                type="checkbox"
-                checked={teacher}
-                onChange={(e) => setTeacher(e.target.checked)}
-              />
-               I want to become a teacher
+            <label className="flex items-center gap-1.5 text-xs text-slate-300">
+              <input type="checkbox" checked={teacher} onChange={(e) => setTeacher(e.target.checked)} />
+              I want to become a teacher
             </label>
-            <p className="text-xs text-slate-400">
-              Use at least 8 characters with uppercase, lowercase, a number, and a symbol.
-            </p>
- 
+          </div>
 
-            <Button
-              type="submit"
-              disabled={loading}
-              className="w-full disabled:cursor-not-allowed disabled:opacity-70"
-            >
-              {loading ? "Creating account..." : "Sign Up"}
-            </Button>
-          </form>
-
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={signUpWithGoogle}
-            disabled={googleLoading}
-            className="mt-2 flex w-full items-center justify-center gap-2 border border-slate-700 bg-slate-800 py-2 text-sm font-semibold text-white hover:border-slate-500 hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-70"
-          >
-            <GoogleIcon />
-            {googleLoading ? "Redirecting..." : "Sign up with Google"}
+          <Button type="submit" disabled={loading} className="w-full disabled:cursor-not-allowed disabled:opacity-70">
+            {loading ? "Creating account..." : "Sign Up"}
           </Button>
+        </form>
 
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={signUpWithGoogle}
+          disabled={googleLoading}
+          className="mt-2 flex w-full items-center justify-center gap-2 border border-slate-700 bg-slate-800 py-2 text-sm font-semibold text-white hover:border-slate-500 hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-70"
+        >
+          <GoogleIcon />
+          {googleLoading ? "Redirecting..." : "Sign up with Google"}
+        </Button>
 
-          <p className="mt-2 text-sm text-slate-300 text-center">
-            Already have an account?{" "}
-            <Link href="/login" className="font-semibold text-orange-400 hover:underline">
-              Login
-            </Link>
-          </p>
+        <p className="mt-2 text-sm text-slate-300 text-center">
+          Already have an account?{" "}
+          <Link href="/login" className="font-semibold text-orange-400 hover:underline">Login</Link>
+        </p>
 
-          {error ? <p className="mt-3 text-sm text-red-400">{error}</p> : null}
-          {success ? <p className="mt-3 text-sm text-emerald-400">{success}</p> : null}
-        </div>
+        {error ? <p className="mt-2 text-sm text-red-400">{error}</p> : null}
+        {success ? <p className="mt-2 text-sm text-emerald-400">{success}</p> : null}
+      </div>
       </div>
     </div>
   );

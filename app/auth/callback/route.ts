@@ -5,25 +5,33 @@ import { syncRoleTables } from "@/features/users/actions/syncTables";
 export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
+  const token_hash = url.searchParams.get("token_hash");
+  const type = url.searchParams.get("type");
   const intent = url.searchParams.get("intent");
   const isLoginFlow = intent === "login";
-  if (!code) {
-    console.error("[auth/callback] Missing OAuth code in callback URL.");
-    return NextResponse.redirect(
-      new URL("/login?error=missing_oauth_code", url.origin),
-    );
-  }
 
   const supabase = await createClient();
 
-  const { error: exchangeError } =
-    await supabase.auth.exchangeCodeForSession(code);
-  if (exchangeError) {
-    console.error(
-      "[auth/callback] Failed to exchange OAuth code for session:",
-      exchangeError.message,
-    );
-    return NextResponse.redirect(new URL("/login?error=oauth", url.origin));
+  if (token_hash && type) {
+    // Email confirmation via OTP token_hash (newer Supabase flow)
+    const { error } = await supabase.auth.verifyOtp({
+      token_hash,
+      type: type as "signup" | "recovery" | "invite" | "email_change",
+    });
+    if (error) {
+      console.error("[auth/callback] Failed to verify OTP token:", error.message);
+      return NextResponse.redirect(new URL("/login?error=oauth", url.origin));
+    }
+  } else if (code) {
+    // OAuth / PKCE code flow
+    const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+    if (exchangeError) {
+      console.error("[auth/callback] Failed to exchange code:", exchangeError.message);
+      return NextResponse.redirect(new URL("/login?error=oauth", url.origin));
+    }
+  } else {
+    console.error("[auth/callback] No code or token_hash in URL.");
+    return NextResponse.redirect(new URL("/login?error=missing_oauth_code", url.origin));
   }
 
   const {
