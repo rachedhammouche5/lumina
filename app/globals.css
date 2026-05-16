@@ -212,4 +212,65 @@ input[type="number"] {
   .glow-locked {
     @apply border-white/5 bg-white/[0.02] shadow-none opacity-40 grayscale;
   }
+
+  .animate-prestige-float {
+    animation: prestige-float 7s ease-in-out infinite;
+  }
+
+  .animate-prestige-pulse {
+    animation: prestige-pulse 3.6s ease-in-out infinite;
+  }
+
+  .animate-prestige-sheen {
+    animation: prestige-sheen 5.5s linear infinite;
+    background-size: 200% 100%;
+  }
+
+  .animate-prestige-spin {
+    animation: prestige-spin 18s linear infinite;
+  }
+}
+
+@keyframes prestige-float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes prestige-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.72;
+  }
+
+  50% {
+    transform: scale(1.06);
+    opacity: 1;
+  }
+}
+
+@keyframes prestige-sheen {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes prestige-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }

@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      achievement: {
+        Row: {
+          criteria_type: string | null
+          criteria_value: Json | null
+          description: string
+          global_count: number | null
+          icon: string | null
+          id: string
+          is_hidden: boolean | null
+          name: string
+          rarity: string | null
+        }
+        Insert: {
+          criteria_type?: string | null
+          criteria_value?: Json | null
+          description: string
+          global_count?: number | null
+          icon?: string | null
+          id?: string
+          is_hidden?: boolean | null
+          name: string
+          rarity?: string | null
+        }
+        Update: {
+          criteria_type?: string | null
+          criteria_value?: Json | null
+          description?: string
+          global_count?: number | null
+          icon?: string | null
+          id?: string
+          is_hidden?: boolean | null
+          name?: string
+          rarity?: string | null
+        }
+        Relationships: []
+      }
       Content: {
         Row: {
           cntnt_id: string
@@ -412,6 +448,39 @@ export type Database = {
         }
         Relationships: []
       }
+      student_achievement: {
+        Row: {
+          achievement_id: string
+          earned_at: string | null
+          student_id: string
+        }
+        Insert: {
+          achievement_id: string
+          earned_at?: string | null
+          student_id: string
+        }
+        Update: {
+          achievement_id?: string
+          earned_at?: string | null
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_achievement_achievement_id_fkey"
+            columns: ["achievement_id"]
+            isOneToOne: false
+            referencedRelation: "achievement"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_achievement_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "Student"
+            referencedColumns: ["std_id"]
+          },
+        ]
+      }
       Teacher: {
         Row: {
           email_notifications_enabled: boolean | null
@@ -555,6 +624,11 @@ export type Database = {
       }
     }
     Functions: {
+      delete_teacher: { Args: { p_tchr_id: string }; Returns: undefined }
+      finalize_teacher_request: {
+        Args: { p_admin_note?: string; p_decision: string; p_user_id: string }
+        Returns: undefined
+      }
       get_avg_rating_by_teacher: {
         Args: { teacher_id_param: string }
         Returns: number
@@ -608,6 +682,16 @@ export type Database = {
           full_name: string
           photo_url: string
           teacher_user_id: string
+        }
+        Returns: undefined
+      }
+      upsert_teacher: {
+        Args: {
+          p_email: string
+          p_fullname: string
+          p_photo_url?: string
+          p_tchr_id: string
+          p_user_id: string
         }
         Returns: undefined
       }

@@ -3,9 +3,12 @@ import { redirect } from "next/navigation";
 import { ArrowRight, BookCheck, Flame, Medal, TrendingUp } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getRole } from "@/features/utils/auth/getRole";
+import { loadPrestigeBadgeViews } from "@/features/achievements/prestige";
 import ProgressChart from "./_components/ProgressChart";
 import LeaderboardPanel, { type LeaderboardEntry } from "./_components/LeaderboardPanel";
+import PrestigeBadgesPanel from "./_components/PrestigeBadgesPanel";
 
 type StudentRow = {
   std_id: string;
@@ -169,6 +172,8 @@ export default async function StudentDashboardPage() {
     .map(mapScore);
 
   const totalQuizzesTaken = topicScores.length;
+  const strongTopicsCount = strongPointsAll.length;
+  const averageScore = totalQuizzesTaken > 0 ? topicScores.reduce((sum, row) => sum + row.score, 0) / totalQuizzesTaken : 0;
 
   const chartData = enrollments.map((row, index) => ({
     name: `${getSkillTitle(row.Skill)} ${index + 1}`,
@@ -182,6 +187,22 @@ export default async function StudentDashboardPage() {
     currentStudentName,
     currentStudent?.std_pfp ?? null,
   );
+
+  const currentRank = leaderboardEntries.find((entry) => entry.id === currentStudentId)?.rank ?? leaderboardEntries.length;
+  const adminClient = process.env.SUPABASE_SERVICE_ROLE_KEY ? createAdminClient() : null;
+  const prestigeBadges = await loadPrestigeBadgeViews({
+    adminClient,
+    studentId: currentStudentId,
+    stats: {
+      streak,
+      skillsCompleted: skills,
+      quizzesTaken: totalQuizzesTaken,
+      strongTopics: strongTopicsCount,
+      averageScore,
+      currentRank,
+      totalStudents: leaderboardEntries.length,
+    },
+  });
 
   return (
     <main className="min-h-screen bg-slate-950 pt-24 pb-20 px-4 sm:px-6">
@@ -261,6 +282,8 @@ export default async function StudentDashboardPage() {
             </div>
           </article>
         </section>
+
+        <PrestigeBadgesPanel badges={prestigeBadges} />
 
         <section className="grid grid-cols-1 gap-6 xl:grid-cols-[1.2fr_0.8fr]">
           <div className="space-y-6">
