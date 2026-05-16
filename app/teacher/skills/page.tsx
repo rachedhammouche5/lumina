@@ -74,7 +74,7 @@ export default async function TeacherCoursesPage() {
           </div>
         </div>
 
-        <div className="pretty-scrollbar max-h-[calc(100vh-22rem)] overflow-y-scroll pr-1 sm:pr-2">
+        <div className=" pr-1 sm:pr-2">
           <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {skills.length > 0 ? (
               skills.map((skill) => (
