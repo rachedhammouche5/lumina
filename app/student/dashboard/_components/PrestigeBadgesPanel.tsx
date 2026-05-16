@@ -183,7 +183,7 @@ function BadgeModal({
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-slate-500">Prestige status</p>
-                <p className="mt-1 text-sm font-semibold text-white">{statusLabel(badge.status)}</p>
+                <p className="mt-1 text-sm font-semibold text-white">{badge.status === "unlocked" ? "Unlocked" : badge.status === "progress" ? "Within reach" : "Locked"}</p>
               </div>
               <span className={`rounded-full border px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] ${badge.status === "unlocked" ? "border-emerald-400/25 bg-emerald-500/10 text-emerald-200" : badge.status === "progress" ? "border-amber-400/25 bg-amber-500/10 text-amber-100" : "border-white/10 bg-white/5 text-slate-400"}`}>
                 {badge.status === "unlocked" ? "Unlocked" : badge.status === "progress" ? "Within reach" : "Locked"}
