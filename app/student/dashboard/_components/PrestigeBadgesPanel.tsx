@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import type { LucideIcon } from "lucide-react";
 import {
   Award,
-  BadgeCheck,
   Brain,
   Crown,
   Flame,
@@ -43,21 +42,6 @@ function BadgeIcon({
   return <Icon size={size} className={className} />;
 }
 
-function rarityGradient(rarity: PrestigeBadgeView["rarity"]) {
-  switch (rarity) {
-    case "Bronze":
-      return "from-orange-500/35 via-amber-500/20 to-black";
-    case "Silver":
-      return "from-slate-200/25 via-slate-400/10 to-black";
-    case "Gold":
-      return "from-amber-300/40 via-yellow-500/20 to-black";
-    case "Obsidian":
-      return "from-zinc-950 via-black to-amber-400/10";
-    case "Legendary":
-      return "from-violet-500/35 via-fuchsia-500/15 to-black";
-  }
-}
-
 function rarityStroke(rarity: PrestigeBadgeView["rarity"]) {
   switch (rarity) {
     case "Bronze":
@@ -86,12 +70,6 @@ function rarityPill(rarity: PrestigeBadgeView["rarity"]) {
     case "Legendary":
       return "border-violet-400/40 bg-violet-500/15 text-violet-100";
   }
-}
-
-function statusLabel(status: PrestigeBadgeView["status"]) {
-  if (status === "unlocked") return "Unlocked";
-  if (status === "progress") return "In progress";
-  return "Locked";
 }
 
 function formatEarnedAt(earnedAt: string | null) {
@@ -231,140 +209,71 @@ function BadgeModal({
 
 export default function PrestigeBadgesPanel({ badges }: Props) {
   const [selectedBadgeId, setSelectedBadgeId] = useState<string | null>(null);
-  const [showAllBadges, setShowAllBadges] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
   const selectedBadge = useMemo(
     () => badges.find((badge) => badge.id === selectedBadgeId) ?? null,
     [badges, selectedBadgeId],
   );
   const earnedBadges = useMemo(() => badges.filter((badge) => badge.status === "unlocked"), [badges]);
-  const visibleBadges = showAllBadges ? badges : earnedBadges;
-  const hiddenCount = badges.length - earnedBadges.length;
 
   return (
     <>
-      <section className="relative overflow-hidden rounded-[2rem] border border-amber-400/15 bg-[#050505] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.55)] sm:p-6">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(245,158,11,0.15),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(168,85,247,0.14),transparent_32%),linear-gradient(180deg,rgba(255,255,255,0.02),transparent)]" />
-        <div className="absolute inset-0 opacity-25 [background-image:radial-gradient(rgba(255,255,255,0.08)_1px,transparent_1px)] [background-size:18px_18px]" />
-        <div className="absolute -right-20 top-0 h-56 w-56 rounded-full bg-violet-500/10 blur-3xl animate-prestige-float" />
-        <div className="absolute -left-16 bottom-0 h-44 w-44 rounded-full bg-amber-400/10 blur-3xl animate-prestige-float" />
+      <article className="relative flex items-start gap-4 overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 p-5">
+        <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 via-transparent to-transparent pointer-events-none" />
+        <div className="absolute -top-6 -right-6 h-20 w-20 rounded-full bg-amber-500/8 pointer-events-none" />
+        <div className="shrink-0 flex h-10 w-10 items-center justify-center rounded-xl border border-amber-500/25 bg-amber-500/15">
+          <Award size={18} className="text-amber-400" />
+        </div>
 
-        <div className="relative flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div className="max-w-2xl">
-            <div className="flex items-center gap-2">
-              <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-amber-400/20 bg-amber-500/10 text-amber-200">
-                <Award size={16} />
-              </span>
-              <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-amber-200/80">Prestige Vault</p>
-            </div>
-            <h2 className="mt-3 text-2xl font-black tracking-tight text-white sm:text-3xl">Elite badge system</h2>
-            <p className="mt-2 max-w-xl text-sm leading-6 text-slate-400">
-              Bronze badges are the everyday wins. Silver rewards weeks of work, gold takes months or top-tier
-              performance, and obsidian or legendary should feel almost mythic.
+        <div className="relative min-w-0 flex-1">
+          <div className="min-w-0">
+            <p className="mb-0.5 text-xs font-medium text-slate-500">Earned badges</p>
+            <p className="text-2xl font-bold text-white">
+              {earnedBadges.length} {earnedBadges.length === 1 ? "badge" : "badges"}
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            <div className="rounded-2xl border border-white/8 bg-white/5 px-4 py-3">
-              <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-slate-500">Unlocked</p>
-              <p className="mt-1 text-lg font-black text-white">{badges.filter((badge) => badge.status === "unlocked").length}</p>
+          {expanded ? (
+            <div className="mt-4 mx-auto w-full max-w-md rounded-2xl border border-slate-800 bg-slate-950/60 p-2.5">
+              {earnedBadges.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-slate-700 bg-slate-900/60 px-3 py-4 text-center text-xs text-slate-400">
+                  No badges yet.
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  {earnedBadges.map((badge) => (
+                    <button
+                      key={badge.id}
+                      type="button"
+                      onClick={() => setSelectedBadgeId(badge.id)}
+                      className={`group flex flex-col items-center gap-1.5 rounded-xl border border-slate-800 bg-slate-900 px-2 py-3 text-center transition hover:-translate-y-0.5 hover:border-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-300/40`}
+                    >
+                      <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-700 bg-slate-950">
+                        <BadgeIcon iconKey={badge.iconKey} size={16} className="text-amber-200" />
+                      </div>
+                      <p className="w-full truncate text-[10px] font-semibold text-white">{badge.name}</p>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
-            <div className="rounded-2xl border border-white/8 bg-white/5 px-4 py-3">
-              <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-slate-500">In reach</p>
-              <p className="mt-1 text-lg font-black text-white">{badges.filter((badge) => badge.status === "progress").length}</p>
-            </div>
-            <div className="rounded-2xl border border-white/8 bg-white/5 px-4 py-3">
-              <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-slate-500">Locked</p>
-              <p className="mt-1 text-lg font-black text-white">{hiddenCount}</p>
-            </div>
+          ) : null}
+
+          <div className="mt-4 flex items-center justify-between gap-3">
+            <p className="text-xs text-slate-500">
+              {expanded ? "Tap a badge to inspect it" : "Tap more to see them"}
+            </p>
+            <button
+              type="button"
+              onClick={() => setExpanded((current) => !current)}
+              className="shrink-0 rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.18em] text-amber-100 transition hover:border-amber-300/35 hover:bg-amber-500/15"
+            >
+              {expanded ? "Hide" : "More"}
+            </button>
           </div>
         </div>
-
-        <div className="relative mt-6 flex flex-wrap items-center justify-between gap-3">
-          <p className="text-xs font-medium text-slate-500">
-            {showAllBadges
-              ? "Full vault unlocked for inspection."
-              : `${earnedBadges.length} earned badge${earnedBadges.length === 1 ? "" : "s"} visible right now.`}
-          </p>
-          <button
-            type="button"
-            onClick={() => setShowAllBadges((current) => !current)}
-            className="inline-flex items-center gap-2 rounded-full border border-violet-400/20 bg-violet-500/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-violet-100 transition hover:border-violet-300/35 hover:bg-violet-500/15"
-          >
-            {showAllBadges ? "Show only earned" : "See all badges possible"}
-          </button>
-        </div>
-
-        <div className="relative mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {visibleBadges.map((badge) => {
-            const hiddenCard = badge.isHidden && badge.status !== "unlocked";
-            const title = hiddenCard ? "Hidden Badge" : badge.name;
-            const subtitle = hiddenCard ? "Mystery reward" : badge.subtitle;
-
-            return (
-              <button
-                key={badge.id}
-                type="button"
-                onClick={() => setSelectedBadgeId(badge.id)}
-                className={`group relative overflow-hidden rounded-[1.75rem] border ${rarityStroke(badge.rarity)} ring-1 ${badge.accentRing} bg-gradient-to-b ${rarityGradient(badge.rarity)} p-4 text-left shadow-[0_20px_60px_rgba(0,0,0,0.35)] transition duration-300 hover:-translate-y-1 hover:scale-[1.01] focus:outline-none focus:ring-2 focus:ring-amber-300/40`}
-              >
-                <div className={`absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-[linear-gradient(110deg,transparent_0%,rgba(255,255,255,0.10)_40%,transparent_70%)] animate-prestige-sheen`} />
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.10),transparent_35%)]" />
-                <div className="relative flex items-start justify-between gap-3">
-                  <div className={`flex h-12 w-12 items-center justify-center rounded-2xl border ${rarityStroke(badge.rarity)} bg-black/55 ${badge.glowClass}`}>
-                    <BadgeIcon iconKey={badge.iconKey} size={20} className="text-white" />
-                  </div>
-                  <span className={`rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.24em] ${rarityPill(badge.rarity)}`}>
-                    {badge.rarity}
-                  </span>
-                </div>
-
-                <div className="relative mt-4">
-                  <h3 className="text-lg font-black tracking-tight text-white">{title}</h3>
-                  <p className="mt-1 text-sm text-slate-300">{subtitle}</p>
-                </div>
-
-                <div className="relative mt-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold uppercase tracking-[0.24em] text-slate-500">Progress</span>
-                    <span className="text-xs font-semibold text-slate-200">{badge.progress}%</span>
-                  </div>
-                  <div className="mt-2 h-2 overflow-hidden rounded-full bg-black/50">
-                    <div
-                      className={`h-full rounded-full bg-gradient-to-r ${badge.accent} animate-prestige-sheen`}
-                      style={{ width: `${badge.progress}%` }}
-                    />
-                  </div>
-                </div>
-
-                <div className="relative mt-4 flex items-center justify-between">
-                  <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-black/45 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-300">
-                    {badge.status === "unlocked" ? (
-                      <BadgeCheck size={11} className="text-emerald-300" />
-                    ) : badge.status === "progress" ? (
-                      <Sparkles size={11} className="text-amber-300" />
-                    ) : (
-                      <ShieldCheck size={11} className="text-slate-500" />
-                    )}
-                    {statusLabel(badge.status)}
-                  </span>
-                  <span className="inline-flex items-center gap-1 text-xs font-semibold text-slate-400 transition-transform group-hover:translate-x-0.5">
-                    Inspect
-                    <Target size={12} className="text-amber-200/80" />
-                  </span>
-                </div>
-              </button>
-            );
-          })}
-        </div>
-
-        {!showAllBadges && hiddenCount > 0 && (
-          <div className="mt-4 rounded-2xl border border-white/8 bg-white/5 px-4 py-3 text-sm text-slate-400">
-            {hiddenCount} badge{hiddenCount === 1 ? "" : "s"} are still hidden, waiting to be earned.
-          </div>
-        )}
-      </section>
-
+      </article>
       {selectedBadge ? <BadgeModal badge={selectedBadge} onClose={() => setSelectedBadgeId(null)} /> : null}
     </>
   );

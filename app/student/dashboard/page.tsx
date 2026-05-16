@@ -206,7 +206,7 @@ export default async function StudentDashboardPage() {
 
   return (
     <main className="min-h-screen bg-slate-950 pt-24 pb-20 px-4 sm:px-6">
-      <div className="mx-auto w-full max-w-6xl space-y-8">
+      <div className="mx-auto w-full max-w-7xl space-y-8">
         <header className="space-y-1">
           <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Dashboard</p>
           <h1 className="text-2xl font-bold text-white">My Learning</h1>
@@ -233,20 +233,7 @@ export default async function StudentDashboardPage() {
             </div>
           </article>
 
-          <article className="relative flex items-start gap-4 overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 p-5">
-            <div className="absolute inset-0 bg-gradient-to-br from-sky-500/10 via-transparent to-transparent pointer-events-none" />
-            <div className="absolute -top-6 -right-6 h-20 w-20 rounded-full bg-sky-500/8 pointer-events-none" />
-            <div className="shrink-0 flex h-10 w-10 items-center justify-center rounded-xl border border-sky-500/25 bg-sky-500/15">
-              <TrendingUp size={18} className="text-sky-400" />
-            </div>
-            <div className="relative">
-              <p className="mb-0.5 text-xs font-medium text-slate-500">Strong topics</p>
-              <p className="text-2xl font-bold text-white">{strongPointsAll.length}</p>
-              <p className="mt-0.5 text-xs text-slate-500">
-                {strongPointsAll.length === 0 ? "Take quizzes to track progress!" : "Topics scored at 70% or higher"}
-              </p>
-            </div>
-          </article>
+          
 
           <article className="relative flex items-start gap-4 overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 p-5">
             <div className="absolute inset-0 bg-gradient-to-br from-violet-500/10 via-transparent to-transparent pointer-events-none" />
@@ -281,9 +268,9 @@ export default async function StudentDashboardPage() {
               </p>
             </div>
           </article>
-        </section>
 
-        <PrestigeBadgesPanel badges={prestigeBadges} />
+          <PrestigeBadgesPanel badges={prestigeBadges} />
+        </section>
 
         <section className="grid grid-cols-1 gap-6 xl:grid-cols-[1.2fr_0.8fr]">
           <div className="space-y-6">
