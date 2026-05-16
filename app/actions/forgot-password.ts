@@ -1,10 +1,18 @@
 "use server";
 
 import { createClient as createAdminClient } from "@supabase/supabase-js";
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
 import { headers } from "next/headers";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const transporter = nodemailer.createTransport({
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false,
+  auth: {
+    user: process.env.GMAIL_USER,
+    pass: process.env.GMAIL_APP_PASSWORD,
+  },
+});
 
 export async function sendPasswordResetEmail(email: string): Promise<{ error?: string }> {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -34,36 +42,35 @@ export async function sendPasswordResetEmail(email: string): Promise<{ error?: s
   // the URL to be whitelisted. The reset page verifies the token itself.
   const resetUrl = `${baseUrl}/reset-password?token_hash=${data.properties.hashed_token}&type=recovery`;
 
-  const { error: sendError } = await resend.emails.send({
-    from: "Lumina <onboarding@resend.dev>",
-    // Resend free tier only allows sending to the account owner's email
-    to: "radiadem05@gmail.com",
-    subject: "Reset your Lumina password",
-    html: `
-      <div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:32px;">
-        <h1 style="color:#f97316;">Lumina</h1>
-        <h2 style="color:#fff;background:#0f172a;padding:16px;border-radius:8px;margin:0;">
-          Password Reset
-        </h2>
-        <p style="color:#374151;font-size:16px;margin-top:16px;">
-          A password reset was requested for <strong>${email}</strong>.
-          Click the button below to set a new password.
-        </p>
-        <a
-          href="${resetUrl}"
-          style="display:inline-block;background:#f97316;color:white;padding:14px 32px;border-radius:8px;text-decoration:none;font-size:16px;font-weight:bold;margin-top:16px;"
-        >
-          Reset Password →
-        </a>
-        <p style="color:#6b7280;font-size:13px;margin-top:24px;">
-          This link expires in 1 hour. If you didn't request this, you can ignore this email.
-        </p>
-      </div>
-    `,
-  });
-
-  if (sendError) {
-    console.error("[forgot-password] Resend failed:", sendError);
+  try {
+    await transporter.sendMail({
+      from: `"Lumina" <${process.env.GMAIL_USER}>`,
+      to: email,
+      subject: "Reset your Lumina password",
+      html: `
+        <div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:32px;">
+          <h1 style="color:#f97316;">Lumina</h1>
+          <h2 style="color:#fff;background:#0f172a;padding:16px;border-radius:8px;margin:0;">
+            Password Reset
+          </h2>
+          <p style="color:#374151;font-size:16px;margin-top:16px;">
+            A password reset was requested for <strong>${email}</strong>.
+            Click the button below to set a new password.
+          </p>
+          <a
+            href="${resetUrl}"
+            style="display:inline-block;background:#f97316;color:white;padding:14px 32px;border-radius:8px;text-decoration:none;font-size:16px;font-weight:bold;margin-top:16px;"
+          >
+            Reset Password →
+          </a>
+          <p style="color:#6b7280;font-size:13px;margin-top:24px;">
+            This link expires in 1 hour. If you didn't request this, you can ignore this email.
+          </p>
+        </div>
+      `,
+    });
+  } catch (sendError) {
+    console.error("[forgot-password] Gmail SMTP failed:", sendError);
     return { error: "Failed to send reset email. Please try again." };
   }
 
