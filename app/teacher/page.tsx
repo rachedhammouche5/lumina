@@ -112,8 +112,8 @@ export default async function TeacherPage() {
           </article>
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-3">
-          <article className="rounded-3xl border border-slate-700 bg-linear-to-br from-slate-700/80 via-slate-950 via-slate-800 to-transparent p-5 lg:col-span-2">
+        <div className="grid gap-4 lg:grid-cols-3 lg:items-start">
+          <article className="flex h-[26rem] min-h-0 flex-col rounded-3xl border border-slate-700 bg-linear-to-br from-slate-700/80 via-slate-950 via-slate-800 to-transparent p-5 lg:col-span-2">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-xl font-semibold text-white">Last Activity</h2>
               <span className="text-xs uppercase tracking-[0.2em] text-slate-500">
@@ -122,7 +122,7 @@ export default async function TeacherPage() {
             </div>
 
             {homeData.lastActivities.length > 0 ? (
-              <ul className="space-y-3">
+              <ul className="pretty-scrollbar min-h-0 flex-1 space-y-3 overflow-y-auto pr-1">
                 {homeData.lastActivities.map((activity) => (
                   <li key={activity.id} className="rounded-2xl border border-slate-700 bg-linear-to-br from-slate-900 via-slate-800 to-transparent p-4 shadow-2xl shadow-slate-950">
                     <div className="flex items-center justify-between gap-3">

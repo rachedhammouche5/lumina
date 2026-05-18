@@ -12,14 +12,8 @@ type TeacherTopic = {
   skill_id: string | null;
 };
 
-type TeacherContent = {
-  cntnt_id: string;
-  cntnt_title: string;
-  tpc_id: string | null;
-};
-
 type TeacherEnroll = {
-  studentId: string;
+  student_id: string;
   skill_id: string | null;
   progress: number;
 };
@@ -33,9 +27,10 @@ type TeacherScore = {
 
 type TeacherReview = {
   studentId: string;
-  content_id: string;
+  skill_id: string;
   rating: number;
   comment: string;
+  time: string;
 };
 
 type TeacherStudent = {
@@ -149,22 +144,17 @@ export async function getTeacherDashboardData(): Promise<TeacherDashboardData | 
   const topics = (topicsRaw ?? []) as TeacherTopic[];
   const topicIds = topics.map((topic) => topic.tpc_id);
 
-  const [contentRes, enrollRes, scoreRes, studentRes, streakRes] = await Promise.all([
-    topicIds.length
-      ? supabase.from("Content").select("cntnt_id,cntnt_title,tpc_id").in("tpc_id", topicIds)
-      : Promise.resolve({ data: [] }),
-    supabase.from("enroll").select("studentId,skill_id,progress").in("skill_id", skillIds),
+  const [enrollRes, scoreRes, studentRes, streakRes] = await Promise.all([
+    supabase.from("enroll").select("student_id,skill_id,progress").in("skill_id", skillIds),
     topicIds.length
       ? supabase.from("score").select("studentId,tpc_id,score,time_taken").in("tpc_id", topicIds)
-      : Promise.resolve({ data: [] }),
+      : Promise.resolve({ data: [] as TeacherScore[] }),
     supabase.from("Student").select("std_id,std_fullname,std_level,std_streak,std_last_activeDate,std_pfp"),
     supabase.rpc("get_count_streak_by_teacher", { teacher_id_param: teacher.tchr_id }),
   ]);
 
-  const contents = (contentRes.data ?? []) as TeacherContent[];
-  const contentIds = contents.map((content) => content.cntnt_id);
-  const reviewRes = contentIds.length
-    ? await supabase.from("review").select("studentId,content_id,rating,comment").in("content_id", contentIds)
+  const reviewRes = skillIds.length
+    ? await supabase.from("review").select("studentId,skill_id,rating,comment,time").in("skill_id", skillIds)
     : { data: [] as TeacherReview[] };
   const enrollments = (enrollRes.data ?? []) as TeacherEnroll[];
   const scores = (scoreRes.data ?? []) as TeacherScore[];
@@ -172,19 +162,11 @@ export async function getTeacherDashboardData(): Promise<TeacherDashboardData | 
   const students = (studentRes.data ?? []) as TeacherStudent[];
 
   const topicIdsBySkill = new Map<string, string[]>();
-  const contentIdsBySkill = new Map<string, string[]>();
   topics.forEach((topic) => {
     if (!topic.skill_id) return;
     const existing = topicIdsBySkill.get(topic.skill_id) ?? [];
     existing.push(topic.tpc_id);
     topicIdsBySkill.set(topic.skill_id, existing);
-  });
-  contents.forEach((content) => {
-    const parentTopic = topics.find((topic) => topic.tpc_id === content.tpc_id);
-    if (!parentTopic?.skill_id) return;
-    const existing = contentIdsBySkill.get(parentTopic.skill_id) ?? [];
-    existing.push(content.cntnt_id);
-    contentIdsBySkill.set(parentTopic.skill_id, existing);
   });
 
   const skillToEnrolledStudents = new Map<string, Set<string>>();
@@ -192,19 +174,18 @@ export async function getTeacherDashboardData(): Promise<TeacherDashboardData | 
   enrollments.forEach((enrollment) => {
     if (!enrollment.skill_id) return;
     const enrolledSet = skillToEnrolledStudents.get(enrollment.skill_id) ?? new Set<string>();
-    enrolledSet.add(enrollment.studentId);
+    enrolledSet.add(enrollment.student_id);
     skillToEnrolledStudents.set(enrollment.skill_id, enrolledSet);
 
-    const studentEnrollments = studentToEnrollments.get(enrollment.studentId) ?? [];
+    const studentEnrollments = studentToEnrollments.get(enrollment.student_id) ?? [];
     studentEnrollments.push(enrollment);
-    studentToEnrollments.set(enrollment.studentId, studentEnrollments);
+    studentToEnrollments.set(enrollment.student_id, studentEnrollments);
   });
 
   const skillChartData = skills.map((skill): DashboardChartPoint => {
     const relatedTopics = topicIdsBySkill.get(skill.skl_id) ?? [];
-    const relatedContentIds = contentIdsBySkill.get(skill.skl_id) ?? [];
     const relatedScores = scores.filter((score) => relatedTopics.includes(score.tpc_id));
-    const relatedReviews = reviews.filter((review) => relatedContentIds.includes(review.content_id));
+    const relatedReviews = reviews.filter((review) => review.skill_id === skill.skl_id);
     const positiveReviews = relatedReviews.filter((review) => review.rating >= 4);
 
     return {
@@ -269,7 +250,7 @@ export async function getTeacherDashboardData(): Promise<TeacherDashboardData | 
       return rest;
     });
 
-  const totalStudents = new Set(enrollments.map((enrollment) => enrollment.studentId)).size;
+  const totalStudents = new Set(enrollments.map((enrollment) => enrollment.student_id)).size;
   const avgScore =
     scores.length > 0
       ? scores.reduce((sum, score) => sum + score.score, 0) / scores.length
@@ -290,9 +271,8 @@ export async function getTeacherDashboardData(): Promise<TeacherDashboardData | 
     chartData: chartData.length ? chartData : skillChartData.slice(0, 6),
     skillInsights: skills.map((skill) => {
       const relatedTopics = topicIdsBySkill.get(skill.skl_id) ?? [];
-      const relatedContentIds = contentIdsBySkill.get(skill.skl_id) ?? [];
       const relatedScores = scores.filter((score) => relatedTopics.includes(score.tpc_id));
-      const relatedReviews = reviews.filter((review) => relatedContentIds.includes(review.content_id));
+      const relatedReviews = reviews.filter((review) => review.skill_id === skill.skl_id);
 
       const studentsInSkill = skillToEnrolledStudents.get(skill.skl_id)?.size ?? 0;
       const skillAvgScore =
