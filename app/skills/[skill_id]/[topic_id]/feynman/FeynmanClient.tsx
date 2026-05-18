@@ -55,7 +55,7 @@ export default function FeynmanClient({ topicId, skillId, topicTitle, topicDescr
   const MIN_CHARS = 80;
   const charsLeft = Math.max(0, MIN_CHARS - explanation.length);
 
-  // FIXED: Standardized callback to append text
+  
   const handleVoiceTranscript = useCallback((text: string) => {
     setExplanation(prev => prev + (prev.trim() ? " " : "") + text);
   }, []);

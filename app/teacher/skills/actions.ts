@@ -48,7 +48,6 @@ export async function addSkill(formData: {
     .eq('tchr_id', formData.teacher_id)
     .single();
 
-  // Fire and forget — don't block the response
   notifyStudents({
     skl_id: data.skl_id,
     skl_title: data.skl_title,

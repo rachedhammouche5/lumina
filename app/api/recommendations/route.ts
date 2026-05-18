@@ -66,17 +66,10 @@ export async function GET(request: NextRequest) {
     const studentId = student?.std_id ?? userId;
 
     // ── 2. Enrolled skill IDs ────────────────────────────────────────────────
-    let { data: enrollData, error: enrollError } = await supabase
+    const { data: enrollData } = await supabase
       .from("enroll")
       .select("skill_id")
-      .eq("studentId", studentId);
-
-    if (enrollError?.message?.includes("studentId")) {
-      ({ data: enrollData } = await supabase
-        .from("enroll")
-        .select("skill_id")
-        .eq("student_id", studentId));
-    }
+      .eq("student_id", studentId);
 
     const enrolledIds = new Set(
       (enrollData ?? [])

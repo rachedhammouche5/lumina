@@ -150,10 +150,6 @@ function chunkPdf(text: string): Array<{ text: string; metadata: Record<string, 
 }
 
 // ─── YouTube Transcript Fetching ──────────────────────────────────────────────
-// Uses the `youtube-transcript` npm package (npm i youtube-transcript).
-// Handles manual captions, auto-generated captions, entity decoding,
-// and proper request headers — far more reliable than the raw timedtext API.
-
 async function fetchTranscriptLines(videoId: string): Promise<TranscriptLine[]> {
   // Attempt 1: explicit English (manual or auto-generated)
   try {
@@ -242,6 +238,8 @@ function chunkTranscriptByTime(
 
 // ─── Shared Embedding Loop ────────────────────────────────────────────────────
 
+const EMBED_BATCH = 5;
+
 async function embedChunks(
   chunks: Array<{ text: string; metadata: Record<string, unknown> }>,
   content: IndexContentInput
@@ -249,23 +247,33 @@ async function embedChunks(
   const { contentId, level, title, type, skillId, topicId } = content;
   const rows: ChunkRecord[] = [];
 
-  for (let i = 0; i < chunks.length; i++) {
-    const { text, metadata: chunkMeta } = chunks[i];
-    console.log(`🔗 Embedding chunk ${i + 1}/${chunks.length}...`);
-    try {
-      const embedding = await embedText(text);
+  for (let batchStart = 0; batchStart < chunks.length; batchStart += EMBED_BATCH) {
+    const batch = chunks.slice(batchStart, batchStart + EMBED_BATCH);
+    const results = await Promise.all(
+      batch.map(async ({ text, metadata: chunkMeta }, batchOffset) => {
+        const i = batchStart + batchOffset;
+        try {
+          const embedding = await embedText(text);
+          return { i, text, chunkMeta, embedding };
+        } catch (e) {
+          console.error(`❌ embedText failed for chunk ${i}:`, e);
+          return null;
+        }
+      }),
+    );
+    for (const result of results) {
+      if (!result) continue;
       rows.push({
         content_id: contentId,
         level: level ?? null,
-        chunk_index: i,
-        chunk_text: text,
-        token_count: estimateTokenCount(text),
-        embedding: JSON.stringify(embedding),
-        metadata: { title, type, skill_id: skillId, topic_id: topicId, ...chunkMeta },
+        chunk_index: result.i,
+        chunk_text: result.text,
+        token_count: estimateTokenCount(result.text),
+        embedding: JSON.stringify(result.embedding),
+        metadata: { title, type, skill_id: skillId, topic_id: topicId, ...result.chunkMeta },
       });
-    } catch (e) {
-      console.error(`❌ embedText failed for chunk ${i}:`, e);
     }
+    console.log(`🔗 Embedded chunks ${batchStart + 1}–${batchStart + batch.length} / ${chunks.length}`);
   }
 
   console.log(`📦 Total rows built: ${rows.length}`);
@@ -338,34 +346,36 @@ async function buildChunkRows(content: IndexContentInput): Promise<ChunkRecord[]
 
 export async function indexTopicContents(contents: IndexContentInput[]) {
   const supabase = createAdminClient();
-  const indexed: { contentId: string; chunks: number }[] = [];
-  const skipped: { contentId: string; reason: string }[] = [];
 
-  for (const content of contents) {
-    try {
-      const rows = await buildChunkRows(content);
+  const results = await Promise.all(
+    contents.map(async (content) => {
+      try {
+        const rows = await buildChunkRows(content);
 
-      // Wipe stale chunks before reinserting
-      await supabase.from("content_chunks").delete().eq("content_id", content.contentId);
+        // Wipe stale chunks before reinserting
+        await supabase.from("content_chunks").delete().eq("content_id", content.contentId);
 
-      if (rows.length === 0) {
-        skipped.push({ contentId: content.contentId, reason: "No extractable text for this content type." });
-        continue;
+        if (rows.length === 0) {
+          return { ok: false as const, contentId: content.contentId, reason: "No extractable text for this content type." };
+        }
+
+        const { error } = await supabase.from("content_chunks").insert(rows);
+        if (error) {
+          console.error("❌ Supabase insert error:", error);
+          throw error;
+        }
+
+        console.log(`✅ Inserted ${rows.length} chunks for content ${content.contentId}`);
+        return { ok: true as const, contentId: content.contentId, chunks: rows.length };
+      } catch (error) {
+        const reason = error instanceof Error ? error.message : "Unknown indexing error";
+        return { ok: false as const, contentId: content.contentId, reason };
       }
+    }),
+  );
 
-      const { error } = await supabase.from("content_chunks").insert(rows);
-      if (error) {
-        console.error("❌ Supabase insert error:", error);
-        throw error;
-      }
-
-      console.log(`✅ Inserted ${rows.length} chunks for content ${content.contentId}`);
-      indexed.push({ contentId: content.contentId, chunks: rows.length });
-    } catch (error) {
-      const reason = error instanceof Error ? error.message : "Unknown indexing error";
-      skipped.push({ contentId: content.contentId, reason });
-    }
-  }
+  const indexed = results.filter((r) => r.ok).map((r) => ({ contentId: r.contentId, chunks: (r as { ok: true; chunks: number }).chunks }));
+  const skipped = results.filter((r) => !r.ok).map((r) => ({ contentId: r.contentId, reason: (r as { ok: false; reason: string }).reason }));
 
   return { indexed, skipped };
 }

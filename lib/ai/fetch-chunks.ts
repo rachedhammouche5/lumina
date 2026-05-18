@@ -123,7 +123,7 @@ async function loadChunks({
     query = query.eq("level", level);
   }
 
-  const { data, error } = await query;
+  const { data, error } = await query.limit(2000);
 
   if (error) {
     throw error;
@@ -261,60 +261,35 @@ export async function fetchChunks(
   const supabase = createAdminClient();
   let embedding: number[] | null = null;
 
-  try {
+  try { 
     embedding = await embedText(query);
   } catch (error) {
     console.error("Chunk embedding failed, switching to keyword fallback:", error);
   }
 
   if (embedding) {
-    const attempts: Array<Record<string, unknown>> = [
-      {
-        query_embedding: embedding,
-        match_count: topK,
-        filter_level: level ?? null,
-        filter_skill_id: skillId ?? null,
-      },
-      {
-        query_embedding: embedding,
-        match_count: topK,
-        filter_level: level ?? null,
-      },
-      {
-        query_embedding: embedding,
-        match_count: topK,
-        filter_skill_id: skillId ?? null,
-      },
-      {
-        query_embedding: embedding,
-        match_count: topK,
-      },
-    ];
+    // Try with skill filter first (scoped), then without (broad fallback)
+    const rpcAttempts: Array<Record<string, unknown>> = skillId
+      ? [
+          { query_embedding: embedding, match_count: topK, filter_skill_id: skillId },
+          { query_embedding: embedding, match_count: topK },
+        ]
+      : [{ query_embedding: embedding, match_count: topK }];
 
-    let lastError: Error | null = null;
+    let lastRpcError: Error | null = null;
 
-    for (const params of attempts) {
+    for (const params of rpcAttempts) {
       const { data, error } = await supabase.rpc("match_chunks", params);
       if (!error && Array.isArray(data) && data.length > 0) {
-        return data ?? [];
+        return data;
       }
-
-      if (error) {
-        lastError = error;
-      }
+      if (error) lastRpcError = error;
     }
 
     try {
-      return await fallbackMatchChunks({
-        queryEmbedding: embedding,
-        topK,
-        level,
-        skillId,
-      });
+      return await fallbackMatchChunks({ queryEmbedding: embedding, topK, level, skillId });
     } catch (fallbackError) {
-      if (lastError) {
-        console.error("Chunk retrieval RPC failed:", lastError);
-      }
+      if (lastRpcError) console.error("Chunk retrieval RPC failed:", lastRpcError);
       console.error("Vector fallback failed, switching to keyword search:", fallbackError);
     }
   }
