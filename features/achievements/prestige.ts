@@ -46,6 +46,7 @@ export type PrestigeBadgeView = {
   globalCount: number;
   isHidden: boolean;
   criteriaType: string;
+  isNew: boolean;
 };
 
 type AdminClient = Awaited<ReturnType<typeof createAdminClient>>;
@@ -543,6 +544,7 @@ export function buildPrestigeBadgeViews(
       globalCount: globalCounts.get(seed.criteriaType) ?? 0,
       isHidden: seed.isHidden,
       criteriaType: seed.criteriaType,
+      isNew: false,
     };
   }).sort((a, b) => {
     const order: Record<PrestigeRarity, number> = {
@@ -633,6 +635,8 @@ export async function loadPrestigeBadgeViews({
       .map((badge) => achievementByCriteriaType.get(badge.criteriaType)?.id)
       .filter((value): value is string => Boolean(value));
 
+    let newlyInsertedIds = new Set<string>();
+
     if (unlockedAchievementIds.length > 0) {
       const { data: existingAwards, error: awardsFetchError } = await adminClient
         .from("student_achievement")
@@ -649,6 +653,8 @@ export async function loadPrestigeBadgeViews({
           student_id: studentId,
           achievement_id: achievementId,
         }));
+
+      newlyInsertedIds = new Set(awardsToInsert.map((a) => a.achievement_id));
 
       if (awardsToInsert.length > 0) {
         const { error: insertError } = await adminClient.from("student_achievement").insert(awardsToInsert);
@@ -689,12 +695,14 @@ export async function loadPrestigeBadgeViews({
       const achievement = achievementByCriteriaType.get(badge.criteriaType);
       const earnedAt = achievement ? earnedAtByAchievementId.get(achievement.id) ?? null : badge.earnedAt;
       const globalCount = achievement ? countByAchievementId.get(achievement.id) ?? 0 : badge.globalCount;
+      const isNew = achievement ? newlyInsertedIds.has(achievement.id) : false;
 
       return {
         ...badge,
         status: earnedAt || badge.status === "unlocked" ? "unlocked" : badge.status,
         earnedAt,
         globalCount,
+        isNew,
       };
     });
   } catch (error) {

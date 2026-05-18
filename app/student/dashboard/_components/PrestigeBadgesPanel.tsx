@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { LucideIcon } from "lucide-react";
 import {
   Award,
@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 
 import type { PrestigeBadgeView, PrestigeIconKey } from "@/features/achievements/prestige";
+import BadgeUnlockCelebration, { triggerBadgeUnlock } from "@/app/features/badge/BadgeUnlockCelebration";
 
 const ICONS: Record<PrestigeIconKey, LucideIcon> = {
   Target,
@@ -210,6 +211,24 @@ function BadgeModal({
 export default function PrestigeBadgesPanel({ badges }: Props) {
   const [selectedBadgeId, setSelectedBadgeId] = useState<string | null>(null);
   const [expanded, setExpanded] = useState(false);
+  const firedRef = useRef(false);
+
+  useEffect(() => {
+    if (firedRef.current) return;
+    firedRef.current = true;
+    const newBadges = badges.filter((b) => b.isNew);
+    newBadges.forEach((badge, i) => {
+      setTimeout(() => {
+        triggerBadgeUnlock({
+          name: badge.name,
+          subtitle: badge.subtitle,
+          rarity: badge.rarity,
+          iconKey: badge.iconKey,
+          accentSoft: badge.accentSoft,
+        });
+      }, i * 3200);
+    });
+  }, [badges]);
 
   const selectedBadge = useMemo(
     () => badges.find((badge) => badge.id === selectedBadgeId) ?? null,
@@ -264,17 +283,30 @@ export default function PrestigeBadgesPanel({ badges }: Props) {
             <p className="text-xs text-slate-500">
               {expanded ? "Tap a badge to inspect it" : "Tap more to see them"}
             </p>
-            <button
-              type="button"
-              onClick={() => setExpanded((current) => !current)}
-              className="shrink-0 rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.18em] text-amber-100 transition hover:border-amber-300/35 hover:bg-amber-500/15"
-            >
-              {expanded ? "Hide" : "More"}
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  const sample = badges[0];
+                  if (sample) triggerBadgeUnlock({ name: sample.name, subtitle: sample.subtitle, rarity: sample.rarity, iconKey: sample.iconKey, accentSoft: sample.accentSoft });
+                }}
+                className="shrink-0 rounded-full border border-rose-500/20 bg-rose-500/10 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.18em] text-rose-300 transition hover:bg-rose-500/15"
+              >
+                Test anim
+              </button>
+              <button
+                type="button"
+                onClick={() => setExpanded((current) => !current)}
+                className="shrink-0 rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.18em] text-amber-100 transition hover:border-amber-300/35 hover:bg-amber-500/15"
+              >
+                {expanded ? "Hide" : "More"}
+              </button>
+            </div>
           </div>
         </div>
       </article>
       {selectedBadge ? <BadgeModal badge={selectedBadge} onClose={() => setSelectedBadgeId(null)} /> : null}
+      <BadgeUnlockCelebration />
     </>
   );
 }
